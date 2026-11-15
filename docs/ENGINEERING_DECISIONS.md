@@ -63,7 +63,7 @@ Status: Accepted (owner, 2026-11-16). Supersedes ED-001's temporary names. Pytho
 ## ED-018 Review decisions: COMMENT, REQUEST_CHANGES and gated APPROVE (supersedes ED-006)
 Status: Accepted (owner instruction, 2026-11-16: the bot should review, comment inline, request changes and approve when configured criteria are met). ED-006 ("COMMENT only") is superseded.
 Rules:
-1. A pure decision engine (`lyvern.engine.review_decision`) maps findings + run status + repository policy to one of `COMMENT`, `REQUEST_CHANGES`, `APPROVE`. It has no network access and is exhaustively unit tested.
+1. A pure decision engine (`lyvern.engine.decision`) maps findings + run status + repository policy to one of `COMMENT`, `REQUEST_CHANGES`, `APPROVE`. It has no network access and is exhaustively unit tested.
 2. `REQUEST_CHANGES` only for blocking findings: confirmed critical/high from deterministic sources, or an LLM finding that was corroborated (static-analysis hit on the same location or a second independent check) with confidence above the repository threshold. An uncorroborated LLM observation can never block (it can only produce `COMMENT`).
 3. `APPROVE` is OFF by default. It needs `allow_approve=true` for the repository, a run with status `succeeded` (no skipped or failed stage), zero blocking findings, no unanalyzed files above a configured share, and PR risk below the configured ceiling. Otherwise `COMMENT`.
 4. Every review body starts with an automated-review label and states what was and was not analyzed. The bot never claims human approval.

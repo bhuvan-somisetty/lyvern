@@ -61,4 +61,4 @@ Handled events: `pull_request` (`opened`, `reopened`, `synchronize`, `ready_for_
 - Pydantic v2 models define all request and response bodies; unknown request fields are rejected.
 
 ## 9. Internal contract (engine <-> worker)
-`ReviewJob` (ids, installation, repo, PR number, head/base sha, pipeline_version) -> `ReviewResult` (findings[], risk, limitations[], llm_usage[], timings). Defined once in `lyvern.contracts` and reused by tests and the benchmark runner.
+`ReviewJob` (ids, installation, repo, PR number, head/base sha, pipeline_version) -> `ReviewResult` (findings[], risk, limitations[], llm_usage[], timings). Defined once in `lyvern.engine.contracts` and reused by tests and the benchmark runner.
