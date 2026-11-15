@@ -3,12 +3,11 @@
 Append-only. Never edit or delete past entries; correct with a new line under the old one. Timestamps are real system-clock readings in IST (+05:30). No secrets in this file.
 
 ## Current status (update at every milestone)
-- Last updated: 2026-11-15 17:11 IST (clock reading), Session 1.
-- Phase: 0 (Product foundation) written, **awaiting owner approval**. Phase 1 has NOT started.
-- Code written: none. Git repo: not initialized. Dependencies installed in the project: none.
-- Documents present: PROJECT_RULES.md and 12 files in docs/ (see Session 1 list; this file and CHANGELOG.md included).
-- Open questions for owner: see "Questions and assumptions" in the Session 1 report (Q1-Q8 below).
-- Next planned action: owner reviews docs, picks answers to Q1-Q8 and a brand shortlist, then Phase 1 (M1) begins.
+- Last updated: 2026-11-16 ~04:15 IST (clock readings), Session 2.
+- Phase 1 / M1 (engineering foundation): implemented; verification in progress (see Session 2 entries). Repo: C:\Users\BHUVAN\dev\pr-intel (outside OneDrive), branch `phase-1/foundation`, 4 commits in total (1 on `develop`, 3 on the branch), no remote.
+- Verified locally: ruff, ruff format, mypy --strict, 15 Python tests, Alembic up/down/up, compose stack healthy, real worker round trip, web eslint/tsc/vitest/build, Python steps on a clean clone.
+- NOT verified: GitHub Actions run (no remote), web steps on a clean clone (running), JSON access logs, product name still not chosen.
+- Next planned action: finish M1 acceptance review; owner picks product name (search Vigyl, Skopyr, Oculyx, Auspyr and top five first); then M2 (GitHub App core), which needs the owner to register a dev GitHub App.
 
 ---
 
@@ -128,3 +127,9 @@ Verify Docker daemon, scaffold M1, run tests, commit on a feature branch.
 - `apps/web` stays a self-contained pnpm project with its own lockfile (the generated nested `pnpm-workspace.yaml` only sets `allowBuilds`); a root pnpm workspace is deferred until shared TS packages exist.
 - Added `.github/workflows/ci.yml` (python job with pgvector Postgres + Redis services and a started worker; web job: lint, tsc, test, build), `.pre-commit-config.yaml`, `README.md`. YAML syntax validated locally with PyYAML. CI has NOT been run on GitHub (no remote exists), so it is unverified.
 - Mistake caught: a `Start-Process pnpm` call failed (pnpm is a .ps1) but my echo said "started"; I corrected it and ran the install as a real background command.
+
+### Session 2: clean-clone verification (2026-11-16 ~04:15 IST)
+- Web commit 1da025a. Web checks in the working tree, all exit 0: eslint, `tsc --noEmit`, vitest (1 test), `next build` (2 static routes).
+- Clean clone at C:\Users\BHUVAN\dev\_cleanclone (outside the repo, throwaway), Python steps all exit 0: uv sync --frozen --all-packages, ruff check, ruff format --check, mypy (13 files), alembic upgrade/downgrade/upgrade, pytest 15 passed.
+- Renamed `vitest.config.ts` to `.mts`; Vite still prints a warning about `configLoader: 'native'` (not yet investigated; harmless so far).
+- Correction: an earlier memory-log line said "5 commits"; the real count at that time was 4.
