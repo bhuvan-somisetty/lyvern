@@ -22,6 +22,7 @@ dev = [
     "lyvern",
     "lyvern-api",
     "lyvern-worker",
+    "hypothesis>=6.170.15",
 ]
 
 [tool.ruff]
@@ -33,7 +34,7 @@ src = ["packages/lyvern/src", "apps/api/src", "apps/worker/src", "tests"]
 select = ["E", "F", "W", "I", "B", "UP", "S", "C4", "SIM", "RUF"]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/**" = ["S101", "S105", "S106"]
+"tests/**" = ["S101", "S105", "S106", "S603", "S607"]
 
 [tool.mypy]
 python_version = "3.12"
