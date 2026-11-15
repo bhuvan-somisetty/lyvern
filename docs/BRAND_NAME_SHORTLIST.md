@@ -77,3 +77,6 @@ Real lookups (npm, PyPI, GitHub account/repos, DNS) plus one web search per name
 | Tavo | free | TAKEN | taken | 82 | reg x3, none | rejected |
 | Rivu | TAKEN | free | taken | 24 | none, reg x3 | rejected |
 Recommendation given: 1) Heedly 2) Vetly 3) Keenly. Trade-off stated to owner: simple names are mostly taken as domains/handles; invented names (Skopyr, Lyvern) are more ownable but harder to spell.
+
+## Owner suggestion: "Reptile" (2026-11-16)
+Rejected after checks. npm taken (reptile 3.0.2, "Plugin for creating a REPL"), PyPI taken, GitHub account taken, 48 repos with that exact name, .com/.dev/.io/.ai/.app all resolve. One letter away from Greptile (greptile.com), an AI pull-request code review company that raised $25M: high risk of confusion and trademark conflict in exactly our market.
