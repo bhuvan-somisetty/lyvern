@@ -1,0 +1,51 @@
+[project]
+name = "pr-intel-workspace"
+version = "0.0.0"
+description = "Workspace root for the pull request intelligence platform (temporary project identifier)."
+requires-python = ">=3.12,<3.13"
+dependencies = []
+
+[tool.uv.workspace]
+members = ["packages/printel", "apps/api", "apps/worker"]
+
+[tool.uv.sources]
+printel = { workspace = true }
+printel-api = { workspace = true }
+printel-worker = { workspace = true }
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3",
+    "httpx>=0.27",
+    "ruff>=0.8",
+    "mypy>=1.13",
+    "printel",
+    "printel-api",
+    "printel-worker",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["packages/printel/src", "apps/api/src", "apps/worker/src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "S", "C4", "SIM", "RUF"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101", "S105", "S106"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+plugins = ["pydantic.mypy"]
+files = ["packages/printel/src", "apps/api/src", "apps/worker/src"]
+
+[[tool.mypy.overrides]]
+module = ["celery.*", "alembic.*"]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers"
+markers = ["integration: needs running Postgres and Redis (docker compose up -d db redis)"]

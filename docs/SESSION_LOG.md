@@ -108,3 +108,16 @@ ED-001 to ED-013 now Accepted by default (owner approved recommended defaults on
 
 ### Pending
 Verify Docker daemon, scaffold M1, run tests, commit on a feature branch.
+
+### Session 2 progress: backend foundation (appended 2026-11-16, IST clock readings from this session ~03:25-03:55)
+- Created: uv workspace (`pyproject.toml`, `uv.lock`), `packages/printel` (config, JSON logging with secret scrubbing and correlation id, SQLAlchemy base, Celery app + `printel.ping` task), `apps/api` (FastAPI: /healthz, /readyz, /version, request-id middleware), `apps/worker` (Celery entry), Alembic (root `alembic.ini`, migration 0001 enables pgvector), `docker-compose.yml` (pgvector/pg16, redis:7, migrate, api, worker, all with healthchecks), `infrastructure/docker/Dockerfile.python`, `.env.example`, `.gitignore`, `.dockerignore`, `.editorconfig`, `.gitattributes`, tests (10 unit, 5 integration).
+- Verified (actual outcomes): `ruff check` clean, `ruff format --check` clean, `mypy --strict` no issues in 13 files, `pytest tests` 15 passed. Alembic upgrade head -> downgrade base -> upgrade head all succeeded, `alembic current` = 0001. `docker compose up -d`: db, redis, api, worker healthy, migrate exit code 0. `GET /readyz` returned `{"status":"ready","checks":{"database":true,"redis":true}}`. A task sent from the host was received and executed by the containerized worker: result `pong` (SUCCESS).
+- Problems and root causes (kept for the record):
+  1. Lint: line-length errors and S105/S106 false positives on test fixtures. Fix: ruff format; tests ignore S105/S106.
+  2. `pyproject.toml` failed to parse after a PowerShell edit: Windows PowerShell 5.1 `Set-Content -Encoding utf8` writes a BOM. Fix: removed the BOM. Rule: edit files with the editor tools or Python/sed, not `Set-Content -Encoding utf8`.
+  3. mypy: Celery has no stubs, so the task decorator is untyped. Fix: one narrow `# type: ignore[untyped-decorator]`.
+  4. Integration tests hit the WRONG Postgres: a native Windows `postgres` process (pid 7228) owns host port 5432. Fix: project DB on host port 5433 (`PRINTEL_DB_PORT`). I did not touch that local Postgres.
+  5. Docker image had no `alembic`: `uv sync` in a workspace installs only the root package. Fix: `uv sync --frozen --no-dev --all-packages`.
+  6. Worker round trip first FAILED and the earlier Redis check was misleading: host port 6379 is owned by `wslrelay` forwarding to a Redis 8.0.5 inside WSL, not our container. The three `printel.ping` task messages I sent while diagnosing went to THAT Redis (list `celery`) and may still be sitting there; owner informed. Fix: project Redis on host port 6380 (`PRINTEL_REDIS_PORT`); added a test asserting the Redis behind the URL is version 7.x so a port clash cannot pass silently.
+- Observations (not yet fixed): uvicorn access logs are plain text, not JSON (our JSON logger covers app logs only). A warm worker round trip from the host took about 7.3 s including Python startup; the first task took about 19 s (cold start). Starlette TestClient warns that `httpx` is deprecated in favor of `httpx2`; unresolved.
+- Decision ED-015: dev host ports are 5433 (Postgres) and 6380 (Redis) because 5432 and 6379 are taken on this machine.

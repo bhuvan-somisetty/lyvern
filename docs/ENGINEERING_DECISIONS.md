@@ -50,3 +50,9 @@ ED-001 to ED-013: Accepted by default on 2026-11-16 (owner chose the recommended
 
 ## ED-014 Repository lives outside OneDrive
 Status: Accepted (owner choice, 2026-11-16). Path `C:\Users\BHUVAN\dev\pr-intel`. Reason: OneDrive would sync `.git`, `.venv`, `node_modules` and caches (slow, space use, corruption risk). The old OneDrive folder keeps the Phase 0 docs as a backup copy. The temporary name stays `pr-intel`; no remote is created before the brand is chosen.
+
+## ED-015 Non-default host ports for local dev services
+Status: Accepted (2026-11-16). Postgres on host 5433, Redis on host 6380 (override with `PRINTEL_DB_PORT`, `PRINTEL_REDIS_PORT`). Reason: this machine already has a native Postgres on 5432 and a WSL Redis behind 6379; tests silently hit them. A test asserts the Redis version to catch future clashes.
+
+## ED-016 Python workspace layout
+Status: Accepted (2026-11-16). `packages/printel` (shared core, later also engine sub-packages), `apps/api`, `apps/worker`, managed by a uv workspace; Docker images use `uv sync --frozen --no-dev --all-packages`. Refines ED-013.
