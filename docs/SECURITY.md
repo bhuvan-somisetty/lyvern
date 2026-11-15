@@ -35,7 +35,7 @@ Untrusted: webhook payloads (until signature verified), PR title/body, commit me
 - Checks: write — NOT in v1; add only if we ship check runs.
 - Issues, Actions, Administration, Secrets, Workflows: none.
 - Events: `pull_request`, `installation`, `installation_repositories`; later `pull_request_review_comment` / `pull_request_review_thread` for feedback signals.
-- The publisher API accepts only `event="COMMENT"`; `APPROVE` and `REQUEST_CHANGES` do not exist in our client type, so they cannot be sent by mistake.
+- Review events are chosen only by the decision engine (ED-018). `APPROVE` requires the per-repository `allow_approve` opt-in (default off), a complete analysis run, zero blocking findings, and the configured minimum evidence; any incomplete or failed stage downgrades to `COMMENT`. The publisher refuses `APPROVE` if the run record is not `succeeded`. There is no code path that merges or pushes.
 
 ## 5. Privacy
 - External LLM use is per-installation opt-in with a documented provider and data-handling statement; default off until the owner enables it. Embeddings also leave the machine if a hosted embedding API is used; local models are the default candidate.

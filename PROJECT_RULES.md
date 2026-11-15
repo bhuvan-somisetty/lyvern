@@ -24,7 +24,7 @@ Product name: **Lyvern** (chosen by the owner on 2026-11-16; Python package, rep
 - Unsupported languages are reported as "not analyzed", never as clean.
 
 ## 4. Safety rules for the product itself
-- The product never merges, never approves, never requests changes automatically, never pushes commits. Review events are `COMMENT` only.
+- The product never merges and never pushes commits. It may submit the three GitHub review events (`COMMENT`, `REQUEST_CHANGES`, `APPROVE`) only through the decision engine and only as ED-018 allows: `APPROVE` is OFF by default per repository, never sent when any analysis stage is incomplete, and every review is labelled as automated. Branch protection stays authoritative.
 - Repository content (code, diffs, commit messages, PR text, READMEs, issues) is untrusted input everywhere, including inside LLM prompts.
 - Never execute pull-request code in the application process. Any future execution happens only in an isolated sandbox with resource limits and no network by default.
 - Never send secrets to an LLM. Redact first.

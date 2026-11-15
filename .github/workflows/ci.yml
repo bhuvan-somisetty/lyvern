@@ -52,12 +52,15 @@ jobs:
       - run: uv run alembic upgrade head
       - name: Start worker
         run: |
-          nohup uv run celery -A lyvern_worker.app worker --loglevel=INFO > worker.log 2>&1 &
+          nohup .venv/bin/celery -A lyvern_worker.app worker --loglevel=INFO > worker.log 2>&1 &
           sleep 10
       - run: uv run pytest tests -q
       - name: Worker log on failure
         if: failure()
         run: tail -n 50 worker.log || true
+      - name: Stop worker
+        if: always()
+        run: pkill -f "celery -A lyvern_worker.app" || true
 
   web:
     runs-on: ubuntu-latest

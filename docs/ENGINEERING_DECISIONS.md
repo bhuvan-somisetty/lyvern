@@ -59,3 +59,14 @@ Status: Accepted (2026-11-16). `packages/printel` (shared core, later also engin
 
 ## ED-017 Product name Lyvern replaces the temporary identifier
 Status: Accepted (owner, 2026-11-16). Supersedes ED-001's temporary names. Python package `printel` -> `lyvern`, apps `printel_api`/`printel_worker` -> `lyvern_api`/`lyvern_worker`, env prefix `PRINTEL_` -> `LYVERN_`, Docker Compose project and database user/name -> `lyvern`, display name default "Lyvern". Earlier log and decision entries keep the old names as history. The name stays behind one constant per app.
+
+## ED-018 Review decisions: COMMENT, REQUEST_CHANGES and gated APPROVE (supersedes ED-006)
+Status: Accepted (owner instruction, 2026-11-16: the bot should review, comment inline, request changes and approve when configured criteria are met). ED-006 ("COMMENT only") is superseded.
+Rules:
+1. A pure decision engine (`lyvern.engine.review_decision`) maps findings + run status + repository policy to one of `COMMENT`, `REQUEST_CHANGES`, `APPROVE`. It has no network access and is exhaustively unit tested.
+2. `REQUEST_CHANGES` only for blocking findings: confirmed critical/high from deterministic sources, or an LLM finding that was corroborated (static-analysis hit on the same location or a second independent check) with confidence above the repository threshold. An uncorroborated LLM observation can never block (it can only produce `COMMENT`).
+3. `APPROVE` is OFF by default. It needs `allow_approve=true` for the repository, a run with status `succeeded` (no skipped or failed stage), zero blocking findings, no unanalyzed files above a configured share, and PR risk below the configured ceiling. Otherwise `COMMENT`.
+4. Every review body starts with an automated-review label and states what was and was not analyzed. The bot never claims human approval.
+5. GitHub branch protection stays authoritative. GitHub does not let an author approve their own PR and may not count an App's approval toward required reviews; a refused or ignored approval is reported to the dashboard and downgraded, never retried as a normal comment pretending to be an approval.
+6. Dismissing or marking a finding as a false positive from the dashboard does not retroactively edit an already-submitted GitHub review; a new commit triggers a new decision.
+7. Whether an App approval is accepted by a given repository's rules is verified empirically in the publishing milestone and documented; no claim is made before that.

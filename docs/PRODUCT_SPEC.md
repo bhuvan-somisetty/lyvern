@@ -5,7 +5,7 @@ Status: draft v0.1 for owner approval. Product name: Lyvern (chosen 2026-11-16).
 ## 1. What we are building
 A GitHub App plus web dashboard that reviews pull requests with a layered pipeline: structural code understanding, established static-analysis tools, small evaluated ML components, and an LLM used for reasoning and explanation. It publishes evidence-backed, line-level feedback on the PR and records every review so quality can be measured over time.
 
-It assists human reviewers. It never merges, approves, requests changes, or pushes code.
+It assists human reviewers. It never merges or pushes code. It publishes `COMMENT`, `REQUEST_CHANGES` and (only when a repository opts in and every policy gate passes) `APPROVE` reviews, always labelled as automated, per ED-018.
 
 ## 2. Why it matters
 - Reviewers spend time on mechanical issues and miss cross-file regressions and security problems.
@@ -35,7 +35,7 @@ Rules: no finding without evidence; an LLM observation is never labelled "verifi
 | J History/analytics | Search, filters, resolve/dismiss, export | Feedback-driven learning (carefully) |
 
 ## 6. Non-goals (v1)
-Auto-merge or auto-approve; autonomous commits; running PR code; replacing formatters/linters for style; GitLab/Bitbucket; on-prem enterprise packaging.
+Auto-merge; approving without an explicit per-repository opt-in; autonomous commits; running PR code; replacing formatters/linters for style; GitLab/Bitbucket; on-prem enterprise packaging.
 
 ## 7. Differentiation (prioritized by feasibility x measurable value)
 1. Cross-file, dependency-aware review (callers/callees of changed symbols in Python/TS). High value, feasible.
