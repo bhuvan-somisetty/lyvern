@@ -170,3 +170,7 @@ Verify Docker daemon, scaffold M1, run tests, commit on a feature branch.
 - Mutation checks: making `is_blocking` return True failed 3 tests; removing the "other stage failed" approval obstacle failed 1 test (note: the random invariant test did not catch that one, only the targeted test did; raise example counts or add a targeted strategy later). Restored; 47 pass.
 - Local gate: ruff 0, format 0, mypy --strict 0 (21 files), pytest tests/unit 75 passed.
 - Limitation to remember: this is the review LOGIC. Nothing yet talks to GitHub, runs analyzers, calls an LLM, or trains a model. No accuracy claim exists or may be made.
+
+### Session 2: CI verified green (2026-11-16 IST)
+- GitHub Actions run 43774680130 on commit b87b702 (phase-1/foundation): conclusion success. This verifies the earlier hypothesis: starting the worker from `.venv/bin/celery` and stopping it in an `if: always()` step removed the setup-uv post-job cache-prune failure. Python job (lint, format, mypy, migrations up/down/up, worker, 15 tests) and web job (lint, typecheck, test, build) both passed on GitHub's runners.
+- A new run for ca5e283 (engine part 2) was started by the push; its result is not yet recorded here.
