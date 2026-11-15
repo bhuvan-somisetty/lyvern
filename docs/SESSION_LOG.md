@@ -141,3 +141,9 @@ Verify Docker daemon, scaffold M1, run tests, commit on a feature branch.
 - Web steps on the clean clone now: install --frozen-lockfile 0, eslint 0, typecheck 0 (after fix), vitest 0, build 0.
 - Note: a PowerShell call with `Remove-Item` was blocked by the tool's path protection; nothing in it ran. For the re-test I renamed the generated files in the throwaway clone instead of deleting.
 - Still unverified: an actual GitHub Actions run (no remote).
+
+### Session 2: rename to Lyvern (2026-11-16 IST)
+- Owner chose the product name Lyvern. Renamed: `packages/printel` -> `packages/lyvern` (module `lyvern`), `printel_api` -> `lyvern_api`, `printel_worker` -> `lyvern_worker`, env prefix `PRINTEL_` -> `LYVERN_`, Compose project and DB user/name `lyvern`, default display name "Lyvern" (config `product_name`, web `src/lib/brand.ts`). `uv.lock` regenerated. History files (this log, ED-001..ED-016, brand shortlist) keep the old names on purpose. New decision ED-017.
+- Before the rename I stopped the old `pr-intel` stack with `docker compose down -v` (removed its dev DB volume `pr-intel_dbdata`, created this session, it only held the pgvector extension).
+- Verified after rename (exit codes): ruff 0, ruff format 0, mypy 0 (13 files), pytest 15 passed (including the real worker round trip and the Redis-version guard), compose: db/redis/api/worker healthy, migrate exit 0, `/readyz` ready; web: lint 0, typecheck 0, vitest 0, build 0.
+- Next: rename the local folder pr-intel -> lyvern, create the PRIVATE GitHub repo `lyvern` under bhuvan-somisetty, push, watch the first real CI run.
