@@ -83,3 +83,10 @@ Rejected after checks. npm taken (reptile 3.0.2, "Plugin for creating a REPL"), 
 
 ## Owner suggestion: "CodeScout" (2026-11-16)
 Real lookups. codescout: npm free, PyPI taken, GitHub account taken, 40 repos with that exact name (incl. OpenHands/codescout, "agentic code search", 93 stars; mareurs/codescout, MCP code-intelligence server), .com/.io/.ai resolve, .dev/.app showed no DNS. code-scout: npm free, PyPI free, GitHub account taken, 14 repos. Web search: no single dominant "CodeScout" company found, but "Scout" is crowded in AI code review (Scout0, a Scout code-intelligence tool). Assessment: easy to spell and meaningful, but two common words (weak trademark, hard to own) with direct overlap in AI code tooling. Usable as a working name, risky as a company brand.
+
+## Owner suggestions: "CodeShield", "CodeLens", "CodePulse" (2026-11-16)
+All three rejected after real lookups (npm, PyPI, GitHub, DNS, web search).
+- CodeShield: npm free; PyPI taken; GitHub account taken; 93 repos with that name. Existing products: Meta PurpleLlama "CodeShield" (insecure-code filter, part of LlamaFirewall), CodeShield AI (repo security analyzer using static analysis + LLM), a local CodeShield auditor. Same space.
+- CodeLens: npm free; PyPI free; GitHub account taken; 87 repos. "CodeLens" is a built-in Microsoft Visual Studio feature and a VS Code API term; also an MCP server and an AI code review tool named CodeLens. All five domains resolve.
+- CodePulse: npm free; PyPI taken; GitHub account taken; 93 repos. An engineering analytics platform named CodePulse (GitHub-integrated, listed on G2/Capterra) exists, plus another AI code review tool at getcodepulse and codedx/codepulse. Direct conflict with a GitHub-integrated product. .dev showed no DNS.
+Pattern: "Code" + common noun names are all in use in this market.
