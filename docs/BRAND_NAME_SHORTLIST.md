@@ -50,3 +50,16 @@ Coined candidates keeping the idea (NOT yet searched): Vigyl (from vigil), Skopy
 
 ## Owner suggestion: "code-reviewer" (2026-11-16)
 Checked with real lookups. npm: `code-reviewer` exists (v0.0.1, "Automate your code reviews"). PyPI: no package (HTTP 404). GitHub: a user account `code-reviewer` exists; many repos named code-reviewer / ai-code-reviewer. Domains code-reviewer.com/.dev, codereviewer.com/.dev/.ai: the probe returned no HTTP answer (code 000), which is NOT proof they are available; check a registrar. Web search: "Code Reviewer" is already a product name (Atlassian Code Reviewer, Tenki Code Reviewer) and a generic phrase, the kind PROJECT directive said to avoid (like CodeReview). Not recommended as a brand.
+
+## Availability scan, 2026-11-16 (real lookups; still not legal clearance)
+Checked npm, PyPI, GitHub account, exact-name GitHub repos, DNS, and one web search per new name.
+| Name | npm | PyPI | GitHub account | exact-name repos | DNS (.com / .dev .io .ai) | Web search |
+|---|---|---|---|---|---|---|
+| Skopyr | free | free | free | 0 | .com resolves (registered or parked) / no record | no exact hit; near-names Skope (YC AI law agents), Skopic, Skopiq (automation firm) |
+| Lyvern | free | free | taken (a user) | 0 | .com resolves / no record | no hit (earlier search) |
+| Oculyx | free | free | free | 4 | .com resolves / no record | no exact hit; near-names Oculogyx (eyecare AI), Oculyze (biotech image AI) |
+| Vigyl | free | free | taken (a user) | 5 | not checked | no hit |
+| Auspyr | free | free | taken (an organization) | 0 | not checked | no hit |
+| Voryn, Trevyn, Nyxel, Auvex | free | free | taken (users) | 16, 3, 14, 2 | not checked | no direct hit |
+Notes: my first script run wrongly showed skopyr and oculyx as taken on GitHub (it read the 404 body as an account); corrected by a second check (HTTP 404 = free). A taken GitHub user can still be sidestepped with an org name such as `getlyvern`. "No DNS record" suggests but does not prove a domain is unregistered; the .com names resolve, so they are likely registered or parked.
+Recommendation given to owner: 1) Skopyr, 2) Lyvern, 3) Oculyx.
