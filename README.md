@@ -31,5 +31,15 @@ uv run pytest tests            # integration tests need `docker compose up -d`
 cd apps/web && pnpm install && pnpm dev
 ```
 
+## Status (2026-11-16)
+Built and verified: repository, CI (green on GitHub), Docker stack, API health endpoints, worker, migrations, dashboard shell, and the review engine core (finding model, diff parser verified against real `git diff`, dedup and ranking, comment placement, review decision engine, review rendering) with 75 unit tests.
+Not built yet: GitHub App connection, static-analysis adapters, code understanding, ML models, LLM layer, benchmark, dashboard pages. Nothing here reviews a real PR end to end yet, and no accuracy figure exists.
+
+## Where is the code
+- `packages/lyvern/src/lyvern/engine/` review logic (contracts, diff, dedup, placement, decision, policy, render)
+- `packages/lyvern/src/lyvern/` shared core (config, logging, database, Celery app)
+- `apps/api` FastAPI service, `apps/worker` Celery worker, `apps/web` Next.js dashboard
+- `tests/` unit and integration tests; `.github/workflows/ci.yml` CI
+
 ## Documentation
-Start with `PROJECT_RULES.md` and `docs/SESSION_LOG.md`.
+Start with `docs/PROJECT_HANDBOOK.md` (everything, A to Z), then `docs/PRD.md` (product requirements) and `docs/TRD.md` (technical requirements). Also: `PROJECT_RULES.md`, `docs/ARCHITECTURE.md`, `docs/DATABASE_SCHEMA.md`, `docs/API_SPECIFICATION.md`, `docs/ML_DESIGN.md`, `docs/SECURITY.md`, `docs/ROADMAP.md`, `docs/ENGINEERING_DECISIONS.md`, `docs/REFERENCE_RESEARCH.md`, `docs/SESSION_LOG.md`.

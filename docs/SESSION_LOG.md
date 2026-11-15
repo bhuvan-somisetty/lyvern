@@ -174,3 +174,9 @@ Verify Docker daemon, scaffold M1, run tests, commit on a feature branch.
 ### Session 2: CI verified green (2026-11-16 IST)
 - GitHub Actions run 43774680130 on commit b87b702 (phase-1/foundation): conclusion success. This verifies the earlier hypothesis: starting the worker from `.venv/bin/celery` and stopping it in an `if: always()` step removed the setup-uv post-job cache-prune failure. Python job (lint, format, mypy, migrations up/down/up, worker, 15 tests) and web job (lint, typecheck, test, build) both passed on GitHub's runners.
 - A new run for ca5e283 (engine part 2) was started by the push; its result is not yet recorded here.
+
+### Session 2: documentation set and publishing (2026-11-16 IST)
+- Owner asked for PRD, TRD, an A-to-Z project document (features, what is special, why these choices, comparison with similar tools, how the product is used), code visible in the OneDrive folder, and everything pushed to GitHub.
+- Wrote `docs/PRD.md`, `docs/TRD.md`, `docs/PROJECT_HANDBOOK.md`; every feature and claim is labelled BUILT / DESIGNED / PLANNED. The handbook example is real output of `render_inline` / `render_summary` on a sample patch; its finding was supplied by hand and the doc says so. Competitor descriptions are limited to what was seen in research and carry a "verify before quoting; no superiority claimed" warning.
+- Explained usage to the owner: a GitHub App plus a web dashboard (not a browser extension); install once, open PRs as normal, review appears on the PR; optional local CLI planned.
+- README now has status, a code map and doc links; CHANGELOG updated.
