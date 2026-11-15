@@ -93,3 +93,6 @@ Pattern: "Code" + common noun names are all in use in this market.
 
 ## Owner suggestion: "CodeIntel" (2026-11-16)
 Rejected. codeintel: npm taken (v1.0.0, repository mapping engine via static analysis), PyPI taken, GitHub account taken, 43 repos; code-intel: npm and PyPI free, GitHub account taken, 16 repos. All five domains (.com .dev .io .ai .app) resolve. "CodeIntel" is an established name for the Komodo/SublimeCodeIntel engine (SublimeCodeIntel 5k stars) and "code intelligence" is a generic industry term (Sourcegraph feature, Gartner category); a separate open-source "Code Intel" AI codebase analysis tool exists; near-name Entelligence AI (AI code review). Better used as a descriptor than a brand.
+
+## DECISION (2026-11-16): owner selected "Lyvern"
+Owner chose Lyvern after the availability scans. Known caveats recorded earlier: the GitHub user account `lyvern` is already taken (use the repo name `lyvern` under the owner's account and an org name such as `getlyvern` if an org is wanted); lyvern.com resolves (registered or parked), .dev/.io/.ai showed no DNS record; no trademark search done; npm and PyPI names were free on 2026-11-16 but are not reserved.
