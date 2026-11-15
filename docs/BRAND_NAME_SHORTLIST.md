@@ -90,3 +90,6 @@ All three rejected after real lookups (npm, PyPI, GitHub, DNS, web search).
 - CodeLens: npm free; PyPI free; GitHub account taken; 87 repos. "CodeLens" is a built-in Microsoft Visual Studio feature and a VS Code API term; also an MCP server and an AI code review tool named CodeLens. All five domains resolve.
 - CodePulse: npm free; PyPI taken; GitHub account taken; 93 repos. An engineering analytics platform named CodePulse (GitHub-integrated, listed on G2/Capterra) exists, plus another AI code review tool at getcodepulse and codedx/codepulse. Direct conflict with a GitHub-integrated product. .dev showed no DNS.
 Pattern: "Code" + common noun names are all in use in this market.
+
+## Owner suggestion: "CodeIntel" (2026-11-16)
+Rejected. codeintel: npm taken (v1.0.0, repository mapping engine via static analysis), PyPI taken, GitHub account taken, 43 repos; code-intel: npm and PyPI free, GitHub account taken, 16 repos. All five domains (.com .dev .io .ai .app) resolve. "CodeIntel" is an established name for the Komodo/SublimeCodeIntel engine (SublimeCodeIntel 5k stars) and "code intelligence" is a generic industry term (Sourcegraph feature, Gartner category); a separate open-source "Code Intel" AI codebase analysis tool exists; near-name Entelligence AI (AI code review). Better used as a descriptor than a brand.
