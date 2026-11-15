@@ -1,0 +1,31 @@
+@import "tailwindcss";
+
+/* Neutral foundation tokens. The final visual identity waits for the chosen product name. */
+:root {
+  --background: #141414;
+  --foreground: #ece7df;
+  --muted: #a39d94;
+  --accent: #e5173f;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
