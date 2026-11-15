@@ -80,3 +80,6 @@ Recommendation given: 1) Heedly 2) Vetly 3) Keenly. Trade-off stated to owner: s
 
 ## Owner suggestion: "Reptile" (2026-11-16)
 Rejected after checks. npm taken (reptile 3.0.2, "Plugin for creating a REPL"), PyPI taken, GitHub account taken, 48 repos with that exact name, .com/.dev/.io/.ai/.app all resolve. One letter away from Greptile (greptile.com), an AI pull-request code review company that raised $25M: high risk of confusion and trademark conflict in exactly our market.
+
+## Owner suggestion: "CodeScout" (2026-11-16)
+Real lookups. codescout: npm free, PyPI taken, GitHub account taken, 40 repos with that exact name (incl. OpenHands/codescout, "agentic code search", 93 stars; mareurs/codescout, MCP code-intelligence server), .com/.io/.ai resolve, .dev/.app showed no DNS. code-scout: npm free, PyPI free, GitHub account taken, 14 repos. Web search: no single dominant "CodeScout" company found, but "Scout" is crowded in AI code review (Scout0, a Scout code-intelligence tool). Assessment: easy to spell and meaningful, but two common words (weak trademark, hard to own) with direct overlap in AI code tooling. Usable as a working name, risky as a company brand.
