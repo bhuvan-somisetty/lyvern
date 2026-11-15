@@ -1,0 +1,44 @@
+# BRAND_NAME_SHORTLIST
+
+Status: NO NAME SELECTED. The owner chooses. Nothing in the codebase uses any of these names; the temporary identifier is `pr-intel`.
+
+## How these were checked (and the limits)
+Date: 2026-11-15 (IST). For each searched name I ran one web search of the form `"<Name>" software OR developer tool OR startup`. The search tool is not an exact-match engine, so "no direct hit" means weak evidence of availability, not proof. A "conflict" means a real existing company or product with that name was found. **Not checked at all**: domain availability (.com/.dev/.io), trademark registers (USPTO, WIPO, India IPO), GitHub organization/npm/PyPI name availability, app-store names, social handles, meaning in other languages. These need separate verification before any commitment, ideally with a trademark attorney.
+
+## The 20 names
+| # | Name | Chars | Searched | Result |
+|---|---|---|---|---|
+| 1 | Lyvern | 6 | yes | no direct hit found |
+| 2 | Trevyn | 6 | yes | no direct hit found (it is also a given name, so many personal pages likely) |
+| 3 | Voryn | 5 | yes | no direct hit; near-name "Voryntel" exists (startup comparison page) |
+| 4 | Nyxel | 5 | yes | no direct hit; near-names "Nyx Development" (dev tools, 2026), "Nyxhora" exist |
+| 5 | Auvex | 5 | yes | no direct hit; near-names Auvenir, Avoryx, Aurix exist |
+| 6 | Kelvyr | 6 | yes | no direct hit; near-name "Kelvra" (programming language) exists |
+| 7 | Praxon | 6 | yes | CONFLICT: Praxon Informatics (HR/payroll software, Bangalore) and another Praxon (telecom) |
+| 8 | Zerith | 6 | yes | CONFLICT: Zerith Studios (AI product studio, 2026) |
+| 9 | Vaelor | 6 | yes | CONFLICT: Vaelor (software solutions company) |
+| 10 | Strova | 6 | yes | CONFLICT: several companies named Strova (AI data, standup tool, retail) |
+| 11 | Hexora | 6 | no | unchecked |
+| 12 | Quorin | 6 | no | unchecked |
+| 13 | Orvyn | 5 | no | unchecked |
+| 14 | Cirrel | 6 | no | unchecked |
+| 15 | Syrel | 5 | no | unchecked |
+| 16 | Mirvel | 6 | no | unchecked |
+| 17 | Ilyra | 5 | no | unchecked |
+| 18 | Carvyn | 6 | no | unchecked |
+| 19 | Pyrel | 5 | no | unchecked |
+| 20 | Altyr | 5 | no | unchecked |
+
+Names 7-10 stay in the list only as a record of what was rejected after checking; they are not recommended. Names 11-20 are unvetted candidates.
+
+## Top five recommendations (searched, no direct conflict found)
+1. **Lyvern**: two syllables, sounds technical and calm; "lyv"/"vern" has no obvious meaning to anchor on, which is good for an invented brand.
+2. **Voryn**: very short, strong consonants; watch the near-name Voryntel.
+3. **Trevyn**: pronounceable and warm; weaker as a trademark because it is also a personal name.
+4. **Nyxel**: futuristic feel ("nyx" = night in Greek; pixel-like ending); watch near-names starting with Nyx.
+5. **Auvex**: crisp and premium-sounding; watch similar names Auvenir/Aurix.
+
+Kelvyr (6) is a close sixth; its neighbor Kelvra is a programming language, which is a developer-tools adjacency to avoid.
+
+## Next steps once the owner picks a shortlist of 2-3
+Check domains and handles, run trademark searches in the target markets, search GitHub/npm/PyPI, test pronunciation with others, then choose. Branding, logo and UI wordmark are only started after the final selection.
