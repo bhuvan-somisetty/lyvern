@@ -6,12 +6,12 @@ The database is the source of truth for review jobs; the queue only carries work
 import redis
 from celery import Celery
 
-from printel.config import get_settings
+from lyvern.config import get_settings
 
 
 def _make_celery() -> Celery:
     redis_url = get_settings().redis_url.get_secret_value()
-    app = Celery("printel", broker=redis_url, backend=redis_url, include=["printel.tasks"])
+    app = Celery("lyvern", broker=redis_url, backend=redis_url, include=["lyvern.tasks"])
     app.conf.update(
         task_acks_late=True,
         task_reject_on_worker_lost=True,

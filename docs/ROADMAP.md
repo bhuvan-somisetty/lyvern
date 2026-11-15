@@ -18,7 +18,7 @@ Phase 0 (this foundation): COMPLETE when the owner approves the documents. Phase
 ## M2. GitHub App core (Phase 2a)
 - **Objective**: secure ingestion of PR events and storage of review jobs.
 - **Components**: signature verification, delivery dedup, event router, installation/repository sync, installation-token client with caching, GitHub API client with rate-limit and retry handling, review-run state machine, audit log, Celery job.
-- **Modules**: `apps/api/webhooks`, `printel/github/`, `printel/db/`.
+- **Modules**: `apps/api/webhooks`, `lyvern/github/`, `lyvern/db/`.
 - **Dependencies**: M1; a test GitHub App registered by the owner (needs owner action); a public tunnel for local webhooks.
 - **Risks**: webhook ordering and bursts; token expiry; rate limits; GitHub API pagination of files.
 - **Tests**: signature valid/invalid/tampered, duplicate delivery, out-of-order events, token refresh, rate-limit backoff using recorded fixtures; one manual end-to-end on a throwaway repo.
@@ -28,7 +28,7 @@ Phase 0 (this foundation): COMPLETE when the owner approves the documents. Phase
 ## M3. Diff intelligence + publisher (Phase 2b/3a)
 - **Objective**: correct diff parsing and safe comment publishing, proven with a trivial rule.
 - **Components**: unified-diff parser (hunks, line maps, renames, binary, no-newline marker), generated/vendored/lockfile skip rules, large-PR strategy (priority ordering and truncation notices), line-validity checker, review publisher (`COMMENT` only), stale-SHA handling.
-- **Modules**: `engine/diff_parser`, `printel/github/publisher.py`.
+- **Modules**: `engine/diff_parser`, `lyvern/github/publisher.py`.
 - **Dependencies**: M2.
 - **Risks**: off-by-one line mapping; CRLF; huge diffs; rename+edit.
 - **Tests**: property-based tests on generated diffs, golden fixtures from real PRs, round-trip of added-line positions against the GitHub API.
@@ -68,7 +68,7 @@ Phase 0 (this foundation): COMPLETE when the owner approves the documents. Phase
 ## M7. LLM review engine (Phase 5a)
 - **Objective**: provider-neutral, schema-validated reasoning with budgets.
 - **Components**: `LLMProvider` protocol + 2 providers, prompt builder with untrusted-data delimiting, token budgeter, redaction, schema validation + repair-or-discard, retries/timeouts, cost accounting, injection test corpus.
-- **Modules**: `printel/llm/`, `engine/review_orchestrator/context.py`.
+- **Modules**: `lyvern/llm/`, `engine/review_orchestrator/context.py`.
 - **Dependencies**: M4, M5; owner-provided API key and cost ceiling.
 - **Risks**: prompt injection, hallucinated lines, cost blow-ups, provider drift.
 - **Tests**: mock provider tests, malformed-JSON handling, injection corpus must not change behavior, redaction tests, budget enforcement.

@@ -1,10 +1,10 @@
-"""Alembic environment. The URL comes from application settings (PRINTEL_DATABASE_URL)."""
+"""Alembic environment. The URL comes from application settings (LYVERN_DATABASE_URL)."""
 
 from alembic import context
 from sqlalchemy import create_engine
 
-from printel.config import get_settings
-from printel.db.base import Base
+from lyvern.config import get_settings
+from lyvern.db.base import Base
 
 target_metadata = Base.metadata
 

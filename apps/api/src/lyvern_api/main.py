@@ -6,11 +6,11 @@ from collections.abc import Awaitable, Callable
 from fastapi import FastAPI, Request, Response
 from fastapi.responses import JSONResponse
 
-from printel import __version__
-from printel.celery_app import check_redis
-from printel.config import get_settings
-from printel.db import check_db
-from printel.logging import configure_logging, correlation_id
+from lyvern import __version__
+from lyvern.celery_app import check_redis
+from lyvern.config import get_settings
+from lyvern.db import check_db
+from lyvern.logging import configure_logging, correlation_id
 
 
 def create_app() -> FastAPI:

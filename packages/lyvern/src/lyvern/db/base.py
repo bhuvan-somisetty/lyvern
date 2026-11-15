@@ -6,7 +6,7 @@ from sqlalchemy import MetaData, create_engine, text
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import DeclarativeBase
 
-from printel.config import get_settings
+from lyvern.config import get_settings
 
 NAMING_CONVENTION = {
     "ix": "ix_%(column_0_label)s",

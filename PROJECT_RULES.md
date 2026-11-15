@@ -2,7 +2,7 @@
 
 Permanent engineering and collaboration rules. Read this file, `docs/SESSION_LOG.md` and the relevant specs at the start of every session.
 
-Temporary project identifier: **pr-intel** (Python package prefix `printel`). The product name is NOT chosen. Do not hardcode a brand anywhere; read it from one config constant when the owner decides. See `docs/BRAND_NAME_SHORTLIST.md`.
+Product name: **Lyvern** (chosen by the owner on 2026-11-16; Python package, repo and env prefix are `lyvern` / `LYVERN_`). Do not scatter the display name through the code; read it from the one config constant (`product_name` in the API, `src/lib/brand.ts` in the web app). Trademark and domain checks are still open; see `docs/BRAND_NAME_SHORTLIST.md`.
 
 ## 1. Ownership and decisions
 - The owner (Bhuvan Somisetty) decides product direction, architecture, cost and security trade-offs.

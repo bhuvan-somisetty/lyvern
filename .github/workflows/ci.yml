@@ -20,12 +20,12 @@ jobs:
       db:
         image: pgvector/pgvector:pg16
         env:
-          POSTGRES_USER: printel
-          POSTGRES_PASSWORD: printel
-          POSTGRES_DB: printel
+          POSTGRES_USER: lyvern
+          POSTGRES_PASSWORD: lyvern
+          POSTGRES_DB: lyvern
         ports: ["5432:5432"]
         options: >-
-          --health-cmd "pg_isready -U printel -d printel" --health-interval 5s
+          --health-cmd "pg_isready -U lyvern -d lyvern" --health-interval 5s
           --health-timeout 3s --health-retries 10
       redis:
         image: redis:7-alpine
@@ -34,9 +34,9 @@ jobs:
           --health-cmd "redis-cli ping" --health-interval 5s --health-timeout 3s
           --health-retries 10
     env:
-      PRINTEL_ENVIRONMENT: test
-      PRINTEL_DATABASE_URL: postgresql+psycopg://printel:printel@localhost:5432/printel
-      PRINTEL_REDIS_URL: redis://localhost:6379/0
+      LYVERN_ENVIRONMENT: test
+      LYVERN_DATABASE_URL: postgresql+psycopg://lyvern:lyvern@localhost:5432/lyvern
+      LYVERN_REDIS_URL: redis://localhost:6379/0
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
@@ -52,7 +52,7 @@ jobs:
       - run: uv run alembic upgrade head
       - name: Start worker
         run: |
-          nohup uv run celery -A printel_worker.app worker --loglevel=INFO > worker.log 2>&1 &
+          nohup uv run celery -A lyvern_worker.app worker --loglevel=INFO > worker.log 2>&1 &
           sleep 10
       - run: uv run pytest tests -q
       - name: Worker log on failure

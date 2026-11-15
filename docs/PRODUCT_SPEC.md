@@ -1,6 +1,6 @@
 # PRODUCT_SPEC
 
-Status: draft v0.1 for owner approval. Project identifier: `pr-intel` (name not chosen).
+Status: draft v0.1 for owner approval. Product name: Lyvern (chosen 2026-11-16).
 
 ## 1. What we are building
 A GitHub App plus web dashboard that reviews pull requests with a layered pipeline: structural code understanding, established static-analysis tools, small evaluated ML components, and an LLM used for reasoning and explanation. It publishes evidence-backed, line-level feedback on the PR and records every review so quality can be measured over time.

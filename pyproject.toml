@@ -1,17 +1,17 @@
 [project]
-name = "pr-intel-workspace"
+name = "lyvern-workspace"
 version = "0.0.0"
-description = "Workspace root for the pull request intelligence platform (temporary project identifier)."
+description = "Workspace root for the pull request intelligence platform."
 requires-python = ">=3.12,<3.13"
 dependencies = []
 
 [tool.uv.workspace]
-members = ["packages/printel", "apps/api", "apps/worker"]
+members = ["packages/lyvern", "apps/api", "apps/worker"]
 
 [tool.uv.sources]
-printel = { workspace = true }
-printel-api = { workspace = true }
-printel-worker = { workspace = true }
+lyvern = { workspace = true }
+lyvern-api = { workspace = true }
+lyvern-worker = { workspace = true }
 
 [dependency-groups]
 dev = [
@@ -19,15 +19,15 @@ dev = [
     "httpx>=0.27",
     "ruff>=0.8",
     "mypy>=1.13",
-    "printel",
-    "printel-api",
-    "printel-worker",
+    "lyvern",
+    "lyvern-api",
+    "lyvern-worker",
 ]
 
 [tool.ruff]
 line-length = 100
 target-version = "py312"
-src = ["packages/printel/src", "apps/api/src", "apps/worker/src", "tests"]
+src = ["packages/lyvern/src", "apps/api/src", "apps/worker/src", "tests"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "B", "UP", "S", "C4", "SIM", "RUF"]
@@ -39,7 +39,7 @@ select = ["E", "F", "W", "I", "B", "UP", "S", "C4", "SIM", "RUF"]
 python_version = "3.12"
 strict = true
 plugins = ["pydantic.mypy"]
-files = ["packages/printel/src", "apps/api/src", "apps/worker/src"]
+files = ["packages/lyvern/src", "apps/api/src", "apps/worker/src"]
 
 [[tool.mypy.overrides]]
 module = ["celery.*", "alembic.*"]

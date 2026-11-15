@@ -7,5 +7,5 @@ COPY pyproject.toml uv.lock alembic.ini ./
 COPY packages ./packages
 COPY apps ./apps
 RUN uv sync --frozen --no-dev --all-packages
-RUN useradd --system --uid 10001 printel
-USER printel
+RUN useradd --system --uid 10001 lyvern
+USER lyvern

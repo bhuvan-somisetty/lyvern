@@ -1,7 +1,7 @@
 import json
 import logging
 
-from printel.logging import JsonFormatter, correlation_id, scrub
+from lyvern.logging import JsonFormatter, correlation_id, scrub
 
 
 def _format(msg: str, **extra: object) -> dict[str, object]:

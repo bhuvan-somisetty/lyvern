@@ -3,9 +3,9 @@
 import pytest
 from sqlalchemy import text
 
-from printel.celery_app import celery_app, check_redis
-from printel.db import check_db, get_engine
-from printel.tasks import ping
+from lyvern.celery_app import celery_app, check_redis
+from lyvern.db import check_db, get_engine
+from lyvern.tasks import ping
 
 pytestmark = pytest.mark.integration
 
@@ -24,7 +24,7 @@ def test_pgvector_extension_present_after_migration() -> None:
 
 
 def test_task_is_registered_and_runs_eagerly() -> None:
-    assert "printel.ping" in celery_app.tasks
+    assert "lyvern.ping" in celery_app.tasks
     assert ping.apply().get() == "pong"
 
 
@@ -37,7 +37,7 @@ def test_redis_is_the_project_instance() -> None:
     """Guard against another Redis (e.g. in WSL) answering on the same port."""
     import redis
 
-    from printel.config import get_settings
+    from lyvern.config import get_settings
 
     client = redis.Redis.from_url(get_settings().redis_url.get_secret_value())
     assert str(client.info("server")["redis_version"]).startswith("7.")

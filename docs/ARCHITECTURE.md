@@ -39,7 +39,7 @@ Each step is a function over typed Pydantic models, so a step can be run and tes
 - **Isolation of untrusted code**: PR code is only read as text and parsed. Static analyzers read files but never execute them; Semgrep/ESLint run with no repo-supplied config trusted (our configs only), in a worker container with no secrets in its environment and limited CPU/memory/time. No `npm install`, no running tests.
 - **Parsing**: Python `ast` for precise Python facts, tree-sitter for everything else (error-tolerant, gives byte/line ranges). Language adapters implement one `LanguageAdapter` protocol (`parse`, `symbols`, `imports`, `enclosing_symbol(line)`, `limitations`).
 - **Embeddings**: pgvector in the same Postgres to avoid another datastore; model chosen after the E2 benchmark.
-- **LLM layer**: `LLMProvider` protocol (`complete(messages, schema, budget) -> result + usage`), implementations behind config. No provider SDK imported outside `printel/llm/providers/`.
+- **LLM layer**: `LLMProvider` protocol (`complete(messages, schema, budget) -> result + usage`), implementations behind config. No provider SDK imported outside `lyvern/llm/providers/`.
 - **Multi-tenancy**: every tenant table carries `organization_id`; plan to add Postgres row-level security as defense in depth, plus repository-scoped checks in the service layer.
 
 ## 4. Proposed deviations from the suggested repository layout (need approval)
@@ -47,7 +47,7 @@ Each step is a function over typed Pydantic models, so a step can be run and tes
 |---|---|---|
 | `packages/shared-types` hand-written | Generate TS types/client from the FastAPI OpenAPI schema | Keeps frontend/backend contracts in sync automatically |
 | `packages/review-sdk` | Defer; not needed until there is an external consumer | Avoid unnecessary abstraction |
-| `engine/` top-level separate from `apps/` | Keep, but make it one installable Python package `printel` with sub-packages, managed by a uv workspace | One lockfile, simple imports, still independently testable |
+| `engine/` top-level separate from `apps/` | Keep, but make it one installable Python package `lyvern` with sub-packages, managed by a uv workspace | One lockfile, simple imports, still independently testable |
 | `infrastructure/github` | Keep as docs + app manifest JSON only | No code needed there |
 | `tests/` all at root | Keep root `tests/` for cross-module integration/e2e/security/ml; unit tests live next to each package | Faster feedback and clearer ownership |
 

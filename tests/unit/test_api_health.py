@@ -2,7 +2,7 @@ from unittest.mock import patch
 
 from fastapi.testclient import TestClient
 
-from printel_api.main import create_app
+from lyvern_api.main import create_app
 
 
 def test_healthz_and_request_id() -> None:
@@ -15,8 +15,8 @@ def test_healthz_and_request_id() -> None:
 
 def test_readyz_503_when_dependency_down() -> None:
     with (
-        patch("printel_api.main.check_db", return_value=True),
-        patch("printel_api.main.check_redis", return_value=False),
+        patch("lyvern_api.main.check_db", return_value=True),
+        patch("lyvern_api.main.check_redis", return_value=False),
     ):
         r = TestClient(create_app()).get("/readyz")
     assert r.status_code == 503
@@ -25,8 +25,8 @@ def test_readyz_503_when_dependency_down() -> None:
 
 def test_readyz_200_when_all_up() -> None:
     with (
-        patch("printel_api.main.check_db", return_value=True),
-        patch("printel_api.main.check_redis", return_value=True),
+        patch("lyvern_api.main.check_db", return_value=True),
+        patch("lyvern_api.main.check_redis", return_value=True),
     ):
         r = TestClient(create_app()).get("/readyz")
     assert r.status_code == 200

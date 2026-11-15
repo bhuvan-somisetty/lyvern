@@ -56,3 +56,6 @@ Status: Accepted (2026-11-16). Postgres on host 5433, Redis on host 6380 (overri
 
 ## ED-016 Python workspace layout
 Status: Accepted (2026-11-16). `packages/printel` (shared core, later also engine sub-packages), `apps/api`, `apps/worker`, managed by a uv workspace; Docker images use `uv sync --frozen --no-dev --all-packages`. Refines ED-013.
+
+## ED-017 Product name Lyvern replaces the temporary identifier
+Status: Accepted (owner, 2026-11-16). Supersedes ED-001's temporary names. Python package `printel` -> `lyvern`, apps `printel_api`/`printel_worker` -> `lyvern_api`/`lyvern_worker`, env prefix `PRINTEL_` -> `LYVERN_`, Docker Compose project and database user/name -> `lyvern`, display name default "Lyvern". Earlier log and decision entries keep the old names as history. The name stays behind one constant per app.
