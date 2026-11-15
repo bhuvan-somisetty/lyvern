@@ -42,3 +42,8 @@ Kelvyr (6) is a close sixth; its neighbor Kelvra is a programming language, whic
 
 ## Next steps once the owner picks a shortlist of 2-3
 Check domains and handles, run trademark searches in the target markets, search GitHub/npm/PyPI, test pronunciation with others, then choose. Branding, logo and UI wordmark are only started after the final selection.
+
+## Owner suggestion: "Inspector" (2026-11-16)
+Owner proposed "Inspector". Checked with two web searches (not exact-match, not legal clearance). Finding: crowded in our exact niche, so not recommended as the brand. Existing uses found: Kusari Inspector (GitHub app, AI review of PRs with security scans), Code Inspector (automated code review platform), Inspector.dev (application monitoring), "Inspector" (visual code editor for coding agents), `inspect-review` (GitHub app), `inspectra` (PyPI, AI code review engine for pull requests). A common dictionary word is also hard to trademark and to find in search.
+Alternative: use an invented word as the brand and "inspector" as the descriptor ("<Name>, the pull request inspector").
+Coined candidates keeping the idea (NOT yet searched): Vigyl (from vigil), Skopyr (from skopos), Oculyx (from oculus), Auspyr (from auspex). Also: avoid "Inspectra" (exists).
