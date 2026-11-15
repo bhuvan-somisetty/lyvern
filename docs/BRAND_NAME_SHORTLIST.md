@@ -63,3 +63,17 @@ Checked npm, PyPI, GitHub account, exact-name GitHub repos, DNS, and one web sea
 | Voryn, Trevyn, Nyxel, Auvex | free | free | taken (users) | 16, 3, 14, 2 | not checked | no direct hit |
 Notes: my first script run wrongly showed skopyr and oculyx as taken on GitHub (it read the 404 body as an account); corrected by a second check (HTTP 404 = free). A taken GitHub user can still be sidestepped with an org name such as `getlyvern`. "No DNS record" suggests but does not prove a domain is unregistered; the .com names resolve, so they are likely registered or parked.
 Recommendation given to owner: 1) Skopyr, 2) Lyvern, 3) Oculyx.
+
+## Easy-to-spell round, 2026-11-16 (owner asked for something easy to spell)
+Real lookups (npm, PyPI, GitHub account/repos, DNS) plus one web search per name. Not legal clearance; DNS "registered?" means the name resolves.
+| Name | npm | PyPI | GitHub acct | repos | DNS .com .dev .io .ai | Web search finding |
+|---|---|---|---|---|---|---|
+| Heedly | free | free | taken | 2 | reg, reg, reg, reg | no hit (near-name Heedjy, an app-directory tool) |
+| Vetly | free | free | taken | 23 | none, none, reg, reg | "Vet-ly": veterinary clinic SOP app on Product Hunt (different industry, same name); "vet" also reads as veterinary |
+| Keenly | free | free | taken | 6 | reg x4 | no hit; plain English adverb, weak as a trademark |
+| Peerly | TAKEN | free | taken | 67 | reg x4 | rejected: crowded |
+| Revly | free | free | taken | 28 | reg, none, reg, reg | rejected: sounds identical to Revyl (revyl.ai), an AI code-review platform |
+| Lumo | TAKEN | TAKEN | taken | 17 | reg x4 | rejected |
+| Tavo | free | TAKEN | taken | 82 | reg x3, none | rejected |
+| Rivu | TAKEN | free | taken | 24 | none, reg x3 | rejected |
+Recommendation given: 1) Heedly 2) Vetly 3) Keenly. Trade-off stated to owner: simple names are mostly taken as domains/handles; invented names (Skopyr, Lyvern) are more ownable but harder to spell.
