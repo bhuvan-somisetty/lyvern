@@ -26,7 +26,11 @@ It is not a chatbot wrapped around a diff. The language model is one input among
 
 **Who uses it:** individual developers and students (a second pair of eyes), open-source maintainers (first-pass triage and security screening), small teams without a dedicated reviewer, tech leads and security engineers (policy and trends).
 
-**A possible extra (PLANNED):** a small local command that reviews a git diff on your machine using the same engine. It would let anyone try Lyvern without installing the App, and makes a good live demo.
+### Whose PRs does it review? Where can I use it?
+- **The App reviews every PR, by any author, in every repository where it is installed.** It is not limited to your own PRs.
+- **Installing needs an owner or admin of that account or organization.** On your own repositories you can install it yourself. On other people's projects (for example a contributor or member role in a large open-source organization) you normally cannot, and you should not ask a maintainer to add a bot just for you.
+- **Reviewer mode (PLANNED, priority P1):** a command you run on your own machine, for example `lyvern review <PR URL>`. It reads the public PR with your own GitHub login, runs the same engine, and prints a **draft** review: findings with file/line, evidence and a proposed verdict. You read it, keep what is right, and post it yourself under your own name. It never posts anything. This is how it would help when you review PRs in repositories you do not own.
+- **Etiquette:** a draft is an aid, not a review. Check each point yourself, and check the project's own policy on AI-assisted contributions and reviews before using generated text in a public review.
 
 ### Example of what a developer sees
 This is **real output of the review engine** (`render_inline` and `render_summary`), run on a small sample patch. The finding itself was supplied by hand for this example, because the analysis stages that will produce findings automatically are not built yet. The comment location (line 11 of `app.py`) was chosen by the real placement code from the real parsed diff.

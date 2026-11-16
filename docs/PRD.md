@@ -70,7 +70,7 @@ Auto-merging; pushing commits; running the PR's code or tests; replacing formatt
 | Dashboard | Next.js dashboard shell | P1 | **BUILT** (empty-state shell only) |
 | Dashboard | Repos, PR history, findings, analytics, settings | P1 | PLANNED |
 | Quality | Benchmark harness, feedback loop, false-positive tracking | P0 | PLANNED |
-| Extra | Local CLI that reviews a git diff with the same engine | P2 | PLANNED (good for demos without installing the App) |
+| Reviewer mode | CLI that takes any PR URL (or a local diff), runs the same engine, and prints a DRAFT review for a human reviewer to read and post themselves; never posts on its own | P1 | PLANNED. Needed because a GitHub App can only be installed by an owner/admin of the repository's account, so a contributor cannot use the App on other people's projects |
 
 ## 8. User experience
 **Installation (once per account/repo):** open the Lyvern GitHub App page, click Install, choose repositories, accept the listed permissions. *(PLANNED: App not yet registered.)*

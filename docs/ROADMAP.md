@@ -121,3 +121,13 @@ Phase 0 (this foundation): COMPLETE when the owner approves the documents. Phase
 
 ## Suggested cut for a first demo
 M1, M2, M3, M5 (Python only: Semgrep + Ruff + secrets), a minimal M8 pipeline, and a read-only slice of M9. This gets real evidence-backed comments on a real PR before the heavier ML and LLM work.
+
+## Addendum 2026-11-16: reviewer mode (CLI) inserted after M3
+- **Objective**: let a contributor/reviewer use the engine on PRs in repositories where the GitHub App cannot be installed.
+- **Components**: `lyvern review <PR URL | owner/repo#N | diff file>`; fetch via the user's own `gh`/token (read-only); run engine; print a draft review (inline comments with file and line, summary, proposed verdict) as text/JSON/markdown; optional output file ready to paste. No posting code path.
+- **Dependencies**: M3 (diff + engine), M5 (analysers) for real findings; works with the engine alone for placement and rendering demos.
+- **Risks**: reviewing other people's code with an LLM needs the provider opt-in; project AI-policy etiquette; rate limits.
+- **Tests**: fixtures from real public PR diffs; "never posts" test (no write API calls); location validity on those PRs.
+- **Acceptance**: on a set of public jaeger-ui and jam PRs, every drafted inline location is a valid added line; owner reviews drafts and records which points were right (feeds the benchmark).
+- **Effort**: 3-4 days.
+- **Evaluation idea**: use the real human review comments on those public PRs as a reference set to measure how many of the humans' points the draft finds (recall) and how many extra points are wrong (precision), with sample sizes and caveats about reviewer disagreement.
