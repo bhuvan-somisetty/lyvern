@@ -248,3 +248,7 @@ Verify Docker daemon, scaffold M1, run tests, commit on a feature branch.
 - Tests: +5 (4 integration for dismissal rules, 1 unit for dismiss_review); with the isolated database `pytest tests/integration` = 22 passed. Earlier PR #1 still shows its old CHANGES_REQUESTED review because the run history was erased before the fix; it is a sandbox artifact and can be closed.
 - Environment notes: API on port 8010 (8000 is held by WSL), Celery solo pool, smee forwarding; these local processes are still running.
 - Not done: APPROVE has not been exercised on GitHub; only Python files are analysed; no accuracy measurement exists.
+
+### Session 2: local processes stopped by the system (2026-11-16 IST)
+- The three local background processes (API on :8010, Celery worker, smee forwarder) were stopped automatically because the machine was critically low on memory (about 0.5 GB free of 15.7 GB at the time). Nothing was wrong with the processes. The API and worker are gone; small leftover node processes of the forwarder may remain. New PRs in the sandbox will not get a review until the processes are started again, and they are restarted only when the owner asks. The Postgres and Redis containers are separate and still running.
+- To run the full local flow again: start Docker (db, redis), then API (`uv run uvicorn lyvern_api.main:app --port 8010`), worker (`uv run celery -A lyvern_worker.app worker --pool=solo`) and the forwarder (`npx smee-client --url <smee url> --target http://127.0.0.1:8010/webhooks/github`).
