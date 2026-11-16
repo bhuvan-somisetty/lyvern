@@ -11,6 +11,8 @@ from pathlib import PurePosixPath
 from typing import Protocol
 
 from lyvern.engine.analyzers import AnalyzerError
+from lyvern.engine.analyzers.go import analyze_go
+from lyvern.engine.analyzers.go import is_supported as is_go
 from lyvern.engine.analyzers.js_ts import analyze_js_ts
 from lyvern.engine.analyzers.js_ts import is_supported as is_js_ts
 from lyvern.engine.analyzers.ruff import analyze_python
@@ -95,11 +97,17 @@ def _run_js_ts(path: str, text: str, added: set[int]) -> list[Finding]:
     return analyze_js_ts(path, text, added_lines=added)
 
 
+def _run_go(path: str, text: str, added: set[int]) -> list[Finding]:
+    return analyze_go(path, text, added_lines=added)
+
+
 def _analyzer_for(path: str) -> Analyzer | None:
     if path.endswith(".py"):
         return _run_python
     if is_js_ts(path):
         return _run_js_ts
+    if is_go(path):
+        return _run_go
     return None
 
 

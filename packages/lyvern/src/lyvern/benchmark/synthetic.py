@@ -13,6 +13,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 from lyvern.benchmark.metrics import Confusion
+from lyvern.engine.analyzers.go import analyze_go
+from lyvern.engine.analyzers.go import is_supported as is_go
 from lyvern.engine.analyzers.js_ts import analyze_js_ts
 from lyvern.engine.analyzers.js_ts import is_supported as is_js_ts
 from lyvern.engine.analyzers.ruff import analyze_python
@@ -35,6 +37,11 @@ def _py(case_id: str, source: str, *expected: Expected, path: str = "app.py") ->
 
 def _js(case_id: str, source: str, *expected: Expected, path: str = "app.js") -> Case:
     return Case(case_id, path, source, tuple(expected))
+
+
+def _go(case_id: str, body: str, *expected: Expected, path: str = "app.go") -> Case:
+    """A Go case: ``body`` is placed inside a function whose first body line is line 4."""
+    return Case(case_id, path, "package main\n\nfunc f() {\n" + body + "}\n", tuple(expected))
 
 
 CASES: tuple[Case, ...] = (
@@ -171,6 +178,50 @@ CASES: tuple[Case, ...] = (
         "export const A = { hashedPassword: '" + "ab" * 32 + "' };\n",
         path="a.stories.tsx",
     ),
+    # ------------------------------------------------------------ Go: must be reported
+    _go(
+        "go-tls-off",
+        "\tcfg := &tls.Config{InsecureSkipVerify: true}\n\t_ = cfg\n",
+        ("lyvern-go:tls-verification-off", 4),
+    ),
+    _go(
+        "go-shell-injection",
+        '\texec.Command("sh", "-c", "ls "+name)\n',
+        ("lyvern-go:shell-command-injection", 4),
+    ),
+    _go(
+        "go-sql-concat",
+        '\tdb.Query("select * from t where n = \'" + name + "\'")\n',
+        ("lyvern-go:sql-string-building", 4),
+    ),
+    _go(
+        "go-sql-sprintf",
+        '\tdb.Exec(fmt.Sprintf("delete from t where id = %s", id))\n',
+        ("lyvern-go:sql-string-building", 4),
+    ),
+    _go("go-weak-hash", "\th := md5.New()\n\t_ = h\n", ("lyvern-go:weak-hash", 4)),
+    _go(
+        "go-hardcoded-secret",
+        '\tpassword := "hunter2hunter2"\n\t_ = password\n',
+        ("lyvern-go:hardcoded-secret", 4),
+    ),
+    _go(
+        "go-defer-in-loop",
+        "\tfor i := 0; i < 3; i++ {\n\t\tdefer f.Close()\n\t}\n",
+        ("lyvern-go:defer-in-loop", 5),
+    ),
+    _go("go-empty-error-branch", "\tif err != nil {\n\t}\n", ("lyvern-go:empty-error-branch", 4)),
+    # ------------------------------------------------------------ Go: must stay quiet
+    _go("go-ok-exec-direct", '\texec.Command("git", "log", name)\n'),
+    _go("go-ok-exec-constant-shell", '\texec.Command("sh", "-c", "ls -la")\n'),
+    _go("go-ok-sql-placeholder", '\tdb.Query("select * from t where n = ?", name)\n'),
+    _go("go-ok-url-query", "\tu := r.URL.Query()\n\t_ = u\n"),
+    _go("go-ok-tls-on", "\tcfg := &tls.Config{InsecureSkipVerify: false}\n\t_ = cfg\n"),
+    _go("go-ok-sha256", "\th := sha256.New()\n\t_ = h\n"),
+    _go("go-ok-flag-name", '\tconst password = "es.password"\n'),
+    _go("go-ok-error-handled", "\tif err != nil {\n\t\treturn\n\t}\n"),
+    _go("go-ok-nosec-reviewed", "\t// #nosec G402\n\tcfg.InsecureSkipVerify = true\n"),
+    _go("go-ok-security-in-tests", "\th := md5.New()\n\t_ = h\n", path="app_test.go"),
 )
 
 
@@ -207,6 +258,8 @@ class SyntheticReport:
 def _analyse(case: Case) -> set[Expected]:
     if is_js_ts(case.path):
         findings = analyze_js_ts(case.path, case.source)
+    elif is_go(case.path):
+        findings = analyze_go(case.path, case.source)
     else:
         findings = analyze_python(case.path, case.source)
     return {(f.detection_source, f.line_start) for f in findings}

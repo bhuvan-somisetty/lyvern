@@ -37,6 +37,7 @@ select = ["E", "F", "W", "I", "B", "UP", "S", "C4", "SIM", "RUF"]
 "tests/**" = ["S101", "S105", "S106", "S603", "S607", "E501"]
 # the rule table holds long tree-sitter queries and descriptions: data, not logic
 "packages/lyvern/src/lyvern/engine/analyzers/js_ts.py" = ["E501"]
+"packages/lyvern/src/lyvern/engine/analyzers/go.py" = ["E501"]
 # report text and docstrings with long sentences
 "packages/lyvern/src/lyvern/benchmark/*.py" = ["E501"]
 # the system prompt contains one long JSON schema line

@@ -13,3 +13,4 @@ All notable changes. Dates are in IST. This project is a work in progress; see `
 - 2026-11-16: merge-conflict notice (one comment per head commit with rebase steps; branch names sanitised) and a rule that a pull request with merge conflicts is never approved.
 - 2026-11-16: development App renamed to `lyvern-bot`; logo added.
 - 2026-11-16: provider network errors now surface as clean errors; Gemini default model changed to `gemini-flash-lite-latest`.
+- 2026-11-16: Go analyser (8 rules, tree-sitter) wired into the review pipeline; 18 Go cases added to the synthetic suite (79 cases).

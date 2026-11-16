@@ -59,7 +59,7 @@ def standard_source() -> FakeSource:
     files = [
         f("a.py", "added", A_PATCH, 8),
         f("b.py", "modified", B_PATCH, 1),
-        f("svc/main.go", "modified", "@@ -1 +1 @@\n-a\n+b\n"),
+        f("svc/Main.java", "modified", "@@ -1 +1 @@\n-a\n+b\n"),
         f("README.md", "modified", "@@ -1 +1 @@\n-a\n+b\n"),
         f("old.py", "removed", "@@ -1 +0,0 @@\n-x\n"),
         f("logo.bin", "added", None),
@@ -90,12 +90,12 @@ def test_draft_review_end_to_end_on_a_sample_pr() -> None:
 
     # honest accounting of what was not analysed
     reasons = dict(draft.unanalyzed)
-    assert reasons["svc/main.go"] == "no analyser for this file type yet"
+    assert reasons["svc/Main.java"] == "no analyser for this file type yet"
     assert "no patch" in reasons["logo.bin"]
     assert (
         "README.md" not in reasons and "old.py" not in reasons
     )  # docs and removed files are not counted
-    assert draft.state.files_total == 4  # a.py, b.py, main.go, logo.bin
+    assert draft.state.files_total == 4  # a.py, b.py, Main.java, logo.bin
     assert draft.state.files_unanalyzed == 2
 
 
@@ -133,7 +133,7 @@ def test_small_clean_pr_is_approved_only_when_the_repository_opted_in() -> None:
 def test_unanalysed_files_or_a_failed_analyser_prevent_approval_even_on_a_clean_pr() -> None:
     from lyvern.engine.policy import ReviewPolicy
 
-    files = [*CLEAN_FILES, f("svc/main.go", "added", "@@ -0,0 +1 @@\n+package main\n")]
+    files = [*CLEAN_FILES, f("svc/Main.java", "added", "@@ -0,0 +1 @@\n+package main\n")]
     draft = review_pull_request(
         FakeSource(files, CLEAN_CONTENT), REF, ReviewPolicy(allow_approve=True)
     )

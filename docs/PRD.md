@@ -64,7 +64,8 @@ Auto-merging; pushing commits; running the PR's code or tests; replacing formatt
 | Review logic | Review text rendering (no emojis, provenance labels) | P0 | **BUILT** |
 | Analysis | Ruff (Python) and tree-sitter JS/TS rules | P0 | **BUILT** (measured on real code: see SESSION_LOG) |
 | Analysis | Semgrep, ESLint, dependency audit adapters | P1 | PLANNED (Semgrep is memory-heavy on the dev machine) |
-| Analysis | Code understanding (Python `ast`, tree-sitter: Python/JS/TS/Go) | P1 | PLANNED |
+| Analysis | Single-file code understanding: Ruff (Python), tree-sitter rules for JavaScript/TypeScript (14 rules) and Go (8 rules, honours `#nosec` / `nolint:gosec`) | P1 | **BUILT** |
+| Analysis | Cross-file call graph and type-aware analysis | P2 | PLANNED (not built; every analyser sees one file at a time) |
 | ML | Finding classifier, semantic similarity (pgvector), explainable PR risk | P1 | DESIGNED |
 | LLM | Provider-neutral client, schema-validated output, budgets, injection defences | P1 | DESIGNED |
 | Platform | FastAPI service, Celery worker, Postgres + pgvector, Redis, Docker Compose, CI | P0 | **BUILT** (foundation) |
