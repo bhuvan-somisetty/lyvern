@@ -324,3 +324,27 @@ def test_listing_existing_comments_paginates() -> None:
     pub = GitHubPublisher(WriteGuard([REPO]), lambda: "t", transport=httpx.MockTransport(handler))
     found = pub.existing_fingerprints(REPO, 1)
     assert len(found) == 101 and "bb01" in found
+
+
+def test_dismiss_review_is_guarded_and_sends_the_message() -> None:
+    rec = Recorder([])
+    pub = make_publisher(rec)
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        rec.requests.append(request)
+        return httpx.Response(200, json={})
+
+    pub = GitHubPublisher(WriteGuard([REPO]), lambda: "tok", transport=httpx.MockTransport(handler))
+    assert pub.dismiss_review(REPO, 3, 99, "why") is True
+    (req,) = rec.requests
+    assert req.method == "PUT" and req.url.path == f"/repos/{REPO}/pulls/3/reviews/99/dismissals"
+    assert json.loads(req.content) == {"message": "why"}
+    with pytest.raises(WriteNotAllowed):
+        pub.dismiss_review("jaegertracing/jaeger-ui", 3, 99, "x")
+    assert len(rec.requests) == 1  # the blocked call sent nothing
+    refuse = GitHubPublisher(
+        WriteGuard([REPO]),
+        lambda: "t",
+        transport=httpx.MockTransport(lambda r: httpx.Response(422)),
+    )
+    assert refuse.dismiss_review(REPO, 3, 99, "why") is False

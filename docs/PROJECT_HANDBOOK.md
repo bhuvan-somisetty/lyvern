@@ -78,7 +78,7 @@ Review summary:
 | Repo, CI on GitHub (green), Docker stack, API health, worker, DB migrations, dashboard shell | **BUILT** |
 | Review engine: finding model, diff parser, dedup/ranking, placement, decision engine, rendering | **BUILT**, 75 unit tests + property tests against real `git diff` |
 | Reviewer mode CLI (read-only fetch of any public PR, Ruff analysis for Python, draft review, never posts) | **BUILT** (first version; tested with a fake source and run on real public PRs) |
-| GitHub App connection (webhooks, post reviews) | PLANNED, next milestone |
+| GitHub App connection (signed webhooks, review job, posting inline comments, REQUEST_CHANGES/COMMENT, dismissing its own stale review) | **BUILT**; verified end to end on two PRs in the owner's sandbox repository (Python only, Ruff findings); nothing has been posted anywhere else |
 | Static analysis (Semgrep, Ruff, ESLint, secrets, dependencies) | PLANNED |
 | Code understanding (tree-sitter / `ast`, cross-file) | PLANNED |
 | ML models (classifier, similarity, risk) and benchmark | DESIGNED / PLANNED |

@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session
 from lyvern.config import Settings, get_settings
 from lyvern.db import get_engine
 from lyvern.db.models import ReviewRun
-from lyvern.engine.contracts import RunStatus
+from lyvern.engine.contracts import ReviewEvent, RunStatus
 from lyvern.engine.policy import ReviewPolicy
 from lyvern.github.app_auth import AppAuth
 from lyvern.github.client import GitHubReadClient
@@ -39,6 +39,37 @@ def _newer_run_exists(session: Session, run: ReviewRun) -> bool:
         .limit(1)
     )
     return newer is not None
+
+
+def _dismiss_stale_changes_requested(
+    session: Session, publisher: GitHubPublisher, run: ReviewRun, head_sha: str
+) -> None:
+    stale = session.scalars(
+        select(ReviewRun).where(
+            ReviewRun.repo_full_name == run.repo_full_name,
+            ReviewRun.pr_number == run.pr_number,
+            ReviewRun.id != run.id,
+            ReviewRun.event_posted == ReviewEvent.REQUEST_CHANGES.value,
+            ReviewRun.github_review_id.is_not(None),
+            ReviewRun.changes_dismissed.is_(False),
+        )
+    ).all()
+    for old in stale:
+        assert old.github_review_id is not None  # filtered above  # noqa: S101
+        try:
+            dismissed = publisher.dismiss_review(
+                run.repo_full_name,
+                run.pr_number,
+                old.github_review_id,
+                f"Dismissed automatically: the blocking findings from the earlier review are no "
+                f"longer present in commit {head_sha[:8]}. A person should still review it.",
+            )
+        except Exception:
+            logger.exception("could not dismiss an earlier review")
+            continue
+        if dismissed:
+            old.changes_dismissed = True
+            session.commit()
 
 
 def execute_review(
@@ -89,6 +120,10 @@ def execute_review(
                 "review published",
                 extra={"repo": repo, "pr": number, "event": result.event_posted.value},
             )
+            # A "changes requested" review stays active on GitHub until its author dismisses
+            # or replaces it. If this complete review found nothing blocking, dismiss ours.
+            if result.event_posted != ReviewEvent.REQUEST_CHANGES and not draft.decision.incomplete:
+                _dismiss_stale_changes_requested(session, publisher, run, draft.pr.head_sha)
         except Exception as error:
             session.rollback()
             run = session.get(ReviewRun, run_id)

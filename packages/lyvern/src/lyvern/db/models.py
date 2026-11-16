@@ -5,7 +5,18 @@ from __future__ import annotations
 from datetime import datetime
 from uuid import UUID, uuid4
 
-from sqlalchemy import BigInteger, DateTime, Integer, String, Text, UniqueConstraint, Uuid, func
+from sqlalchemy import (
+    BigInteger,
+    Boolean,
+    DateTime,
+    Integer,
+    String,
+    Text,
+    UniqueConstraint,
+    Uuid,
+    false,
+    func,
+)
 from sqlalchemy.orm import Mapped, mapped_column
 
 from lyvern.db.base import Base
@@ -48,6 +59,7 @@ class ReviewRun(Base):
     github_review_id: Mapped[int | None] = mapped_column(BigInteger)
     findings_count: Mapped[int | None] = mapped_column(Integer)
     inline_posted: Mapped[int | None] = mapped_column(Integer)
+    changes_dismissed: Mapped[bool] = mapped_column(Boolean, server_default=false(), default=False)
     error: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

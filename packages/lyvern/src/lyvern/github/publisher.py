@@ -125,6 +125,16 @@ class GitHubPublisher:
                 break
         return found
 
+    def dismiss_review(self, repo: str, pr_number: int, review_id: int, message: str) -> bool:
+        """Dismiss one of OUR earlier reviews; False if GitHub refuses (e.g. already dismissed)."""
+        self._guard.assert_allowed(repo)
+        response = self._http.put(
+            f"/repos/{repo}/pulls/{pr_number}/reviews/{review_id}/dismissals",
+            json={"message": message},
+            headers=self._headers(),
+        )
+        return response.status_code == 200
+
     def _post_review(self, repo: str, pr_number: int, payload: dict[str, Any]) -> httpx.Response:
         return self._http.post(
             f"/repos/{repo}/pulls/{pr_number}/reviews", json=payload, headers=self._headers()

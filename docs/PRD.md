@@ -54,8 +54,8 @@ Auto-merging; pushing commits; running the PR's code or tests; replacing formatt
 ## 7. Feature list with status
 | Area | Feature | Priority | Status |
 |---|---|---|---|
-| GitHub | GitHub App install, signed webhooks, delivery dedup | P0 | DESIGNED |
-| GitHub | Fetch PR, files, patches; post inline/general/summary reviews | P0 | PLANNED |
+| GitHub | GitHub App install, signed webhooks, delivery dedup | P0 | **BUILT**, verified end to end in the sandbox repository |
+| GitHub | Fetch PR, files, patches; post inline/general/summary reviews; dismiss own stale changes-requested review | P0 | **BUILT**, verified in the sandbox repository (inline comments on exact lines, REQUEST_CHANGES, COMMENT, dismissal); APPROVE path built but not yet exercised on GitHub |
 | Diff | Unified diff parser with exact GitHub line mapping | P0 | **BUILT** |
 | Review logic | Finding model with enforced invariants | P0 | **BUILT** |
 | Review logic | Dedup and cross-source corroboration, ranking | P0 | **BUILT** |

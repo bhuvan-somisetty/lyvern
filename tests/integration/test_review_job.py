@@ -24,9 +24,14 @@ CODE = "import os\n\n\ndef f(items=[]):\n    return eval(items)\n"
 PATCH = "@@ -0,0 +1,5 @@\n" + "".join(f"+{line}\n" for line in CODE.split("\n")[:-1])
 
 
+CLEAN = "def add(a, b):\n    return a + b\n"
+CLEAN_PATCH = "@@ -0,0 +1,2 @@\n" + "".join(f"+{line}\n" for line in CLEAN.split("\n")[:-1])
+
+
 class FakeSource:
-    def __init__(self, fail: bool = False) -> None:
+    def __init__(self, fail: bool = False, clean: bool = False) -> None:
         self.fail = fail
+        self.clean = clean
 
     def get_pull_request(self, ref: PullRequestRef) -> PullRequestInfo:
         if self.fail:
@@ -40,24 +45,30 @@ class FakeSource:
         )  # fmt: skip
 
     def list_changed_files(self, ref: PullRequestRef) -> list[ChangedFileInfo]:
+        patch = CLEAN_PATCH if self.clean else PATCH
         return [
             ChangedFileInfo(
-                filename="app.py", status="added", additions=5, deletions=0, patch=PATCH
+                filename="app.py", status="added", additions=5, deletions=0, patch=patch
             )
         ]
 
     def get_file_text(self, repo_full_name: str, path: str, ref: str) -> str | None:
-        return CODE
+        return CLEAN if self.clean else CODE
 
 
 class Recorder:
-    def __init__(self, post_status: int = 200) -> None:
+    def __init__(self, post_status: int = 200, put_status: int = 200) -> None:
         self.posts: list[dict[str, Any]] = []
+        self.puts: list[str] = []
         self.post_status = post_status
+        self.put_status = put_status
 
     def __call__(self, request: httpx.Request) -> httpx.Response:
         if request.method == "GET":
             return httpx.Response(200, json=[])
+        if request.method == "PUT":
+            self.puts.append(request.url.path)
+            return httpx.Response(self.put_status, json={})
         self.posts.append(json.loads(request.content))
         return httpx.Response(self.post_status, json={"id": 777})
 
@@ -158,3 +169,57 @@ def test_publishing_to_a_repository_off_the_allowlist_fails_the_run(db: None) ->
     )
     run = load(rid)
     assert run.status == "failed" and "WriteNotAllowed" in (run.error or "") and rec.posts == []
+
+
+# ------------------------------------------------ dismissing our own stale "changes requested"
+
+
+def make_previous_request_changes(review_id: int = 555) -> UUID:
+    with Session(get_engine()) as s:
+        run = ReviewRun(
+            repo_full_name=REPO, pr_number=4, head_sha="9" * 40, installation_id=5,
+            trigger_delivery_id="d0", status="succeeded", event_posted="REQUEST_CHANGES",
+            github_review_id=review_id,
+        )  # fmt: skip
+        s.add(run)
+        s.commit()
+        return run.id
+
+
+def test_clean_follow_up_dismisses_the_earlier_changes_requested_review(db: None) -> None:
+    previous = make_previous_request_changes(555)
+    rid, rec = make_run(sha="a" * 40), Recorder()
+    run_job(rid, FakeSource(clean=True), rec)
+    assert load(rid).event_posted == "COMMENT"
+    assert rec.puts == [f"/repos/{REPO}/pulls/4/reviews/555/dismissals"]
+    assert load(previous).changes_dismissed is True
+
+
+def test_follow_up_that_still_blocks_does_not_dismiss(db: None) -> None:
+    previous = make_previous_request_changes()
+    rid, rec = make_run(sha="a" * 40), Recorder()
+    run_job(rid, FakeSource(), rec)  # still has blocking findings
+    assert load(rid).event_posted == "REQUEST_CHANGES"
+    assert rec.puts == [] and load(previous).changes_dismissed is False
+
+
+def test_incomplete_follow_up_never_dismisses(db: None, monkeypatch: pytest.MonkeyPatch) -> None:
+    from lyvern.engine.analyzers import AnalyzerError
+
+    def boom(*a: Any, **k: Any) -> Any:
+        raise AnalyzerError("timed out")
+
+    monkeypatch.setattr("lyvern.review_pipeline.analyze_python", boom)
+    previous = make_previous_request_changes()
+    rid, rec = make_run(sha="a" * 40), Recorder()
+    run_job(rid, FakeSource(clean=True), rec)
+    assert load(rid).status == "partial" and load(rid).event_posted == "COMMENT"
+    assert rec.puts == [] and load(previous).changes_dismissed is False
+
+
+def test_refused_dismissal_is_not_marked_done_and_does_not_fail_the_run(db: None) -> None:
+    previous = make_previous_request_changes()
+    rid, rec = make_run(sha="a" * 40), Recorder(put_status=422)
+    run_job(rid, FakeSource(clean=True), rec)
+    assert load(rid).status == "succeeded"  # the review itself was published
+    assert load(previous).changes_dismissed is False
