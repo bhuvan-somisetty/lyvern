@@ -3,7 +3,7 @@
 Everything here needs your GitHub account, your screen or your decision. Each step says where to
 click and how to know it worked. Do them in this order.
 
-## 1. Turn on the Push event (enables the base-branch conflict re-check)
+## 1. Turn on the Push event (enables the base-branch conflict re-check) - DONE and verified 2026-11-16
 1. Open https://github.com/settings/apps/lyvern-bot
 2. In the left menu click **Permissions & events**.
 3. Scroll to **Subscribe to events** and tick **Push**. (If the box is greyed out, set
