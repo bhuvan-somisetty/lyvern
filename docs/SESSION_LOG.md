@@ -208,3 +208,8 @@ Verify Docker daemon, scaffold M1, run tests, commit on a feature branch.
 - Sandbox repo `bhuvan-somisetty/lyvern-sandbox`: GitHub API returned 404, i.e. NOT created yet (form filled but not submitted).
 - Seen in the owner's screenshots of the App form: Webhook URL field contained the repository URL instead of the smee address (must be the smee URL); the Pull requests permission and the Pull request event were not yet set (events only appear after permissions are chosen); the GitHub App had not been created yet as far as the screenshots show.
 - Side effect to fix: running `uv run` in the OneDrive snapshot folder created a `.venv` (61 packages) inside OneDrive, which will sync. Owner advised to delete it and run commands from C:\Users\BHUVAN\dev\pr-intel.
+
+### Session 2: GitHub App registered (2026-11-16 IST)
+- Owner registered the development GitHub App (name lyvern-dev-bhuvan, owned by bhuvan-somisetty, installable only on that account). App ID 5777151, Client ID Iv23liNHA8on66qKdDQ7 (identifiers, not secrets). Screenshots show: Webhook active with the smee.io URL, a webhook secret configured, SSL verification enabled; permissions Pull requests = Read and write, Contents = Read-only, Metadata = Read-only (mandatory); installation scope "Only on this account". Whether the "Pull request" event box was ticked before creation was not visible in the final screenshots; to be verified under the App's "Permissions & events" page.
+- Still to do by the owner: generate the private key (save as C:\Users\BHUVAN\secrets\lyvern-dev.pem), create the lyvern-sandbox repository, install the App on that repository only.
+- Added ids and the key path (not the key) to the local .env and variable names to .env.example.
