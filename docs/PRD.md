@@ -55,7 +55,7 @@ Auto-merging; pushing commits; running the PR's code or tests; replacing formatt
 | Area | Feature | Priority | Status |
 |---|---|---|---|
 | GitHub | GitHub App install, signed webhooks, delivery dedup | P0 | **BUILT**, verified end to end in the sandbox repository |
-| GitHub | Fetch PR, files, patches; post inline/general/summary reviews; dismiss own stale changes-requested review | P0 | **BUILT**, verified in the sandbox repository (inline comments on exact lines, REQUEST_CHANGES, COMMENT, dismissal); APPROVE path built but not yet exercised on GitHub |
+| GitHub | Fetch PR, files, patches; post inline/general/summary reviews; dismiss own stale changes-requested review; per-repository opt-in APPROVE | P0 | **BUILT**, verified in the sandbox repository (including a live APPROVE on a clean PR) (inline comments on exact lines, REQUEST_CHANGES, COMMENT, dismissal); APPROVE path built but not yet exercised on GitHub |
 | Diff | Unified diff parser with exact GitHub line mapping | P0 | **BUILT** |
 | Review logic | Finding model with enforced invariants | P0 | **BUILT** |
 | Review logic | Dedup and cross-source corroboration, ranking | P0 | **BUILT** |
@@ -72,7 +72,7 @@ Auto-merging; pushing commits; running the PR's code or tests; replacing formatt
 | Dashboard | Repository management, findings explorer, analytics charts, settings, user login | P1 | PLANNED |
 | Quality | Benchmark harness (synthetic suite and read-only real-PR comparison, adjudication sheet, confidence intervals) | P0 | **BUILT**, first results in BENCHMARK.md |
 | Quality | Feedback loop from the dashboard and GitHub, false-positive tracking over time | P0 | PLANNED |
-| LLM | Provider-neutral AI review: schema validation, evidence verification against the diff, redaction, never blocking | P1 | **BUILT** (Groq verified live; Gemini not verified; precision unknown, see BENCHMARK.md) |
+| LLM | Provider-neutral AI review: schema validation, evidence verification against the diff, redaction, never blocking | P1 | **BUILT** (Groq verified live; Gemini verified for connectivity only (flash-lite), no quality benchmark; precision unknown, see BENCHMARK.md) |
 | Reviewer mode | CLI that takes any PR URL, runs the same engine, and prints a DRAFT review for a human reviewer to read and post themselves; never posts on its own | P1 | **BUILT (first version)**: read-only GitHub client, Python analysis via Ruff, diff parsing, placement, verdict proposal; JS/TS/Go analysis not yet (those files are listed as not analysed). Needed because a GitHub App can only be installed by an owner/admin of the repository's account, so a contributor cannot use the App on other people's projects |
 
 ## 8. User experience
