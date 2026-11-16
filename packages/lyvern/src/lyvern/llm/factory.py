@@ -17,7 +17,7 @@ def make_llm_reviewer(provider: str | None, settings: Settings | None = None) ->
     cfg = settings or get_settings()
     if name == "gemini":
         key = cfg.gemini_api_key.get_secret_value() if cfg.gemini_api_key else ""
-        return LlmReviewer(GeminiClient(key, cfg.llm_model or "gemini-flash-latest"))
+        return LlmReviewer(GeminiClient(key, cfg.llm_model or "gemini-flash-lite-latest"))
     if name == "groq":
         key = cfg.groq_api_key.get_secret_value() if cfg.groq_api_key else ""
         return LlmReviewer(GroqClient(key, cfg.llm_model or "openai/gpt-oss-120b"))

@@ -74,7 +74,7 @@ def test_gemini_request_shape_and_response_parsing() -> None:
     out = client.complete("sys", "user")
     assert out.text == '{"findings": []}' and out.usage == LlmUsage(10, 3)
     assert (
-        "gemini-flash-latest:generateContent" in seen["url"] and "KEY123" not in seen["url"]
+        "gemini-flash-lite-latest:generateContent" in seen["url"] and "KEY123" not in seen["url"]
     )  # key only in a header
     assert seen["headers"]["x-goog-api-key"] == "KEY123"
     assert seen["body"]["generationConfig"]["temperature"] == 0
@@ -470,3 +470,14 @@ def test_other_400_errors_are_not_retried() -> None:
             "s", "u"
         )
     assert calls["n"] == 1
+
+
+@pytest.mark.parametrize("cls", [GeminiClient, GroqClient])
+def test_network_failures_become_llm_errors_without_the_url(cls: Any) -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        raise httpx.ReadTimeout("timed out calling " + str(request.url), request=request)
+
+    client = cls("SECRETKEY", transport=httpx.MockTransport(handler), sleep=lambda _s: None)
+    with pytest.raises(LlmError, match="ReadTimeout") as info:
+        client.complete("s", "u")
+    assert "SECRETKEY" not in str(info.value) and "http" not in str(info.value)

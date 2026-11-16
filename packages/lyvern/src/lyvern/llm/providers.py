@@ -45,12 +45,19 @@ def _post_json(
     secret: str = "",
     retries: int = 2,
 ) -> dict[str, Any]:
-    response = http.post(url, headers=headers, json=body)
+    def post() -> httpx.Response:
+        try:
+            return http.post(url, headers=headers, json=body)
+        except httpx.HTTPError as error:
+            # name the failure only: the exception text can contain the request URL
+            raise LlmError(f"provider request failed ({type(error).__name__})") from None
+
+    response = post()
     for attempt in range(retries):
         if response.status_code not in _RETRY:
             break
         sleep(max(1.5 * (2**attempt), _retry_after(response)))
-        response = http.post(url, headers=headers, json=body)
+        response = post()
     detail = _provider_message(response, secret) if response.status_code >= 400 else ""
     suffix = f": {detail}" if detail else ""
     if response.status_code == 429:
@@ -72,7 +79,7 @@ class GeminiClient:
     def __init__(
         self,
         api_key: str,
-        model: str = "gemini-flash-latest",
+        model: str = "gemini-flash-lite-latest",
         *,
         transport: httpx.BaseTransport | None = None,
         sleep: Callable[[float], None] = time.sleep,
