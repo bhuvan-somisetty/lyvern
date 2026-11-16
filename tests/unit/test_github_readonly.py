@@ -64,6 +64,7 @@ def test_client_exposes_no_write_methods() -> None:
     assert set(public) == {
         "close",
         "get_pull_request",
+        "get_merge_state",
         "list_changed_files",
         "list_review_comments",
         "get_file_text",

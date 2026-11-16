@@ -29,7 +29,7 @@ from lyvern.engine.placement import Placement, plan_placement
 from lyvern.engine.policy import ReviewPolicy
 from lyvern.engine.render import render_inline, render_summary
 from lyvern.engine.risk import RiskAssessment, RiskFile, assess_risk
-from lyvern.github.models import ChangedFileInfo, PullRequestInfo
+from lyvern.github.models import ChangedFileInfo, MergeState, PullRequestInfo
 from lyvern.github.refs import PullRequestRef
 from lyvern.llm.base import LlmError
 
@@ -69,6 +69,19 @@ class DraftReview:
     inline: tuple[tuple[str, int, int | None, str], ...]  # path, line, start_line, text
     llm: LlmReviewResult | None = None
     llm_error: str | None = None
+    merge_state: MergeState | None = None
+
+
+def _merge_state(source: object, ref: PullRequestRef) -> MergeState | None:
+    """Best effort: a source that cannot say (or fails) leaves mergeability unknown."""
+    getter = getattr(source, "get_merge_state", None)
+    if not callable(getter):
+        return None
+    try:
+        state = getter(ref)
+    except Exception:
+        return None
+    return state if isinstance(state, MergeState) else None
 
 
 Analyzer = Callable[[str, str, set[int]], list[Finding]]
@@ -117,6 +130,7 @@ def review_pull_request(
     policy = policy or ReviewPolicy()
     pr = source.get_pull_request(ref)
     changed = source.list_changed_files(ref)
+    merge_state = _merge_state(source, ref)
 
     diffs: dict[str, FileDiff] = {}
     raw_findings: list[Finding] = []
@@ -197,6 +211,7 @@ def review_pull_request(
         files_total=considered,
         files_unanalyzed=len(unanalyzed),
         risk_score=risk.score,
+        merge_conflicts=merge_state is not None and merge_state.has_conflicts,
     )
     decision = decide(findings, state, policy)
     summary = render_summary(
@@ -222,6 +237,7 @@ def review_pull_request(
         unanalyzed=tuple(unanalyzed),
         llm=llm_result,
         llm_error=llm_error,
+        merge_state=merge_state,
         summary=summary,
         inline=inline,
     )

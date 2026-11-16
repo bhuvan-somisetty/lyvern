@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 
 from lyvern.db import ReviewRun, get_engine
 from lyvern.engine.policy import ReviewPolicy
-from lyvern.github.models import ChangedFileInfo, PullRequestInfo
+from lyvern.github.models import ChangedFileInfo, MergeState, PullRequestInfo
 from lyvern.github.publisher import GitHubPublisher, WriteGuard
 from lyvern.github.refs import PullRequestRef
 from lyvern.services.review_job import execute_review
@@ -223,3 +223,38 @@ def test_refused_dismissal_is_not_marked_done_and_does_not_fail_the_run(db: None
     run_job(rid, FakeSource(clean=True), rec)
     assert load(rid).status == "succeeded"  # the review itself was published
     assert load(previous).changes_dismissed is False
+
+
+class ConflictingSource(FakeSource):
+    def __init__(self, state: MergeState | Exception) -> None:
+        super().__init__(clean=True)
+        self.state = state
+
+    def get_merge_state(self, ref: PullRequestRef) -> MergeState:
+        if isinstance(self.state, Exception):
+            raise self.state
+        return self.state
+
+
+def conflict_posts(rec: Recorder) -> list[dict[str, Any]]:
+    return [p for p in rec.posts if "Merge conflicts" in str(p.get("body", ""))]
+
+
+def test_a_conflicting_pull_request_gets_a_notice_and_the_run_still_succeeds(db: None) -> None:
+    rid, rec = make_run(), Recorder()
+    run_job(rid, ConflictingSource(MergeState(mergeable=False, state="dirty")), rec)
+    assert load(rid).status == "succeeded"
+    (notice,) = conflict_posts(rec)
+    assert "git rebase origin/main" in notice["body"]
+
+
+def test_clean_unknown_or_failing_mergeability_posts_no_notice(db: None) -> None:
+    states = [
+        MergeState(mergeable=True, state="clean"),
+        MergeState(mergeable=None, state="unknown"),
+        RuntimeError("github down"),
+    ]
+    for index, state in enumerate(states):
+        rid, rec = make_run(sha=str(index) * 40), Recorder()
+        run_job(rid, ConflictingSource(state), rec)
+        assert load(rid).status == "succeeded" and conflict_posts(rec) == []

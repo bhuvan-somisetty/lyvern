@@ -265,3 +265,43 @@ def test_approval_is_off_unless_the_repository_is_named_exactly() -> None:
     assert policy_for_repo("octo/repo", named).allow_approve is True
     assert policy_for_repo("octo/repo2", named).allow_approve is False
     assert policy_for_repo("evil/octo/repo", named).allow_approve is False
+
+
+class MergeStateSource(FakeSource):
+    def __init__(self, state: Any) -> None:
+        super().__init__(CLEAN_FILES, CLEAN_CONTENT)
+        self.state = state
+
+    def get_merge_state(self, ref: PullRequestRef) -> Any:
+        if isinstance(self.state, Exception):
+            raise self.state
+        return self.state
+
+
+def test_a_pull_request_with_merge_conflicts_is_never_approved() -> None:
+    from lyvern.engine.policy import ReviewPolicy
+    from lyvern.github.models import MergeState
+
+    policy = ReviewPolicy(allow_approve=True)
+    clean = review_pull_request(
+        MergeStateSource(MergeState(mergeable=True, state="clean")), REF, policy
+    )
+    assert clean.decision.event == ReviewEvent.APPROVE
+
+    dirty = review_pull_request(
+        MergeStateSource(MergeState(mergeable=False, state="dirty")), REF, policy
+    )
+    assert dirty.decision.event == ReviewEvent.COMMENT
+    assert any("merge conflicts" in r for r in dirty.decision.reasons)
+    assert dirty.merge_state is not None and dirty.merge_state.has_conflicts
+
+
+def test_unknown_or_failing_mergeability_does_not_block_and_is_not_guessed() -> None:
+    from lyvern.engine.policy import ReviewPolicy
+    from lyvern.github.models import MergeState
+
+    policy = ReviewPolicy(allow_approve=True)
+    for state in (MergeState(mergeable=None, state="unknown"), RuntimeError("github down")):
+        draft = review_pull_request(MergeStateSource(state), REF, policy)
+        assert draft.decision.event == ReviewEvent.APPROVE
+        assert draft.merge_state is None or not draft.merge_state.has_conflicts

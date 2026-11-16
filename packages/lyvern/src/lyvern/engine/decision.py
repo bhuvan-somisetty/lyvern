@@ -32,6 +32,7 @@ class AnalysisState:
     files_total: int = 0
     files_unanalyzed: int = 0  # unsupported language, binary, too large, parse failure
     risk_score: int | None = None  # 0-100, None if the risk stage did not complete
+    merge_conflicts: bool = False  # GitHub reports the PR cannot be merged (known conflicts only)
 
     @property
     def unanalyzed_share(self) -> float:
@@ -134,6 +135,8 @@ def _approve_obstacles(
     obstacles: list[str] = []
     if not policy.allow_approve:
         obstacles.append("approval is not enabled for this repository")
+    if state.merge_conflicts:
+        obstacles.append("the pull request has merge conflicts")
     if state.run_status != RunStatus.SUCCEEDED:
         obstacles.append(f"run status is {state.run_status.value}, not succeeded")
     missing = sorted(

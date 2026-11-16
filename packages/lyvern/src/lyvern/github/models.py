@@ -27,6 +27,19 @@ class PullRequestInfo(BaseModel):
     deletions: int
 
 
+class MergeState(BaseModel):
+    """Whether GitHub can merge the pull request. ``mergeable`` is None while it computes."""
+
+    model_config = ConfigDict(frozen=True, extra="ignore")
+
+    mergeable: bool | None
+    state: str  # GitHub's mergeable_state: clean, dirty (conflicts), blocked, behind, unknown, ...
+
+    @property
+    def has_conflicts(self) -> bool:
+        return self.mergeable is False and self.state == "dirty"
+
+
 class ChangedFileInfo(BaseModel):
     model_config = ConfigDict(frozen=True, extra="ignore")
 

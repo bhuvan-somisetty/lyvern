@@ -17,7 +17,12 @@ from urllib.parse import quote
 
 import httpx
 
-from lyvern.github.models import ChangedFileInfo, PullRequestInfo, ReviewCommentInfo
+from lyvern.github.models import (
+    ChangedFileInfo,
+    MergeState,
+    PullRequestInfo,
+    ReviewCommentInfo,
+)
 from lyvern.github.refs import PullRequestRef
 
 API = "https://api.github.com"
@@ -112,6 +117,28 @@ class GitHubReadClient:
             additions=int(data.get("additions") or 0),
             deletions=int(data.get("deletions") or 0),
         )
+
+    def get_merge_state(
+        self,
+        ref: PullRequestRef,
+        *,
+        attempts: int = 4,
+        sleep: Callable[[float], None] = time.sleep,
+    ) -> MergeState:
+        """GitHub computes mergeability in the background: ask again while it says unknown."""
+        state = MergeState(mergeable=None, state="unknown")
+        for attempt in range(attempts):
+            data = self._get(f"/repos/{ref.owner}/{ref.repo}/pulls/{ref.number}")
+            mergeable = data.get("mergeable")
+            state = MergeState(
+                mergeable=mergeable if isinstance(mergeable, bool) else None,
+                state=str(data.get("mergeable_state") or "unknown"),
+            )
+            if state.mergeable is not None:
+                break
+            if attempt < attempts - 1:
+                sleep(1.5 * (attempt + 1))
+        return state
 
     def list_changed_files(self, ref: PullRequestRef) -> list[ChangedFileInfo]:
         files: list[ChangedFileInfo] = []

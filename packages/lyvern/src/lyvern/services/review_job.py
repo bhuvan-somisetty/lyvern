@@ -13,11 +13,13 @@ from sqlalchemy.orm import Session
 from lyvern.config import Settings, get_settings
 from lyvern.db import get_engine
 from lyvern.db.models import ReviewRun
+from lyvern.engine.conflict import render_conflict_notice
 from lyvern.engine.contracts import ReviewEvent, RunStatus
 from lyvern.engine.llm_review import LlmReviewer
 from lyvern.engine.policy import ReviewPolicy
 from lyvern.github.app_auth import AppAuth
 from lyvern.github.client import GitHubReadClient
+from lyvern.github.models import MergeState, PullRequestInfo
 from lyvern.github.publisher import GitHubPublisher, ReviewComment, WriteGuard
 from lyvern.github.refs import PullRequestRef
 from lyvern.llm.factory import make_llm_reviewer
@@ -72,6 +74,20 @@ def _dismiss_stale_changes_requested(
         if dismissed:
             old.changes_dismissed = True
             session.commit()
+
+
+def _notify_merge_conflicts(
+    publisher: GitHubPublisher, pr: PullRequestInfo, ref: PullRequestRef, state: MergeState | None
+) -> None:
+    """Tell the author about merge conflicts. Best effort: never fails or changes the run."""
+    if state is None or not state.has_conflicts:
+        return
+    try:
+        body = render_conflict_notice(pr.base_ref, pr.head_ref, pr.head_sha)
+        if publisher.post_conflict_notice(f"{ref.owner}/{ref.repo}", ref.number, body, pr.head_sha):
+            logger.info("merge conflict notice posted", extra={"pr": ref.number})
+    except Exception:
+        logger.exception("could not post the merge conflict notice")
 
 
 def execute_review(
@@ -130,6 +146,9 @@ def execute_review(
             # or replaces it. If this complete review found nothing blocking, dismiss ours.
             if result.event_posted != ReviewEvent.REQUEST_CHANGES and not draft.decision.incomplete:
                 _dismiss_stale_changes_requested(session, publisher, run, draft.pr.head_sha)
+            _notify_merge_conflicts(
+                publisher, draft.pr, PullRequestRef(owner, name, number), draft.merge_state
+            )
         except Exception as error:
             session.rollback()
             run = session.get(ReviewRun, run_id)

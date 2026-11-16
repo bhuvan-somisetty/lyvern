@@ -72,6 +72,7 @@ Auto-merging; pushing commits; running the PR's code or tests; replacing formatt
 | Dashboard | Repository management, findings explorer, analytics charts, settings, user login | P1 | PLANNED |
 | Quality | Benchmark harness (synthetic suite and read-only real-PR comparison, adjudication sheet, confidence intervals) | P0 | **BUILT**, first results in BENCHMARK.md |
 | Quality | Feedback loop from the dashboard and GitHub, false-positive tracking over time | P0 | PLANNED |
+| GitHub | Merge-conflict notice: when GitHub reports the PR cannot be merged, post one comment per head commit with rebase and merge instructions; a conflicting PR is never approved | P1 | **BUILT**, verified in the sandbox repository |
 | LLM | Provider-neutral AI review: schema validation, evidence verification against the diff, redaction, never blocking | P1 | **BUILT** (Groq verified live; Gemini verified for connectivity only (flash-lite), no quality benchmark; precision unknown, see BENCHMARK.md) |
 | Reviewer mode | CLI that takes any PR URL, runs the same engine, and prints a DRAFT review for a human reviewer to read and post themselves; never posts on its own | P1 | **BUILT (first version)**: read-only GitHub client, Python analysis via Ruff, diff parsing, placement, verdict proposal; JS/TS/Go analysis not yet (those files are listed as not analysed). Needed because a GitHub App can only be installed by an owner/admin of the repository's account, so a contributor cannot use the App on other people's projects |
 

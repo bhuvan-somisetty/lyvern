@@ -20,6 +20,7 @@ from typing import Any
 
 import httpx
 
+from lyvern.engine.conflict import has_conflict_marker
 from lyvern.engine.contracts import ReviewEvent
 from lyvern.engine.render import extract_fingerprints
 
@@ -124,6 +125,31 @@ class GitHubPublisher:
             if len(batch) < 100:
                 break
         return found
+
+    def post_conflict_notice(self, repo: str, pr_number: int, body: str, head_sha: str) -> bool:
+        """Post the merge-conflict notice once per head commit; False if it is already there."""
+        self._guard.assert_allowed(repo)
+        for page in range(1, MAX_COMMENT_PAGES + 1):
+            response = self._http.get(
+                f"/repos/{repo}/issues/{pr_number}/comments",
+                params={"per_page": 100, "page": page},
+                headers=self._headers(),
+            )
+            if response.status_code != 200:
+                raise PublishError(f"could not list comments (HTTP {response.status_code})")
+            batch = response.json()
+            if any(has_conflict_marker(str(c.get("body") or ""), head_sha) for c in batch):
+                return False
+            if len(batch) < 100:
+                break
+        posted = self._http.post(
+            f"/repos/{repo}/issues/{pr_number}/comments",
+            json={"body": body},
+            headers=self._headers(),
+        )
+        if posted.status_code != 201:
+            raise PublishError(f"could not post the notice (HTTP {posted.status_code})")
+        return True
 
     def dismiss_review(self, repo: str, pr_number: int, review_id: int, message: str) -> bool:
         """Dismiss one of OUR earlier reviews; False if GitHub refuses (e.g. already dismissed)."""
