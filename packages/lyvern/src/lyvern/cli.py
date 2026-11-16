@@ -13,6 +13,7 @@ import subprocess
 import sys
 from collections.abc import Sequence
 
+from lyvern.engine.analyzers.deps import OsvClient
 from lyvern.github.client import GitHubError, GitHubRateLimited, GitHubReadClient
 from lyvern.github.refs import InvalidPullRequestRef, parse_pr_reference
 from lyvern.llm.base import LlmError
@@ -106,6 +107,12 @@ def build_parser() -> argparse.ArgumentParser:
         choices=["gemini", "groq"],
         help="also ask an AI model (changed code is sent to the provider, secrets redacted)",
     )
+    review.add_argument(
+        "--deps",
+        action="store_true",
+        help="also check pinned dependencies against the OSV vulnerability database "
+        "(sends package names and versions, never code, to api.osv.dev)",
+    )
     bench = sub.add_parser("benchmark", help="measure the analysers (read-only)")
     bsub = bench.add_subparsers(dest="bench_command", required=True)
     bsub.add_parser("synthetic", help="labelled synthetic suite (regression check)")
@@ -170,8 +177,9 @@ def main(argv: Sequence[str] | None = None) -> int:
             file=sys.stderr,
         )
     client = GitHubReadClient(resolve_token())
+    osv = OsvClient() if args.deps else None
     try:
-        draft = review_pull_request(client, ref, llm=reviewer)
+        draft = review_pull_request(client, ref, llm=reviewer, deps=osv)
     except GitHubRateLimited as error:
         print(
             f"error: GitHub rate limit reached (resets at epoch {error.reset_epoch}).",
@@ -183,6 +191,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         return 3
     finally:
         client.close()
+        if osv is not None:
+            osv.close()
     print(json.dumps(draft_to_json(draft), indent=2) if args.json else format_draft(draft))
     return 0
 

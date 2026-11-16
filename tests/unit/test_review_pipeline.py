@@ -323,3 +323,39 @@ def test_merge_conflicts_stay_out_of_the_review_summary_and_inline_comments() ->
     with_findings = review_pull_request(bad, REF, ReviewPolicy(allow_approve=True))
     assert with_findings.inline and "conflict" not in with_findings.summary.lower()
     assert all("conflict" not in text.lower() for _p, _l, _s, text in with_findings.inline)
+
+
+def test_cli_deps_flag_uses_the_dependency_lookup_and_closes_it(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    from lyvern.engine.analyzers.deps import Dependency, Vulnerability
+    from lyvern.engine.contracts import Severity
+
+    class FakeOsv:
+        closed = False
+
+        def vulnerabilities(self, deps: Any) -> dict[tuple[str, str, str], list[Vulnerability]]:
+            key = (deps[0].ecosystem, deps[0].name, deps[0].version)
+            return {key: [Vulnerability("GHSA-1", "Bad", Severity.HIGH, "2.0.0")]}
+
+        def close(self) -> None:
+            FakeOsv.closed = True
+
+    class FakeClient(FakeSource):
+        def __init__(self, token: str | None) -> None:
+            req = "requests==2.19.0\n"
+            patch = "@@ -0,0 +1 @@\n+requests==2.19.0\n"
+            super().__init__([f("requirements.txt", "added", patch)], {"requirements.txt": req})
+
+        def close(self) -> None:
+            pass
+
+    assert Dependency("PyPI", "requests", "2.19.0", 1)
+    monkeypatch.setattr(cli, "GitHubReadClient", FakeClient)
+    monkeypatch.setattr(cli, "resolve_token", lambda: "t")
+    monkeypatch.setattr(cli, "OsvClient", FakeOsv)
+    assert cli.main(["review", "octo/repo#7", "--deps"]) == 0
+    out = capsys.readouterr().out
+    assert "osv:GHSA-1" in out and "requirements.txt:1" in out and FakeOsv.closed is True
+    assert cli.main(["review", "octo/repo#7"]) == 0  # without the flag nothing is looked up
+    assert "osv:" not in capsys.readouterr().out

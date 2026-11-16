@@ -11,6 +11,12 @@ from pathlib import PurePosixPath
 from typing import Protocol
 
 from lyvern.engine.analyzers import AnalyzerError
+from lyvern.engine.analyzers.deps import (
+    DependencyLookup,
+    DependencyLookupError,
+    analyze_manifest,
+    is_manifest,
+)
 from lyvern.engine.analyzers.go import analyze_go
 from lyvern.engine.analyzers.go import is_supported as is_go
 from lyvern.engine.analyzers.js_ts import analyze_js_ts
@@ -101,6 +107,13 @@ def _run_go(path: str, text: str, added: set[int]) -> list[Finding]:
     return analyze_go(path, text, added_lines=added)
 
 
+def _manifest_analyzer(lookup: DependencyLookup) -> Analyzer:
+    def run(path: str, text: str, added: set[int]) -> list[Finding]:
+        return analyze_manifest(path, text, lookup, added_lines=added)
+
+    return run
+
+
 def _analyzer_for(path: str) -> Analyzer | None:
     if path.endswith(".py"):
         return _run_python
@@ -134,6 +147,7 @@ def review_pull_request(
     policy: ReviewPolicy | None = None,
     *,
     llm: LlmReviewer | None = None,
+    deps: DependencyLookup | None = None,
 ) -> DraftReview:
     policy = policy or ReviewPolicy()
     pr = source.get_pull_request(ref)
@@ -144,10 +158,12 @@ def review_pull_request(
     raw_findings: list[Finding] = []
     unanalyzed: list[tuple[str, str]] = []
     analyzer_failed = False
+    deps_failed = False
     considered = 0  # files that exist after the PR and are source code
 
     for info in changed:
-        if info.status == "removed" or _is_non_code(info.filename):
+        manifest = deps is not None and is_manifest(info.filename)
+        if info.status == "removed" or (_is_non_code(info.filename) and not manifest):
             continue
         considered += 1
         if info.patch is None:
@@ -166,6 +182,9 @@ def review_pull_request(
         diffs[info.filename] = fd
 
         analyzer = _analyzer_for(info.filename)
+        if analyzer is None and manifest and deps is not None:
+            analyzer = _manifest_analyzer(deps)
+
         if analyzer is None:
             unanalyzed.append((info.filename, "no analyser for this file type yet"))
             continue
@@ -177,6 +196,9 @@ def review_pull_request(
             continue
         try:
             raw_findings += analyzer(info.filename, text, set(fd.added_lines()))
+        except DependencyLookupError as error:
+            deps_failed = True
+            unanalyzed.append((info.filename, f"dependency check failed: {error}"))
         except AnalyzerError as error:
             analyzer_failed = True
             unanalyzed.append((info.filename, f"analyser failed: {error}"))
@@ -207,7 +229,7 @@ def review_pull_request(
     state = AnalysisState(
         run_status=(
             RunStatus.PARTIAL
-            if analyzer_failed or llm_stage == StageState.FAILED
+            if analyzer_failed or deps_failed or llm_stage == StageState.FAILED
             else RunStatus.SUCCEEDED
         ),
         stages={
@@ -215,6 +237,11 @@ def review_pull_request(
             "static_analysis": StageState.FAILED if analyzer_failed else StageState.COMPLETED,
             "risk": StageState.COMPLETED,
             **({"llm": llm_stage} if llm_stage is not None else {}),
+            **(
+                {"dependencies": StageState.FAILED if deps_failed else StageState.COMPLETED}
+                if deps is not None
+                else {}
+            ),
         },
         files_total=considered,
         files_unanalyzed=len(unanalyzed),

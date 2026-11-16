@@ -39,6 +39,9 @@ class Settings(BaseSettings):
     gemini_api_key: SecretStr | None = None
     groq_api_key: SecretStr | None = None
     # Which provider the review job uses for AI observations ('' = off) and an optional model.
+    # 'osv' turns on the known-vulnerability check for pinned dependencies (sends package names
+    # and versions, never code, to api.osv.dev). Empty = off.
+    dependency_check: str = ""
     llm_provider: str = ""
     llm_model: str | None = None
 

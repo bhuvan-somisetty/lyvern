@@ -13,6 +13,7 @@ from sqlalchemy.orm import Session
 from lyvern.config import Settings, get_settings
 from lyvern.db import get_engine
 from lyvern.db.models import FindingRecord, ReviewRun
+from lyvern.engine.analyzers.deps import DependencyLookup, OsvClient
 from lyvern.engine.conflict import render_conflict_notice
 from lyvern.engine.contracts import ReviewEvent, RunStatus
 from lyvern.engine.llm_review import LlmReviewer
@@ -160,6 +161,7 @@ def execute_review(
     publisher: GitHubPublisher,
     policy: ReviewPolicy,
     llm: LlmReviewer | None = None,
+    deps: DependencyLookup | None = None,
 ) -> None:
     with Session(engine) as session:
         run = session.get(ReviewRun, run_id)
@@ -178,6 +180,7 @@ def execute_review(
                 PullRequestRef(owner, name, number),
                 policy,
                 llm=llm,
+                deps=deps,
             )
             session.refresh(run)
             if _newer_run_exists(session, run) or not draft.decision.publish:
@@ -246,6 +249,7 @@ def execute_review_from_settings(run_id: UUID, settings: Settings | None = None)
         WriteGuard.from_setting(settings.write_allowed_repos),
         lambda: auth.installation_token(installation_id),
     )
+    osv = OsvClient() if settings.dependency_check.strip().lower() == "osv" else None
     try:
         execute_review(
             engine,
@@ -254,7 +258,10 @@ def execute_review_from_settings(run_id: UUID, settings: Settings | None = None)
             publisher=publisher,
             policy=policy_for_repo(repo_full_name, settings),
             llm=make_llm_reviewer(settings.llm_provider, settings),
+            deps=osv,
         )
     finally:
+        if osv is not None:
+            osv.close()
         publisher.close()
         auth.close()

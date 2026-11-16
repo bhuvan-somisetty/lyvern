@@ -14,3 +14,4 @@ All notable changes. Dates are in IST. This project is a work in progress; see `
 - 2026-11-16: development App renamed to `lyvern-bot`; logo added.
 - 2026-11-16: provider network errors now surface as clean errors; Gemini default model changed to `gemini-flash-lite-latest`.
 - 2026-11-16: Go analyser (8 rules, tree-sitter) wired into the review pipeline; 18 Go cases added to the synthetic suite (79 cases).
+- 2026-11-16: dependency vulnerability check against OSV (pinned requirements.txt, package.json, go.mod), opt-in; `lyvern review --deps`.

@@ -65,6 +65,7 @@ Auto-merging; pushing commits; running the PR's code or tests; replacing formatt
 | Analysis | Ruff (Python) and tree-sitter JS/TS rules | P0 | **BUILT** (measured on real code: see SESSION_LOG) |
 | Analysis | Semgrep, ESLint, dependency audit adapters | P1 | PLANNED (Semgrep is memory-heavy on the dev machine) |
 | Analysis | Single-file code understanding: Ruff (Python), tree-sitter rules for JavaScript/TypeScript (14 rules) and Go (8 rules, honours `#nosec` / `nolint:gosec`) | P1 | **BUILT** |
+| Analysis | Known-vulnerability check for pinned dependencies (`requirements*.txt`, `package.json`, `go.mod`) against the OSV database; off by default (`LYVERN_DEPENDENCY_CHECK=osv`); version ranges are not guessed | P1 | **BUILT**, verified live in the sandbox |
 | Analysis | Cross-file call graph and type-aware analysis | P2 | PLANNED (not built; every analyser sees one file at a time) |
 | ML | Finding classifier, semantic similarity (pgvector), explainable PR risk | P1 | DESIGNED |
 | LLM | Provider-neutral client, schema-validated output, budgets, injection defences | P1 | DESIGNED |
