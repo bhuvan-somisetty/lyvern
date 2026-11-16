@@ -3,8 +3,10 @@
 Two files, so a change to the features never needs the data to be fetched again:
 
 * ``prs_raw.jsonl`` is the source of truth: for each pull request its metadata, the list of
-  changed files (names, statuses, line counts; no code) and the human-review labels.
-* ``prs.csv`` is derived from it by ``featurize`` using ``lyvern.ml.features``.
+  changed files (names, statuses, line counts; no code) and the human-review labels. It holds
+  third parties' usernames and PR text, so it stays on the owner's machine (git-ignored).
+* ``prs.csv`` is derived from it by ``featurize`` using ``lyvern.ml.features``. It has numbers
+  only (repository, PR number, date, labels, features): no usernames, titles or text.
 
 Labels: ``changes_requested`` = a person other than the author submitted a CHANGES_REQUESTED
 review; ``human_reviewed`` = any non-author, non-bot review; ``human_inline_comments`` = number
@@ -34,7 +36,7 @@ from lyvern.github.models import (
 from lyvern.github.refs import PullRequestRef
 from lyvern.ml.features import FEATURE_NAMES, extract_features
 
-META_FIELDS = ("repo", "number", "created_at", "merged", "author")
+META_FIELDS = ("repo", "number", "created_at", "merged")  # no usernames in the committed CSV
 LABEL_FIELDS = ("changes_requested", "human_reviewed", "human_inline_comments")
 FIELDS = (*META_FIELDS, *LABEL_FIELDS, *FEATURE_NAMES)
 MAX_BODY_CHARS = 20_000
@@ -197,7 +199,6 @@ def featurize(raw: Path, out_csv: Path) -> int:
                 "number": rec["number"],
                 "created_at": pr.created_at,
                 "merged": int(pr.merged),
-                "author": pr.author,
                 **rec["labels"],
             }
             row.update({k: round(v, 6) for k, v in extract_features(pr, files).items()})

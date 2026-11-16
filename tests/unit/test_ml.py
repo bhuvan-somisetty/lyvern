@@ -326,6 +326,7 @@ def test_featurize_rebuilds_the_csv_from_raw_records_without_the_network(tmp_pat
     assert (
         rows[0]["human_inline_comments"] == "1" and rows[0]["created_at"] == "2026-01-01T00:00:00Z"
     )
+    assert "author" not in rows[0] and "bob" not in csv_path.read_text(encoding="utf-8")
     # a change to the features only needs this step again, not new API calls
     assert featurize(raw, csv_path) == 2
 
@@ -354,7 +355,7 @@ def write_synthetic(path: Path, n_per_repo: int = 150, signal: float = 1.5, seed
                 label = int(rng.random() < p)
                 row.update(
                     repo=repo, number=i, created_at=f"2026-01-{1 + i // 10:02d}T{i % 10:02d}:00:00Z",
-                    merged=1, author="x", changes_requested=0, human_reviewed=label,
+                    merged=1, changes_requested=0, human_reviewed=label,
                     human_inline_comments=label * 2,
                 )  # fmt: skip
                 writer.writerow(row)
@@ -432,6 +433,9 @@ def test_training_finds_a_real_signal_and_exports_a_model_that_reproduces_sklear
     assert max(zip(model.coef, FEATURE_NAMES, strict=True))[1] == "log_total_churn"
 
     card = card_path.read_text(encoding="utf-8")
+    assert "a person other than the author leaves at least one inline code comment" in card
+    assert "Does it beat a trivial baseline?" in card and "Which numbers to trust" in card
+    assert "CHANGES_REQUESTED review (reviewers rarely use that state)" in card
     for needle in (
         "Model card",
         "evaluated once",
@@ -449,3 +453,26 @@ def test_without_any_signal_the_model_is_not_shown(tmp_path: Path) -> None:
     model = load_model(tmp_path / "m.json")
     assert model is not None
     assert model.meta["heldout_auc_ci_low"] < 0.65  # no real signal: nothing to claim
+
+
+def test_the_ml_commands_are_wired_to_the_raw_then_features_flow(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    from lyvern import cli
+
+    parser = cli.build_parser()
+    ml = next(
+        a for a in parser._actions if getattr(a, "choices", None) and "ml" in a.choices
+    ).choices["ml"]  # type: ignore[attr-defined]
+    commands = next(a for a in ml._actions if getattr(a, "choices", None)).choices  # type: ignore[attr-defined]
+    assert set(commands) == {"collect", "featurize", "train"}
+    args = parser.parse_args(["ml", "collect", "--repos", "r.txt"])
+    assert args.out.endswith("prs_raw.jsonl") and args.per_repo == 250
+    args = parser.parse_args(["ml", "featurize"])
+    assert args.raw.endswith("prs_raw.jsonl") and args.out.endswith("prs.csv")
+    assert parser.parse_args(["ml", "train"]).target == "inline_feedback"
+
+    raw, out = tmp_path / "raw.jsonl", tmp_path / "prs.csv"
+    collect_repo(FakeClient(), "o/r", raw, target=10, done=set(), log=lambda _m: None, workers=1)
+    assert cli.main(["ml", "featurize", "--raw", str(raw), "--out", str(out)]) == 0
+    assert "wrote 2 rows" in capsys.readouterr().out and len(rows_of(out)) == 2
