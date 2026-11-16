@@ -66,12 +66,14 @@ Auto-merging; pushing commits; running the PR's code or tests; replacing formatt
 | Analysis | Semgrep, ESLint, dependency audit adapters | P1 | PLANNED (Semgrep is memory-heavy on the dev machine) |
 | Analysis | Single-file code understanding: Ruff (Python), tree-sitter rules for JavaScript/TypeScript (14 rules) and Go (8 rules, honours `#nosec` / `nolint:gosec`) | P1 | **BUILT** |
 | Analysis | Known-vulnerability check for pinned dependencies (`requirements*.txt`, `package.json`, `go.mod`) against the OSV database; off by default (`LYVERN_DEPENDENCY_CHECK=osv`); version ranges are not guessed | P1 | **BUILT**, verified live in the sandbox |
-| Analysis | Cross-file call graph and type-aware analysis | P2 | PLANNED (not built; every analyser sees one file at a time) |
+| Analysis | Cross-file check: a top-level function, class or export that the PR removes (and does not re-add) but other files still import or call; reads at most 60 same-language files at the head commit; on by default (`LYVERN_CROSS_FILE_CHECK`) | P1 | **BUILT** (narrow by design) |
+| Analysis | Full call graph and type-aware analysis | P2 | PLANNED (not built) |
 | ML | Finding classifier, semantic similarity (pgvector), explainable PR risk | P1 | DESIGNED |
 | LLM | Provider-neutral client, schema-validated output, budgets, injection defences | P1 | DESIGNED |
 | Platform | FastAPI service, Celery worker, Postgres + pgvector, Redis, Docker Compose, CI | P0 | **BUILT** (foundation) |
 | Dashboard | Overview and review-detail pages reading the database through a token-protected read-only API; honest empty, loading and error states | P1 | **BUILT** (password login with a signed expiring cookie; findings stored and labelled by the owner; measured precision with intervals; no charts) |
-| Dashboard | Repository management, analytics charts, multi-user accounts and roles | P1 | PLANNED |
+| Dashboard | User accounts with roles (viewer, reviewer, admin): scrypt-hashed passwords, admin CLI, per-user verdicts, role checked on every write | P1 | **BUILT** |
+| Dashboard | Repository management, analytics charts, single sign-on | P1 | PLANNED |
 | Quality | Benchmark harness (synthetic suite and read-only real-PR comparison, adjudication sheet, confidence intervals) | P0 | **BUILT**, first results in BENCHMARK.md |
 | Quality | Feedback loop: each reported finding is stored; the owner marks it real, false alarm or not sure on the dashboard; precision with a 95% interval overall and per rule | P0 | **BUILT** (needs the owner's labels to produce a number; GitHub reactions are not read) |
 | GitHub | Merge-conflict notice: when GitHub reports the PR cannot be merged, post one comment per head commit with rebase and merge instructions; a conflicting PR is never approved | P1 | **BUILT**, verified in the sandbox repository |

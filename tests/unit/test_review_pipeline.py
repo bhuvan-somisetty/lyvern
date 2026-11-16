@@ -219,7 +219,8 @@ def test_cli_main_runs_with_a_fake_client_and_handles_bad_input(
 def test_cli_has_no_command_that_posts() -> None:
     parser = cli.build_parser()
     commands = next(a for a in parser._actions if getattr(a, "choices", None)).choices  # type: ignore[attr-defined]
-    assert set(commands) == {"review", "benchmark", "ml"}  # all three only read from GitHub
+    # review, benchmark and ml only read from GitHub; user only edits the local accounts table
+    assert set(commands) == {"review", "benchmark", "ml", "user"}
     # structurally: the CLI and the benchmark code never import or call the write path
     import inspect
 

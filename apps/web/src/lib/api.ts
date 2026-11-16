@@ -1,3 +1,5 @@
+import type { Role } from "@/lib/session";
+
 // Server-side access to the read-only dashboard API. The token never reaches the browser.
 
 export type Run = {
@@ -98,7 +100,11 @@ export const fetchFindings = (runId: string) =>
 export const fetchFeedback = () => get<FeedbackSummary>("/api/v1/feedback/summary");
 
 /** The one write the dashboard makes: a person's verdict on a finding. Server-side only. */
-export async function putVerdict(findingId: string, verdict: Verdict): Promise<Result<Finding>> {
+export async function putVerdict(
+  findingId: string,
+  verdict: Verdict,
+  reviewer: string,
+): Promise<Result<Finding>> {
   const token = process.env.LYVERN_API_TOKEN;
   if (!token) return { ok: false, error: "The dashboard API token is not configured." };
   try {
@@ -107,7 +113,7 @@ export async function putVerdict(findingId: string, verdict: Verdict): Promise<R
       {
         method: "PUT",
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ verdict }),
+        body: JSON.stringify({ verdict, reviewer }),
         cache: "no-store",
       },
     );
@@ -115,6 +121,28 @@ export async function putVerdict(findingId: string, verdict: Verdict): Promise<R
     return { ok: true, data: (await response.json()) as Finding };
   } catch {
     return { ok: false, error: "The API is not reachable. Is it running?" };
+  }
+}
+
+export type LoginResult =
+  | { ok: true; data: { username: string; role: Role; can_label: boolean } }
+  | { ok: false; status: number }; // status 0 = the API could not be reached
+
+/** Ask the API to check a username and password. Server-side only. */
+export async function verifyLogin(username: string, password: string): Promise<LoginResult> {
+  const token = process.env.LYVERN_API_TOKEN;
+  if (!token) return { ok: false, status: 0 };
+  try {
+    const response = await fetch(`${baseUrl()}/api/v1/auth/verify`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ username, password }),
+      cache: "no-store",
+    });
+    if (!response.ok) return { ok: false, status: response.status };
+    return { ok: true, data: await response.json() };
+  } catch {
+    return { ok: false, status: 0 };
   }
 }
 

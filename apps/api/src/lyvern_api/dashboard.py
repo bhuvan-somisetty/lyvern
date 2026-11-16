@@ -16,9 +16,11 @@ from pydantic import BaseModel
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from lyvern.auth import can_label
 from lyvern.benchmark.metrics import wilson_interval
 from lyvern.config import get_settings
 from lyvern.db import FindingFeedback, FindingRecord, ReviewRun, WebhookDelivery, get_engine
+from lyvern.services.users import authenticate
 
 router = APIRouter(prefix="/api/v1", tags=["dashboard"])
 
@@ -161,6 +163,7 @@ class FindingOut(BaseModel):
 class FeedbackIn(BaseModel):
     verdict: Verdict
     note: str | None = None
+    reviewer: str | None = None  # username, set by the web server after it checked the role
 
 
 class SourcePrecision(BaseModel):
@@ -234,10 +237,12 @@ def set_feedback(finding_id: UUID, body: FeedbackIn) -> FindingOut:
             raise HTTPException(status_code=404, detail="finding not found")
         feedback = s.scalar(select(FindingFeedback).where(FindingFeedback.finding_id == finding_id))
         if feedback is None:
-            feedback = FindingFeedback(finding_id=finding_id, verdict=body.verdict, note=note)
+            feedback = FindingFeedback(
+                finding_id=finding_id, verdict=body.verdict, note=note, reviewer=body.reviewer
+            )
             s.add(feedback)
         else:
-            feedback.verdict, feedback.note = body.verdict, note
+            feedback.verdict, feedback.note, feedback.reviewer = body.verdict, note, body.reviewer
         s.commit()
         s.refresh(feedback)
         return _finding_out(record, feedback)
@@ -289,3 +294,43 @@ def feedback_summary() -> FeedbackSummary:
         precision_ci_high=high,
         by_source=by_source,
     )
+
+
+class LoginIn(BaseModel):
+    username: str
+    password: str
+
+
+class LoginOut(BaseModel):
+    username: str
+    role: str
+    can_label: bool
+
+
+_ATTEMPTS: dict[str, list[float]] = {}
+MAX_ATTEMPTS = 8
+ATTEMPT_WINDOW_SECONDS = 300.0
+
+
+def _too_many_attempts(key: str, now: float) -> bool:
+    recent = [t for t in _ATTEMPTS.get(key, []) if now - t < ATTEMPT_WINDOW_SECONDS]
+    _ATTEMPTS[key] = recent
+    return len(recent) >= MAX_ATTEMPTS
+
+
+@router.post("/auth/verify", response_model=LoginOut, dependencies=[Depends(require_token)])
+def verify_login(body: LoginIn) -> LoginOut:
+    """Check a dashboard login. The web server calls this; it never reveals which part was wrong."""
+    import time
+
+    key = body.username.strip().lower()[:64]
+    now = time.monotonic()
+    if _too_many_attempts(key, now):
+        raise HTTPException(status_code=429, detail="too many attempts; wait a few minutes")
+    with Session(get_engine()) as session:
+        user = authenticate(session, body.username[:64], body.password[:300])
+        if user is None:
+            _ATTEMPTS.setdefault(key, []).append(now)
+            raise HTTPException(status_code=401, detail="invalid username or password")
+        _ATTEMPTS.pop(key, None)
+        return LoginOut(username=user.username, role=user.role, can_label=can_label(user.role))

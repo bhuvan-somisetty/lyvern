@@ -22,6 +22,7 @@ from lyvern.engine.analyzers.go import is_supported as is_go
 from lyvern.engine.analyzers.js_ts import analyze_js_ts
 from lyvern.engine.analyzers.js_ts import is_supported as is_js_ts
 from lyvern.engine.analyzers.ruff import analyze_python
+from lyvern.engine.analyzers.xref import check_removed_symbols
 from lyvern.engine.contracts import Finding, RunStatus
 from lyvern.engine.decision import (
     AnalysisState,
@@ -152,6 +153,7 @@ def review_pull_request(
     llm: LlmReviewer | None = None,
     deps: DependencyLookup | None = None,
     attention: AttentionModel | None = None,
+    cross_file: bool = False,
 ) -> DraftReview:
     policy = policy or ReviewPolicy()
     pr = source.get_pull_request(ref)
@@ -163,6 +165,7 @@ def review_pull_request(
     unanalyzed: list[tuple[str, str]] = []
     analyzer_failed = False
     deps_failed = False
+    xref_failed = False
     considered = 0  # files that exist after the PR and are source code
 
     for info in changed:
@@ -207,6 +210,18 @@ def review_pull_request(
             analyzer_failed = True
             unanalyzed.append((info.filename, f"analyser failed: {error}"))
 
+    xref_on = cross_file and callable(getattr(source, "list_repo_files", None))
+    if xref_on:
+        try:
+            raw_findings += check_removed_symbols(
+                source,  # type: ignore[arg-type]  # checked above: it has list_repo_files
+                pr.head_repo_full_name,
+                pr.head_sha,
+                diffs,
+            )
+        except AnalyzerError:
+            xref_failed = True
+
     llm_result: LlmReviewResult | None = None
     llm_error: str | None = None
     llm_stage: StageState | None = None
@@ -233,7 +248,7 @@ def review_pull_request(
     state = AnalysisState(
         run_status=(
             RunStatus.PARTIAL
-            if analyzer_failed or deps_failed or llm_stage == StageState.FAILED
+            if analyzer_failed or deps_failed or xref_failed or llm_stage == StageState.FAILED
             else RunStatus.SUCCEEDED
         ),
         stages={
@@ -241,6 +256,11 @@ def review_pull_request(
             "static_analysis": StageState.FAILED if analyzer_failed else StageState.COMPLETED,
             "risk": StageState.COMPLETED,
             **({"llm": llm_stage} if llm_stage is not None else {}),
+            **(
+                {"cross_file": StageState.FAILED if xref_failed else StageState.COMPLETED}
+                if xref_on
+                else {}
+            ),
             **(
                 {"dependencies": StageState.FAILED if deps_failed else StageState.COMPLETED}
                 if deps is not None

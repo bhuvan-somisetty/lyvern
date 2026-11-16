@@ -3,11 +3,17 @@ import { Suspense } from "react";
 import { Loading } from "@/components/Loading";
 import { RunDetail } from "@/components/RunDetail";
 import { setVerdict } from "@/app/actions";
+import { currentSession } from "@/lib/current-session";
+import { canLabel } from "@/lib/session";
 import { fetchFindings, fetchRun } from "@/lib/api";
 
 async function RunContent({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const [result, findings] = await Promise.all([fetchRun(id), fetchFindings(id)]);
+  const [result, findings, who] = await Promise.all([
+    fetchRun(id),
+    fetchFindings(id),
+    currentSession(),
+  ]);
   if (!result.ok) {
     return (
       <main className="mx-auto max-w-3xl px-6 py-12">
@@ -26,6 +32,7 @@ async function RunContent({ params }: { params: Promise<{ id: string }> }) {
       run={result.data}
       findings={findings.ok ? findings.data : []}
       verdictAction={setVerdict}
+      canLabel={canLabel(who?.role)}
     />
   );
 }

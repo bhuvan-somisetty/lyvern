@@ -16,10 +16,12 @@ export function RunDetail({
   run,
   findings = [],
   verdictAction,
+  canLabel = true,
 }: {
   run: Run;
   findings?: Finding[];
   verdictAction?: (formData: FormData) => void | Promise<void>;
+  canLabel?: boolean;
 }) {
   return (
     <main className="mx-auto max-w-3xl px-6 py-12">
@@ -55,10 +57,11 @@ export function RunDetail({
 
       <h2 className="mt-10 text-xl font-semibold">Findings</h2>
       <p className="mt-1 text-sm text-muted">
-        Mark each one as a real problem or a false alarm. The overview turns your marks into a
-        measured precision figure.
+        {canLabel
+          ? "Mark each one as a real problem or a false alarm. The overview turns your marks into a measured precision figure."
+          : "Your account can read reviews but not mark findings. Ask an admin for the reviewer role."}
       </p>
-      <Findings findings={findings} runId={run.id} action={verdictAction} />
+      <Findings findings={findings} runId={run.id} action={canLabel ? verdictAction : undefined} />
     </main>
   );
 }

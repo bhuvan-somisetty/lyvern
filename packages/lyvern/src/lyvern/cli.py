@@ -114,6 +114,21 @@ def build_parser() -> argparse.ArgumentParser:
         help="also check pinned dependencies against the OSV vulnerability database "
         "(sends package names and versions, never code, to api.osv.dev)",
     )
+    user = sub.add_parser("user", help="manage dashboard accounts (run on the server)")
+    usub = user.add_subparsers(dest="user_command", required=True)
+    add = usub.add_parser("add", help="create an account; the password is read from a prompt")
+    add.add_argument("username")
+    add.add_argument("--role", default="viewer", choices=["viewer", "reviewer", "admin"])
+    usub.add_parser("list", help="list accounts (never shows passwords)")
+    passwd = usub.add_parser("set-password", help="change an account's password")
+    passwd.add_argument("username")
+    role = usub.add_parser("set-role", help="change an account's role")
+    role.add_argument("username")
+    role.add_argument("role", choices=["viewer", "reviewer", "admin"])
+    disable = usub.add_parser("disable", help="stop an account from signing in")
+    disable.add_argument("username")
+    enable = usub.add_parser("enable", help="allow a disabled account to sign in again")
+    enable.add_argument("username")
     ml = sub.add_parser("ml", help="collect data and train the pull-request attention model")
     msub = ml.add_subparsers(dest="ml_command", required=True)
     collect = msub.add_parser("collect", help="read public PR history into a CSV (GET only)")
@@ -132,6 +147,11 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="leave out the advisory statistical attention estimate",
     )
+    review.add_argument(
+        "--no-xref",
+        action="store_true",
+        help="skip the check for references to removed symbols (reads up to 60 files)",
+    )
     bench = sub.add_parser("benchmark", help="measure the analysers (read-only)")
     bsub = bench.add_subparsers(dest="bench_command", required=True)
     bsub.add_parser("synthetic", help="labelled synthetic suite (regression check)")
@@ -141,6 +161,50 @@ def build_parser() -> argparse.ArgumentParser:
     real.add_argument("--sheet", help="write the adjudication sheet (JSON lines) to this path")
     real.add_argument("--llm", choices=["gemini", "groq"], help="include the AI reviewer")
     return parser
+
+
+def _read_password(confirm: bool) -> str:
+    import getpass
+
+    password = os.environ.get("LYVERN_NEW_PASSWORD") or getpass.getpass("Password: ")
+    if (
+        confirm
+        and not os.environ.get("LYVERN_NEW_PASSWORD")
+        and getpass.getpass("Repeat password: ") != password
+    ):
+        raise ValueError("the two passwords do not match")
+    return password
+
+
+def run_user(args: argparse.Namespace) -> int:
+    from sqlalchemy.orm import Session
+
+    from lyvern.auth import InvalidCredentialsFormat
+    from lyvern.db import get_engine
+    from lyvern.services import users
+
+    try:
+        with Session(get_engine()) as session:
+            if args.user_command == "add":
+                created = users.create_user(session, args.username, _read_password(True), args.role)
+                print(f"created {created.username} ({created.role})")
+            elif args.user_command == "list":
+                for u in users.list_users(session):
+                    flag = " (disabled)" if u.disabled else ""
+                    print(f"{u.username}\t{u.role}{flag}")
+            elif args.user_command == "set-password":
+                users.set_password(session, args.username, _read_password(True))
+                print(f"password changed for {args.username}")
+            elif args.user_command == "set-role":
+                users.set_role(session, args.username, args.role)
+                print(f"{args.username} is now {args.role}")
+            else:
+                users.set_disabled(session, args.username, args.user_command == "disable")
+                print(f"{args.username}: {args.user_command}d")
+    except (users.UserError, InvalidCredentialsFormat, ValueError) as error:
+        print(f"error: {error}", file=sys.stderr)
+        return 2
+    return 0
 
 
 def run_ml(args: argparse.Namespace) -> int:
@@ -205,6 +269,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         if reconfigure is not None:
             reconfigure(encoding="utf-8", errors="replace")
     args = build_parser().parse_args(argv)
+    if args.command == "user":
+        return run_user(args)
     if args.command == "ml":
         try:
             return run_ml(args)
@@ -241,6 +307,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             llm=reviewer,
             deps=osv,
             attention=None if args.no_attention else load_model(),
+            cross_file=not args.no_xref,
         )
     except GitHubRateLimited as error:
         print(

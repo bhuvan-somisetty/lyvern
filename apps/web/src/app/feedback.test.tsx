@@ -4,6 +4,7 @@ import { FeedbackCard } from "@/components/FeedbackCard";
 import { Findings } from "@/components/Findings";
 import { LoginForm } from "@/components/LoginForm";
 import { Overview } from "@/components/Overview";
+import { RunDetail } from "@/components/RunDetail";
 import type { FeedbackSummary, Finding } from "@/lib/api";
 
 const finding = (over: Partial<Finding> = {}): Finding => ({
@@ -106,13 +107,15 @@ describe("FeedbackCard", () => {
 describe("LoginForm", () => {
   it("has a labelled password field and no message by default", () => {
     render(<LoginForm action={vi.fn()} />);
-    expect(screen.getByLabelText("Dashboard password")).toHaveAttribute("type", "password");
+    expect(screen.getByLabelText("Username")).toHaveAttribute("type", "text");
+    expect(screen.getByLabelText("Password")).toHaveAttribute("type", "password");
     expect(screen.queryByRole("alert")).toBeNull();
   });
 
   it("shows a clear message for each failure and a generic one for unknown codes", () => {
     for (const [code, text] of [
-      ["bad", /Wrong password/],
+      ["bad", /Wrong username or password/],
+      ["api", /not reachable/],
       ["wait", /Too many attempts/],
       ["config", /not configured/],
       ["weird", /Could not sign in/],
@@ -121,5 +124,43 @@ describe("LoginForm", () => {
       expect(screen.getByRole("alert")).toHaveTextContent(text);
       unmount();
     }
+  });
+});
+
+
+describe("role-based views", () => {
+  it("a viewer sees the findings but no verdict buttons and a clear explanation", () => {
+    render(
+      <RunDetail
+        run={{
+          id: "11111111-1111-1111-1111-111111111111",
+          repo: "o/r",
+          pr_number: 1,
+          pr_url: "https://github.com/o/r/pull/1",
+          head_sha: "abcdef0123456789",
+          status: "succeeded",
+          event_posted: "COMMENT",
+          findings_count: 1,
+          inline_posted: 1,
+          changes_dismissed: false,
+          error: null,
+          created_at: "2026-11-16T08:00:00Z",
+          started_at: null,
+          finished_at: null,
+        }}
+        findings={[finding()]}
+        verdictAction={vi.fn()}
+        canLabel={false}
+      />,
+    );
+    expect(screen.getByText(/can read reviews but not mark findings/i)).toBeInTheDocument();
+    expect(screen.queryAllByRole("button")).toHaveLength(0);
+    expect(screen.getByText("Use of possibly insecure function")).toBeInTheDocument();
+  });
+
+  it("shows who is signed in on the overview", () => {
+    render(<Overview stats={null} runs={[]} who={{ username: "alice", role: "reviewer" }} logout={vi.fn()} />);
+    expect(screen.getByText("Signed in as alice (reviewer)")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Sign out" })).toBeInTheDocument();
   });
 });

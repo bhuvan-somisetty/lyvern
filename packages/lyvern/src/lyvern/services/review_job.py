@@ -164,6 +164,7 @@ def execute_review(
     llm: LlmReviewer | None = None,
     deps: DependencyLookup | None = None,
     attention: AttentionModel | None = None,
+    cross_file: bool = False,
 ) -> None:
     with Session(engine) as session:
         run = session.get(ReviewRun, run_id)
@@ -184,6 +185,7 @@ def execute_review(
                 llm=llm,
                 deps=deps,
                 attention=attention,
+                cross_file=cross_file,
             )
             session.refresh(run)
             if _newer_run_exists(session, run) or not draft.decision.publish:
@@ -263,6 +265,7 @@ def execute_review_from_settings(run_id: UUID, settings: Settings | None = None)
             llm=make_llm_reviewer(settings.llm_provider, settings),
             deps=osv,
             attention=load_model() if settings.attention_model else None,
+            cross_file=settings.cross_file_check,
         )
     finally:
         if osv is not None:

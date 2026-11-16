@@ -51,3 +51,11 @@ click and how to know it worked. Do them in this order.
   databases for every project. The uv cache is on `D:\dev-cache\uv` (`UV_CACHE_DIR`).
 - Git signs commits with your GPG key. If a passphrase window appears, type your passphrase; the
   commit finishes when you do.
+
+## 7. Create dashboard accounts for other people (optional)
+1. On the server run `uv run alembic upgrade head` once.
+2. For each person: `uv run lyvern user add their-name --role reviewer` and type a password for them
+   (at least 10 characters). Use `--role viewer` for people who should only read.
+3. They sign in at the dashboard with that username and password. You can still sign in as `owner`
+   with the password from `apps/web/.env.local`.
+4. To remove access: `uv run lyvern user disable their-name`.

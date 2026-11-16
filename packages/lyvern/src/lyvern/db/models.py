@@ -102,7 +102,21 @@ class FindingFeedback(Base):
         Uuid, ForeignKey("findings.id", ondelete="CASCADE"), unique=True
     )
     verdict: Mapped[str] = mapped_column(String(16))  # true_positive | false_positive | unsure
+    reviewer: Mapped[str | None] = mapped_column(String(32))  # who gave the verdict
     note: Mapped[str | None] = mapped_column(Text)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
+
+
+class User(Base):
+    """A dashboard account. Only a scrypt hash of the password is stored."""
+
+    __tablename__ = "users"
+
+    id: Mapped[UUID] = mapped_column(Uuid, primary_key=True, default=uuid4)
+    username: Mapped[str] = mapped_column(String(32), unique=True)
+    password_hash: Mapped[str] = mapped_column(String(200))
+    role: Mapped[str] = mapped_column(String(16))  # viewer | reviewer | admin
+    disabled: Mapped[bool] = mapped_column(Boolean, server_default=false(), default=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

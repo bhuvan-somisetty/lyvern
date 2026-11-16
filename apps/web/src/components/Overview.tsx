@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { FeedbackSummary, Run, Stats } from "@/lib/api";
 import { FeedbackCard } from "@/components/FeedbackCard";
 import { LogoutButton } from "@/components/LogoutButton";
+import type { Session } from "@/lib/session";
 import { PRODUCT_NAME } from "@/lib/brand";
 
 const EVENT_LABEL: Record<string, string> = {
@@ -63,18 +64,27 @@ export function Overview({
   error,
   feedback = null,
   logout,
+  who = null,
 }: {
   stats: Stats | null;
   runs: Run[] | null;
   error?: string;
   feedback?: FeedbackSummary | null;
   logout?: () => void | Promise<void>;
+  who?: Session | null;
 }) {
   return (
     <main className="mx-auto max-w-5xl px-6 py-12">
       <div className="flex items-center justify-between">
         <p className="font-mono text-sm text-accent">{PRODUCT_NAME}</p>
-        {logout ? <LogoutButton action={logout} /> : null}
+        <div className="flex items-center gap-4 text-sm text-muted">
+          {who ? (
+            <span>
+              Signed in as {who.username} ({who.role})
+            </span>
+          ) : null}
+          {logout ? <LogoutButton action={logout} /> : null}
+        </div>
       </div>
       <h1 className="mt-2 text-3xl font-semibold tracking-tight">Pull request reviews</h1>
       <p className="mt-2 max-w-2xl text-muted">

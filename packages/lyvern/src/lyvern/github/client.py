@@ -212,6 +212,13 @@ class GitHubReadClient:
                 sleep(1.5 * (attempt + 1))
         return state
 
+    def list_repo_files(self, repo_full_name: str, ref: str) -> list[str]:
+        """Paths of every file in the repository at ``ref`` (one call; may be truncated)."""
+        data = self._get(
+            f"/repos/{repo_full_name}/git/trees/{quote(ref, safe='')}", {"recursive": "1"}
+        )
+        return [str(i["path"]) for i in data.get("tree", []) if i.get("type") == "blob"]
+
     def list_changed_files(self, ref: PullRequestRef) -> list[ChangedFileInfo]:
         files: list[ChangedFileInfo] = []
         for page in range(1, MAX_FILE_PAGES + 1):

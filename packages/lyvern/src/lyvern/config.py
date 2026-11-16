@@ -44,6 +44,8 @@ class Settings(BaseSettings):
     dependency_check: str = ""
     # Show the advisory attention estimate (a statistical model, see docs/ML_MODEL_CARD.md).
     attention_model: bool = True
+    # Look for references to symbols a pull request removes (reads up to 60 repository files).
+    cross_file_check: bool = True
     llm_provider: str = ""
     llm_model: str | None = None
 
