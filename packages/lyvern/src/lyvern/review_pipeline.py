@@ -24,12 +24,14 @@ from lyvern.engine.decision import (
 )
 from lyvern.engine.dedup import dedupe, rank
 from lyvern.engine.diff import DiffParseError, FileDiff, FileStatus, parse_patch
+from lyvern.engine.llm_review import LlmReviewer, LlmReviewResult
 from lyvern.engine.placement import Placement, plan_placement
 from lyvern.engine.policy import ReviewPolicy
 from lyvern.engine.render import render_inline, render_summary
 from lyvern.engine.risk import RiskAssessment, RiskFile, assess_risk
 from lyvern.github.models import ChangedFileInfo, PullRequestInfo
 from lyvern.github.refs import PullRequestRef
+from lyvern.llm.base import LlmError
 
 PRODUCT_NAME = "Lyvern"
 
@@ -65,6 +67,8 @@ class DraftReview:
     unanalyzed: tuple[tuple[str, str], ...]
     summary: str
     inline: tuple[tuple[str, int, int | None, str], ...]  # path, line, start_line, text
+    llm: LlmReviewResult | None = None
+    llm_error: str | None = None
 
 
 Analyzer = Callable[[str, str, set[int]], list[Finding]]
@@ -86,6 +90,18 @@ def _analyzer_for(path: str) -> Analyzer | None:
     return None
 
 
+def _ai_note(result: LlmReviewResult | None, error: str | None) -> str | None:
+    if error is not None:
+        return f"AI review could not run ({error}); only deterministic checks were applied."
+    if result is None:
+        return None
+    return (
+        f"AI review ({result.model}): {len(result.findings)} observation(s) kept, "
+        f"{len(result.dropped)} discarded because they could not be verified against the diff. "
+        "AI observations are not independently verified and never block a merge."
+    )
+
+
 def _is_non_code(path: str) -> bool:
     p = PurePosixPath(path)
     return p.name in _NON_CODE_NAMES or p.suffix.lower() in _NON_CODE_SUFFIXES
@@ -95,6 +111,8 @@ def review_pull_request(
     source: PullRequestSource,
     ref: PullRequestRef,
     policy: ReviewPolicy | None = None,
+    *,
+    llm: LlmReviewer | None = None,
 ) -> DraftReview:
     policy = policy or ReviewPolicy()
     pr = source.get_pull_request(ref)
@@ -141,6 +159,18 @@ def review_pull_request(
             analyzer_failed = True
             unanalyzed.append((info.filename, f"analyser failed: {error}"))
 
+    llm_result: LlmReviewResult | None = None
+    llm_error: str | None = None
+    llm_stage: StageState | None = None
+    if llm is not None:
+        try:
+            llm_result = llm.review(pr, diffs)
+            raw_findings += list(llm_result.findings)
+            llm_stage = StageState.COMPLETED
+        except LlmError as error:
+            llm_stage = StageState.FAILED
+            llm_error = str(error)[:160]
+
     findings = rank(mark_blocking(dedupe(raw_findings), policy))
     placement = plan_placement(findings, diffs, policy)
     risk = assess_risk(
@@ -153,11 +183,16 @@ def review_pull_request(
         files_unanalyzed=len(unanalyzed),
     )
     state = AnalysisState(
-        run_status=RunStatus.PARTIAL if analyzer_failed else RunStatus.SUCCEEDED,
+        run_status=(
+            RunStatus.PARTIAL
+            if analyzer_failed or llm_stage == StageState.FAILED
+            else RunStatus.SUCCEEDED
+        ),
         stages={
             "diff": StageState.COMPLETED,
             "static_analysis": StageState.FAILED if analyzer_failed else StageState.COMPLETED,
             "risk": StageState.COMPLETED,
+            **({"llm": llm_stage} if llm_stage is not None else {}),
         },
         files_total=considered,
         files_unanalyzed=len(unanalyzed),
@@ -172,6 +207,7 @@ def review_pull_request(
         placement=placement,
         unanalyzed=unanalyzed,
         risk=risk,
+        ai_note=_ai_note(llm_result, llm_error),
     )
     inline = tuple(
         (c.path, c.line, c.start_line, render_inline(c.finding)) for c in placement.inline
@@ -184,6 +220,8 @@ def review_pull_request(
         placement=placement,
         risk=risk,
         unanalyzed=tuple(unanalyzed),
+        llm=llm_result,
+        llm_error=llm_error,
         summary=summary,
         inline=inline,
     )

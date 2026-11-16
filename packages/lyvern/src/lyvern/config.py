@@ -32,6 +32,9 @@ class Settings(BaseSettings):
     # --- LLM providers (free tiers); only used by the LLM layer
     gemini_api_key: SecretStr | None = None
     groq_api_key: SecretStr | None = None
+    # Which provider the review job uses for AI observations ('' = off) and an optional model.
+    llm_provider: str = ""
+    llm_model: str | None = None
 
 
 @lru_cache

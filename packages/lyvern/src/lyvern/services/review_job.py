@@ -14,11 +14,13 @@ from lyvern.config import Settings, get_settings
 from lyvern.db import get_engine
 from lyvern.db.models import ReviewRun
 from lyvern.engine.contracts import ReviewEvent, RunStatus
+from lyvern.engine.llm_review import LlmReviewer
 from lyvern.engine.policy import ReviewPolicy
 from lyvern.github.app_auth import AppAuth
 from lyvern.github.client import GitHubReadClient
 from lyvern.github.publisher import GitHubPublisher, ReviewComment, WriteGuard
 from lyvern.github.refs import PullRequestRef
+from lyvern.llm.factory import make_llm_reviewer
 from lyvern.review_pipeline import PullRequestSource, review_pull_request
 
 logger = logging.getLogger(__name__)
@@ -79,6 +81,7 @@ def execute_review(
     make_source: Callable[[int], PullRequestSource],
     publisher: GitHubPublisher,
     policy: ReviewPolicy,
+    llm: LlmReviewer | None = None,
 ) -> None:
     with Session(engine) as session:
         run = session.get(ReviewRun, run_id)
@@ -93,7 +96,10 @@ def execute_review(
         try:
             owner, _, name = repo.partition("/")
             draft = review_pull_request(
-                make_source(installation_id), PullRequestRef(owner, name, number), policy
+                make_source(installation_id),
+                PullRequestRef(owner, name, number),
+                policy,
+                llm=llm,
             )
             session.refresh(run)
             if _newer_run_exists(session, run) or not draft.decision.publish:
@@ -156,6 +162,7 @@ def execute_review_from_settings(run_id: UUID, settings: Settings | None = None)
             make_source=lambda inst: GitHubReadClient(auth.installation_token(inst)),
             publisher=publisher,
             policy=ReviewPolicy(),
+            llm=make_llm_reviewer(settings.llm_provider, settings),
         )
     finally:
         publisher.close()

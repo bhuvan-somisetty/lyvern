@@ -15,6 +15,8 @@ from collections.abc import Sequence
 
 from lyvern.github.client import GitHubError, GitHubRateLimited, GitHubReadClient
 from lyvern.github.refs import InvalidPullRequestRef, parse_pr_reference
+from lyvern.llm.base import LlmError
+from lyvern.llm.factory import make_llm_reviewer
 from lyvern.review_pipeline import DraftReview, review_pull_request
 
 
@@ -99,6 +101,11 @@ def build_parser() -> argparse.ArgumentParser:
     review = sub.add_parser("review", help="print a DRAFT review of a pull request (never posts)")
     review.add_argument("pr", help="https://github.com/owner/repo/pull/123 or owner/repo#123")
     review.add_argument("--json", action="store_true", help="machine-readable output")
+    review.add_argument(
+        "--llm",
+        choices=["gemini", "groq"],
+        help="also ask an AI model (changed code is sent to the provider, secrets redacted)",
+    )
     bench = sub.add_parser("benchmark", help="measure the analysers (read-only)")
     bsub = bench.add_subparsers(dest="bench_command", required=True)
     bsub.add_parser("synthetic", help="labelled synthetic suite (regression check)")
@@ -106,6 +113,7 @@ def build_parser() -> argparse.ArgumentParser:
     real.add_argument("--prs", required=True, help="text file: one PR URL or owner/repo#N per line")
     real.add_argument("--tolerance", type=int, default=3, help="line distance for a match")
     real.add_argument("--sheet", help="write the adjudication sheet (JSON lines) to this path")
+    real.add_argument("--llm", choices=["gemini", "groq"], help="include the AI reviewer")
     return parser
 
 
@@ -124,7 +132,7 @@ def run_benchmark(args: argparse.Namespace) -> int:
                 refs.append(parse_pr_reference(text))
     client = GitHubReadClient(resolve_token())
     try:
-        report = run_real_benchmark(client, refs, args.tolerance)
+        report = run_real_benchmark(client, refs, args.tolerance, llm=make_llm_reviewer(args.llm))
     finally:
         client.close()
     print(report.render())
@@ -151,9 +159,19 @@ def main(argv: Sequence[str] | None = None) -> int:
     except InvalidPullRequestRef as error:
         print(f"error: {error}", file=sys.stderr)
         return 2
+    try:
+        reviewer = make_llm_reviewer(args.llm)
+    except LlmError as error:
+        print(f"error: {error}", file=sys.stderr)
+        return 2
+    if reviewer is not None:
+        print(
+            f"Note: changed code (secrets redacted) is sent to {args.llm} for the AI review.",
+            file=sys.stderr,
+        )
     client = GitHubReadClient(resolve_token())
     try:
-        draft = review_pull_request(client, ref)
+        draft = review_pull_request(client, ref, llm=reviewer)
     except GitHubRateLimited as error:
         print(
             f"error: GitHub rate limit reached (resets at epoch {error.reset_epoch}).",

@@ -26,6 +26,7 @@ from lyvern.benchmark.metrics import (
     count_matched,
     fmt_ratio,
 )
+from lyvern.engine.llm_review import LlmReviewer
 from lyvern.github.client import GitHubError, GitHubReadClient
 from lyvern.github.models import ReviewCommentInfo
 from lyvern.github.refs import PullRequestRef
@@ -112,12 +113,15 @@ def human_comments(comments: Iterable[ReviewCommentInfo]) -> list[ReviewCommentI
 
 
 def run_real_benchmark(
-    client: GitHubReadClient, refs: Sequence[PullRequestRef], tolerance: int = 3
+    client: GitHubReadClient,
+    refs: Sequence[PullRequestRef],
+    tolerance: int = 3,
+    llm: LlmReviewer | None = None,
 ) -> RealReport:
     report = RealReport(tolerance=tolerance)
     for ref in refs:
         try:
-            draft = review_pull_request(client, ref)
+            draft = review_pull_request(client, ref, llm=llm)
             people = human_comments(client.list_review_comments(ref))
         except GitHubError as error:
             report.results.append(
