@@ -7,7 +7,11 @@ To get a measured precision, a person who knows the code sets each `label` to `"
 ```python
 import json
 from lyvern.benchmark.real_prs import precision_from_labels
-rows = [json.loads(line) for line in open("docs/benchmark/ai_adjudication_sheet.jsonl", encoding="utf-8")]
+
+rows = [
+    json.loads(line)
+    for line in open("docs/benchmark/ai_adjudication_sheet.jsonl", encoding="utf-8")
+]
 confusion, unlabelled = precision_from_labels(rows)
 print(confusion.summary(), "| unlabelled:", unlabelled)
 ```

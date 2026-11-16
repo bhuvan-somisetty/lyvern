@@ -297,3 +297,8 @@ Verify Docker daemon, scaffold M1, run tests, commit on a feature branch.
 - Build problem found: Next 16 "cache components" rejects `export const dynamic` and requires live data fetching inside Suspense; restructured both pages (Suspense + async data components). `pnpm lint`, `typecheck`, `test`, `build` all exit 0 (routes: `/` and `/runs/[id]`).
 - Alembic: `path_separator = os` added (deprecation warning gone).
 - Full local gate: ruff, format, mypy --strict clean; `pytest` (unit + the webhook, review-job and dashboard integration tests) = 270 passed. Docs refreshed: PRD, TRD, Handbook, README statuses and the setup guide (how to run everything and the dashboard).
+
+### Session 2: rename, logo, approval opt-in (2026-11-16 IST)
+- Owner renamed the development GitHub App from `lyvern-dev-bhuvan` to `lyvern-bot` (verified through the public App endpoint: slug and name `lyvern-bot`, id 5777151 unchanged, so webhook, key and installation are unaffected) and uploaded a new logo. Logo candidates and their generator scripts are in the owner's Desktop folder `Lyvern Logos`; the chosen file is stored as `docs/assets/lyvern-bot-logo.png` once the owner confirms which one is final.
+- Added `LYVERN_APPROVE_ALLOWED_REPOS` (default empty) and `policy_for_repo`: automated APPROVE is a per-repository, exact-name opt-in; unit test covers empty, case-insensitive match, near-miss names and a path-like name.
+- Owner instruction: if a merge conflict appears on the owner's own branches (this repository or sandbox pull requests), rebase instead of creating merge commits; never do this in repositories the owner does not own.

@@ -28,6 +28,9 @@ class Settings(BaseSettings):
     github_webhook_secret: SecretStr | None = None
     # Repositories the bot may WRITE to (reviews, comments). Everything else is read-only.
     write_allowed_repos: str = "bhuvan-somisetty/lyvern-sandbox"
+    # Repositories that opted in to automated APPROVE (comma separated, exact owner/name).
+    # Empty by default: the bot never approves anywhere unless a repository is named here.
+    approve_allowed_repos: str = ""
 
     # Bearer token for the read-only dashboard API. Unset = the API answers 503 (locked).
     api_token: SecretStr | None = None

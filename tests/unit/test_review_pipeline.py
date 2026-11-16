@@ -254,3 +254,14 @@ def test_pre_existing_js_issue_outside_the_change_is_not_reported() -> None:
     patch = "@@ -1,2 +1,3 @@\n eval(old);\n const keep = 1;\n+const added = 2;\n"
     draft = review_pull_request(FakeSource([f("a.js", "modified", patch)], {"a.js": code}), REF)
     assert draft.inline == () and {d.finding.line_start for d in draft.placement.dropped} == {1}
+
+
+def test_approval_is_off_unless_the_repository_is_named_exactly() -> None:
+    from lyvern.config import Settings
+    from lyvern.services.review_job import policy_for_repo
+
+    assert policy_for_repo("octo/repo", Settings(approve_allowed_repos="")).allow_approve is False
+    named = Settings(approve_allowed_repos=" Octo/Repo , other/x ")
+    assert policy_for_repo("octo/repo", named).allow_approve is True
+    assert policy_for_repo("octo/repo2", named).allow_approve is False
+    assert policy_for_repo("evil/octo/repo", named).allow_approve is False

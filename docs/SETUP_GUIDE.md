@@ -45,7 +45,7 @@ GitHub has to be able to reach your computer while we test. smee.io relays messa
 2. In the left menu scroll to the bottom and click **Developer settings**.
 3. Click **GitHub Apps**, then **New GitHub App**.
 4. Fill the form:
-   - **GitHub App name:** a unique name, for example `lyvern-dev-bhuvan`. If it says the name is taken, add digits.
+   - **GitHub App name:** a unique name, for example `lyvern-bot` (the development App here was first created as `lyvern-dev-bhuvan` and renamed; the App ID stays the same after a rename). If it says the name is taken, add digits.
    - **Homepage URL:** `https://github.com/bhuvan-somisetty/lyvern`
    - **Identifying and authorizing users:** leave **Callback URL** empty. Untick **Expire user authorization tokens** if it is ticked and you are asked; otherwise leave the defaults.
    - **Webhook:** tick **Active**. For **Webhook URL** paste your smee address from step 4. For **Secret** make a random value: in PowerShell run `python -c "import secrets;print(secrets.token_hex(32))"`, copy the output into the Secret box, and also save it in a password manager or a private note. You will need it later.
@@ -97,3 +97,6 @@ Add JS/TS analysis rules so jaeger-ui and jam style PRs get real analysis, build
 3. Optional AI review: put `LYVERN_LLM_PROVIDER=groq` in your local `.env` (keys stay in `.env`; Groq worked in tests, Gemini model names for new keys were unstable).
 4. Dashboard: generate a token with `python -c "import secrets;print(secrets.token_hex(24))"`, put `LYVERN_API_TOKEN=<token>` in the repo `.env` AND in `apps/web/.env.local` (the web app reads it on the server only), set `LYVERN_API_URL=http://127.0.0.1:8010` in `apps/web/.env.local`, then `cd apps/web && pnpm dev` and open http://localhost:3000. Without a token the API answers 503 and the page shows an error instead of data.
 5. Try reviewer mode on any public PR (read-only): `uv run lyvern review owner/repo#123` and add `--llm groq` for the AI layer.
+
+### Automated approval (off by default)
+`LYVERN_APPROVE_ALLOWED_REPOS=owner/name` (comma separated, exact names) is the only way the bot may APPROVE a pull request, and only when the change is small, has no findings, every file was analysed and the risk score is at most 30. Leave it empty to disable approval everywhere.

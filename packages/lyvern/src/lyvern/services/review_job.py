@@ -141,6 +141,12 @@ def execute_review(
             logger.exception("review failed", extra={"repo": repo, "pr": number})
 
 
+def policy_for_repo(repo_full_name: str, settings: Settings) -> ReviewPolicy:
+    """Approval is an explicit per-repository opt-in (exact, case-insensitive owner/name)."""
+    allowed = {r.strip().lower() for r in settings.approve_allowed_repos.split(",") if r.strip()}
+    return ReviewPolicy(allow_approve=repo_full_name.lower() in allowed)
+
+
 def execute_review_from_settings(run_id: UUID, settings: Settings | None = None) -> None:
     """Production wiring: App credentials from settings, installation token per run."""
     settings = settings or get_settings()
@@ -151,6 +157,7 @@ def execute_review_from_settings(run_id: UUID, settings: Settings | None = None)
     with Session(engine) as session:
         run = session.get(ReviewRun, run_id)
         installation_id = run.installation_id if run else 0
+        repo_full_name = run.repo_full_name if run else ""
     publisher = GitHubPublisher(
         WriteGuard.from_setting(settings.write_allowed_repos),
         lambda: auth.installation_token(installation_id),
@@ -161,7 +168,7 @@ def execute_review_from_settings(run_id: UUID, settings: Settings | None = None)
             run_id,
             make_source=lambda inst: GitHubReadClient(auth.installation_token(inst)),
             publisher=publisher,
-            policy=ReviewPolicy(),
+            policy=policy_for_repo(repo_full_name, settings),
             llm=make_llm_reviewer(settings.llm_provider, settings),
         )
     finally:
