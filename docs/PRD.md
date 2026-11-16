@@ -62,7 +62,8 @@ Auto-merging; pushing commits; running the PR's code or tests; replacing formatt
 | Review logic | Placement (inline/general/dropped) | P0 | **BUILT** |
 | Review logic | Decision engine (COMMENT / REQUEST_CHANGES / gated APPROVE) | P0 | **BUILT** |
 | Review logic | Review text rendering (no emojis, provenance labels) | P0 | **BUILT** |
-| Analysis | Semgrep, Ruff, ESLint, secret scan, dependency audit adapters | P0 | PLANNED |
+| Analysis | Ruff (Python) and tree-sitter JS/TS rules | P0 | **BUILT** (measured on real code: see SESSION_LOG) |
+| Analysis | Semgrep, ESLint, dependency audit adapters | P1 | PLANNED (Semgrep is memory-heavy on the dev machine) |
 | Analysis | Code understanding (Python `ast`, tree-sitter: Python/JS/TS/Go) | P1 | PLANNED |
 | ML | Finding classifier, semantic similarity (pgvector), explainable PR risk | P1 | DESIGNED |
 | LLM | Provider-neutral client, schema-validated output, budgets, injection defences | P1 | DESIGNED |

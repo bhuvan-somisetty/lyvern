@@ -5,11 +5,14 @@ Nothing here can write to GitHub: the source protocol only has read methods.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import PurePosixPath
 from typing import Protocol
 
 from lyvern.engine.analyzers import AnalyzerError
+from lyvern.engine.analyzers.js_ts import analyze_js_ts
+from lyvern.engine.analyzers.js_ts import is_supported as is_js_ts
 from lyvern.engine.analyzers.ruff import analyze_python
 from lyvern.engine.contracts import Finding, RunStatus
 from lyvern.engine.decision import (
@@ -62,6 +65,25 @@ class DraftReview:
     inline: tuple[tuple[str, int, int | None, str], ...]  # path, line, start_line, text
 
 
+Analyzer = Callable[[str, str, set[int]], list[Finding]]
+
+
+def _run_python(path: str, text: str, added: set[int]) -> list[Finding]:
+    return analyze_python(path, text, added_lines=added)
+
+
+def _run_js_ts(path: str, text: str, added: set[int]) -> list[Finding]:
+    return analyze_js_ts(path, text, added_lines=added)
+
+
+def _analyzer_for(path: str) -> Analyzer | None:
+    if path.endswith(".py"):
+        return _run_python
+    if is_js_ts(path):
+        return _run_js_ts
+    return None
+
+
 def _is_non_code(path: str) -> bool:
     p = PurePosixPath(path)
     return p.name in _NON_CODE_NAMES or p.suffix.lower() in _NON_CODE_SUFFIXES
@@ -101,7 +123,8 @@ def review_pull_request(
             continue
         diffs[info.filename] = fd
 
-        if not info.filename.endswith(".py"):
+        analyzer = _analyzer_for(info.filename)
+        if analyzer is None:
             unanalyzed.append((info.filename, "no analyser for this file type yet"))
             continue
         text = source.get_file_text(pr.head_repo_full_name, info.filename, pr.head_sha)
@@ -111,7 +134,7 @@ def review_pull_request(
             )
             continue
         try:
-            raw_findings += analyze_python(info.filename, text, added_lines=set(fd.added_lines()))
+            raw_findings += analyzer(info.filename, text, set(fd.added_lines()))
         except AnalyzerError as error:
             analyzer_failed = True
             unanalyzed.append((info.filename, f"analyser failed: {error}"))

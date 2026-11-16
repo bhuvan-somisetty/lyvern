@@ -59,7 +59,7 @@ def standard_source() -> FakeSource:
     files = [
         f("a.py", "added", A_PATCH, 8),
         f("b.py", "modified", B_PATCH, 1),
-        f("web/app.tsx", "modified", "@@ -1 +1 @@\n-a\n+b\n"),
+        f("svc/main.go", "modified", "@@ -1 +1 @@\n-a\n+b\n"),
         f("README.md", "modified", "@@ -1 +1 @@\n-a\n+b\n"),
         f("old.py", "removed", "@@ -1 +0,0 @@\n-x\n"),
         f("logo.bin", "added", None),
@@ -90,12 +90,12 @@ def test_draft_review_end_to_end_on_a_sample_pr() -> None:
 
     # honest accounting of what was not analysed
     reasons = dict(draft.unanalyzed)
-    assert reasons["web/app.tsx"] == "no analyser for this file type yet"
+    assert reasons["svc/main.go"] == "no analyser for this file type yet"
     assert "no patch" in reasons["logo.bin"]
     assert (
         "README.md" not in reasons and "old.py" not in reasons
     )  # docs and removed files are not counted
-    assert draft.state.files_total == 4  # a.py, b.py, app.tsx, logo.bin
+    assert draft.state.files_total == 4  # a.py, b.py, main.go, logo.bin
     assert draft.state.files_unanalyzed == 2
 
 
@@ -189,3 +189,28 @@ def test_cli_has_no_command_that_posts() -> None:
     parser = cli.build_parser()
     commands = next(a for a in parser._actions if getattr(a, "choices", None)).choices  # type: ignore[attr-defined]
     assert set(commands) == {"review"}
+
+
+def test_typescript_and_javascript_files_are_analysed_with_real_inline_placement() -> None:
+    ts_code = "const a = 1;\nexport function run(input: string) {\n  return eval(input);\n}\n"
+    ts_patch = "@@ -0,0 +1,4 @@\n" + "".join(f"+{line}\n" for line in ts_code.split("\n")[:-1])
+    files = [
+        f("web/run.ts", "added", ts_patch, 4),
+        f("web/ok.js", "added", "@@ -0,0 +1 @@\n+const x = 1;\n"),
+    ]
+    draft = review_pull_request(
+        FakeSource(files, {"web/run.ts": ts_code, "web/ok.js": "const x = 1;\n"}), REF
+    )
+    assert {x.detection_source for x in draft.findings} == {"lyvern-js:eval"}
+    assert {(p, ln) for p, ln, _s, _t in draft.inline} == {("web/run.ts", 3)}
+    assert draft.unanalyzed == () and draft.state.files_total == 2
+    assert (
+        draft.decision.event == ReviewEvent.REQUEST_CHANGES
+    )  # eval confidence 0.80 meets the threshold
+
+
+def test_pre_existing_js_issue_outside_the_change_is_not_reported() -> None:
+    code = "eval(old);\nconst keep = 1;\nconst added = 2;\n"
+    patch = "@@ -1,2 +1,3 @@\n eval(old);\n const keep = 1;\n+const added = 2;\n"
+    draft = review_pull_request(FakeSource([f("a.js", "modified", patch)], {"a.js": code}), REF)
+    assert draft.inline == () and {d.finding.line_start for d in draft.placement.dropped} == {1}

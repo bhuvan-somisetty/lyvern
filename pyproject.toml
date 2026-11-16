@@ -35,6 +35,8 @@ select = ["E", "F", "W", "I", "B", "UP", "S", "C4", "SIM", "RUF"]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["S101", "S105", "S106", "S603", "S607"]
+# the rule table holds long tree-sitter queries and descriptions: data, not logic
+"packages/lyvern/src/lyvern/engine/analyzers/js_ts.py" = ["E501"]
 
 [tool.mypy]
 python_version = "3.12"
