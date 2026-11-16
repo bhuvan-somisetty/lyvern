@@ -1,16 +1,23 @@
 import { Suspense } from "react";
+import { logout } from "@/app/actions";
 import { Loading } from "@/components/Loading";
 import { Overview } from "@/components/Overview";
-import { fetchRuns, fetchStats } from "@/lib/api";
+import { fetchFeedback, fetchRuns, fetchStats } from "@/lib/api";
 
 async function DashboardData() {
-  const [stats, runs] = await Promise.all([fetchStats(), fetchRuns(25)]);
+  const [stats, runs, feedback] = await Promise.all([
+    fetchStats(),
+    fetchRuns(25),
+    fetchFeedback(),
+  ]);
   const error = !stats.ok ? stats.error : !runs.ok ? runs.error : undefined;
   return (
     <Overview
       stats={stats.ok ? stats.data : null}
       runs={runs.ok ? runs.data : null}
       error={error}
+      feedback={feedback.ok ? feedback.data : null}
+      logout={logout}
     />
   );
 }

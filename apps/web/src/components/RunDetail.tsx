@@ -1,5 +1,6 @@
 import Link from "next/link";
-import type { Run } from "@/lib/api";
+import type { Finding, Run } from "@/lib/api";
+import { Findings } from "@/components/Findings";
 import { eventLabel } from "@/components/Overview";
 
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
@@ -11,7 +12,15 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
   );
 }
 
-export function RunDetail({ run }: { run: Run }) {
+export function RunDetail({
+  run,
+  findings = [],
+  verdictAction,
+}: {
+  run: Run;
+  findings?: Finding[];
+  verdictAction?: (formData: FormData) => void | Promise<void>;
+}) {
   return (
     <main className="mx-auto max-w-3xl px-6 py-12">
       <Link href="/" className="text-sm text-muted hover:underline">
@@ -43,6 +52,13 @@ export function RunDetail({ run }: { run: Run }) {
           </Row>
         ) : null}
       </dl>
+
+      <h2 className="mt-10 text-xl font-semibold">Findings</h2>
+      <p className="mt-1 text-sm text-muted">
+        Mark each one as a real problem or a false alarm. The overview turns your marks into a
+        measured precision figure.
+      </p>
+      <Findings findings={findings} runId={run.id} action={verdictAction} />
     </main>
   );
 }

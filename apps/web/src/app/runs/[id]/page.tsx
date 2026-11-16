@@ -2,11 +2,12 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { Loading } from "@/components/Loading";
 import { RunDetail } from "@/components/RunDetail";
-import { fetchRun } from "@/lib/api";
+import { setVerdict } from "@/app/actions";
+import { fetchFindings, fetchRun } from "@/lib/api";
 
 async function RunContent({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const result = await fetchRun(id);
+  const [result, findings] = await Promise.all([fetchRun(id), fetchFindings(id)]);
   if (!result.ok) {
     return (
       <main className="mx-auto max-w-3xl px-6 py-12">
@@ -20,7 +21,13 @@ async function RunContent({ params }: { params: Promise<{ id: string }> }) {
       </main>
     );
   }
-  return <RunDetail run={result.data} />;
+  return (
+    <RunDetail
+      run={result.data}
+      findings={findings.ok ? findings.data : []}
+      verdictAction={setVerdict}
+    />
+  );
 }
 
 export default function RunPage({ params }: { params: Promise<{ id: string }> }) {

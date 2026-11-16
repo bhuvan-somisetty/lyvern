@@ -9,6 +9,8 @@ from sqlalchemy import (
     BigInteger,
     Boolean,
     DateTime,
+    Float,
+    ForeignKey,
     Integer,
     String,
     Text,
@@ -64,3 +66,43 @@ class ReviewRun(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class FindingRecord(Base):
+    """One finding the bot reported in one run. Kept so people can label it right or wrong."""
+
+    __tablename__ = "findings"
+
+    id: Mapped[UUID] = mapped_column(Uuid, primary_key=True, default=uuid4)
+    run_id: Mapped[UUID] = mapped_column(
+        Uuid, ForeignKey("review_runs.id", ondelete="CASCADE"), index=True
+    )
+    fingerprint: Mapped[str] = mapped_column(String(80))
+    file_path: Mapped[str] = mapped_column(String(500))
+    line_start: Mapped[int] = mapped_column(Integer)
+    line_end: Mapped[int] = mapped_column(Integer)
+    severity: Mapped[str] = mapped_column(String(16))
+    category: Mapped[str] = mapped_column(String(24))
+    origin: Mapped[str] = mapped_column(String(24))
+    detection_source: Mapped[str] = mapped_column(String(120))
+    title: Mapped[str] = mapped_column(String(200))
+    confidence: Mapped[float] = mapped_column(Float)
+    blocking: Mapped[bool] = mapped_column(Boolean, default=False)
+    placed_inline: Mapped[bool] = mapped_column(Boolean, default=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class FindingFeedback(Base):
+    """A person's verdict on a finding (one per finding; changing it overwrites it)."""
+
+    __tablename__ = "finding_feedback"
+
+    id: Mapped[UUID] = mapped_column(Uuid, primary_key=True, default=uuid4)
+    finding_id: Mapped[UUID] = mapped_column(
+        Uuid, ForeignKey("findings.id", ondelete="CASCADE"), unique=True
+    )
+    verdict: Mapped[str] = mapped_column(String(16))  # true_positive | false_positive | unsure
+    note: Mapped[str | None] = mapped_column(Text)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )

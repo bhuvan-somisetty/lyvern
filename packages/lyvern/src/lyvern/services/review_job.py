@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 
 from lyvern.config import Settings, get_settings
 from lyvern.db import get_engine
-from lyvern.db.models import ReviewRun
+from lyvern.db.models import FindingRecord, ReviewRun
 from lyvern.engine.conflict import render_conflict_notice
 from lyvern.engine.contracts import ReviewEvent, RunStatus
 from lyvern.engine.llm_review import LlmReviewer
@@ -23,7 +23,7 @@ from lyvern.github.models import MergeState, PullRequestInfo
 from lyvern.github.publisher import GitHubPublisher, ReviewComment, WriteGuard
 from lyvern.github.refs import PullRequestRef
 from lyvern.llm.factory import make_llm_reviewer
-from lyvern.review_pipeline import PullRequestSource, review_pull_request
+from lyvern.review_pipeline import DraftReview, PullRequestSource, review_pull_request
 
 logger = logging.getLogger(__name__)
 
@@ -123,6 +123,35 @@ def _notify_merge_conflicts(
         logger.exception("could not post the merge conflict notice")
 
 
+MAX_STORED_FINDINGS = 200
+
+
+def _save_findings(session: Session, run_id: UUID, draft: DraftReview) -> None:
+    """Keep what was reported so a person can mark each finding right or wrong later."""
+    placed = {
+        (c.finding.file_path, c.finding.line_start, c.finding.detection_source)
+        for c in draft.placement.inline
+    }
+    for f in draft.findings[:MAX_STORED_FINDINGS]:
+        session.add(
+            FindingRecord(
+                run_id=run_id,
+                fingerprint=f.fingerprint,
+                file_path=f.file_path[:500],
+                line_start=f.line_start,
+                line_end=f.line_end,
+                severity=f.severity.value,
+                category=f.category.value,
+                origin=f.origin.value,
+                detection_source=f.detection_source[:120],
+                title=f.title[:200],
+                confidence=f.confidence,
+                blocking=f.blocking,
+                placed_inline=(f.file_path, f.line_start, f.detection_source) in placed,
+            )
+        )
+
+
 def execute_review(
     engine: Engine,
     run_id: UUID,
@@ -170,6 +199,7 @@ def execute_review(
             run.findings_count = len(draft.findings)
             run.inline_posted = result.inline_posted
             run.finished_at = _now()
+            _save_findings(session, run.id, draft)
             session.commit()
             logger.info(
                 "review published",

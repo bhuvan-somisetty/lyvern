@@ -1,5 +1,7 @@
 import Link from "next/link";
-import type { Run, Stats } from "@/lib/api";
+import type { FeedbackSummary, Run, Stats } from "@/lib/api";
+import { FeedbackCard } from "@/components/FeedbackCard";
+import { LogoutButton } from "@/components/LogoutButton";
 import { PRODUCT_NAME } from "@/lib/brand";
 
 const EVENT_LABEL: Record<string, string> = {
@@ -59,14 +61,21 @@ export function Overview({
   stats,
   runs,
   error,
+  feedback = null,
+  logout,
 }: {
   stats: Stats | null;
   runs: Run[] | null;
   error?: string;
+  feedback?: FeedbackSummary | null;
+  logout?: () => void | Promise<void>;
 }) {
   return (
     <main className="mx-auto max-w-5xl px-6 py-12">
-      <p className="font-mono text-sm text-accent">{PRODUCT_NAME}</p>
+      <div className="flex items-center justify-between">
+        <p className="font-mono text-sm text-accent">{PRODUCT_NAME}</p>
+        {logout ? <LogoutButton action={logout} /> : null}
+      </div>
       <h1 className="mt-2 text-3xl font-semibold tracking-tight">Pull request reviews</h1>
       <p className="mt-2 max-w-2xl text-muted">
         Every number on this page is read from the review database. Nothing is estimated.
@@ -97,6 +106,8 @@ export function Overview({
               review will appear here.
             </p>
           )}
+
+          <FeedbackCard summary={feedback} />
         </>
       )}
     </main>

@@ -103,3 +103,8 @@ Add JS/TS analysis rules so jaeger-ui and jam style PRs get real analysis, build
 
 ### Re-checking conflicts when the target branch changes (one extra App setting)
 GitHub sends no `pull_request` event when a push to `main` makes an open pull request conflict. Lyvern handles the `push` event for that: open the App's settings page, **Permissions & events**, and under **Subscribe to events** tick **Push** (it needs no new permission), then save. After that, each push to a branch re-checks the open pull requests that target it (at most 50, drafts skipped): a pull request that now conflicts gets the conflict comment and the bot's earlier approval of it is dismissed. Without the Push subscription this feature simply never triggers; nothing else changes.
+
+### Dashboard login and the feedback loop
+Put these in `apps/web/.env.local` (git-ignored; the web app reads them on the server only): `LYVERN_DASHBOARD_PASSWORD` (the password you type on the sign-in page), `LYVERN_SESSION_SECRET` (a long random string that signs the session cookie), plus `LYVERN_API_TOKEN` and `LYVERN_API_URL` from the dashboard section above. If either login variable is missing, every page redirects to the sign-in page and sign-in refuses to work (it fails closed). After five wrong passwords in a minute, sign-in refuses attempts for the rest of that minute. Sessions last 8 hours.
+
+Run `uv run alembic upgrade head` once to create the new `findings` and `finding_feedback` tables. From then on every review stores its findings. Open a review on the dashboard and mark each finding Real problem, False alarm or Not sure; the overview shows the measured precision (true / (true + false), with a 95% Wilson interval and a per-rule table). Not sure answers are excluded, never guessed.

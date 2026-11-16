@@ -76,7 +76,7 @@ class Recorder:
 @pytest.fixture
 def db() -> Iterator[None]:
     with get_engine().begin() as conn:
-        conn.execute(text("TRUNCATE review_runs, webhook_deliveries"))
+        conn.execute(text("TRUNCATE review_runs, webhook_deliveries CASCADE"))
     yield
 
 
@@ -289,3 +289,17 @@ def test_an_earlier_approval_stays_when_the_latest_review_approves_again(db: Non
     run_job(rid, FakeSource(clean=True), rec, ReviewPolicy(allow_approve=True))
     assert load(rid).event_posted == "APPROVE"
     assert rec.puts == [] and load(previous).changes_dismissed is False
+
+
+def test_reported_findings_are_stored_with_their_inline_placement(db: None) -> None:
+    from lyvern.db import FindingRecord
+
+    rid, rec = make_run(), Recorder()
+    run_job(rid, FakeSource(), rec)
+    with Session(get_engine()) as s:
+        rows = s.query(FindingRecord).filter(FindingRecord.run_id == rid).all()
+        assert len(rows) == load(rid).findings_count and rows
+        by_rule = {r.detection_source: r for r in rows}
+        assert by_rule["ruff:S307"].placed_inline is True  # the eval line was added by the PR
+        assert by_rule["ruff:S307"].file_path == "app.py" and by_rule["ruff:S307"].line_start == 5
+        assert all(r.origin == "static_analysis" and r.fingerprint for r in rows)

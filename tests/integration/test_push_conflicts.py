@@ -35,7 +35,7 @@ def client(monkeypatch: pytest.MonkeyPatch) -> Iterator[tuple[TestClient, Queued
     queued: Queued = []
     monkeypatch.setattr(api_main.check_conflicts, "delay", lambda r, i, b: queued.append((r, i, b)))
     with get_engine().begin() as conn:
-        conn.execute(text("TRUNCATE review_runs, webhook_deliveries"))
+        conn.execute(text("TRUNCATE review_runs, webhook_deliveries CASCADE"))
     yield TestClient(api_main.create_app()), queued
     get_settings.cache_clear()
 
@@ -145,7 +145,7 @@ class Recorder:
 @pytest.fixture
 def db() -> Iterator[None]:
     with get_engine().begin() as conn:
-        conn.execute(text("TRUNCATE review_runs, webhook_deliveries"))
+        conn.execute(text("TRUNCATE review_runs, webhook_deliveries CASCADE"))
     yield
 
 

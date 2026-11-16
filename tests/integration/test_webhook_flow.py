@@ -29,7 +29,7 @@ def client(monkeypatch: pytest.MonkeyPatch) -> Iterator[tuple[TestClient, list[s
     queued: list[str] = []
     monkeypatch.setattr(api_main.run_review, "delay", lambda run_id: queued.append(run_id))
     with get_engine().begin() as conn:
-        conn.execute(text("TRUNCATE review_runs, webhook_deliveries"))
+        conn.execute(text("TRUNCATE review_runs, webhook_deliveries CASCADE"))
     yield TestClient(api_main.create_app()), queued
     get_settings.cache_clear()
 
