@@ -20,6 +20,19 @@ class Settings(BaseSettings):
     )
     redis_url: SecretStr = Field(default=SecretStr("redis://localhost:6380/0"))
 
+    # --- GitHub App (ids are not secret; the key file stays outside the repository)
+    github_app_id: str | None = None
+    github_app_client_id: str | None = None
+    github_app_private_key_path: str | None = None
+    github_installation_id: int | None = None
+    github_webhook_secret: SecretStr | None = None
+    # Repositories the bot may WRITE to (reviews, comments). Everything else is read-only.
+    write_allowed_repos: str = "bhuvan-somisetty/lyvern-sandbox"
+
+    # --- LLM providers (free tiers); only used by the LLM layer
+    gemini_api_key: SecretStr | None = None
+    groq_api_key: SecretStr | None = None
+
 
 @lru_cache
 def get_settings() -> Settings:
