@@ -16,6 +16,7 @@ from lyvern.github.webhook import verify_signature
 from lyvern.logging import configure_logging, correlation_id
 from lyvern.services.ingest import ingest_delivery
 from lyvern.tasks import run_review
+from lyvern_api.dashboard import router as dashboard_router
 
 MAX_WEBHOOK_BYTES = 5_000_000
 
@@ -37,6 +38,8 @@ def create_app() -> FastAPI:
             correlation_id.reset(token)
         response.headers["x-request-id"] = rid
         return response
+
+    app.include_router(dashboard_router)
 
     @app.get("/healthz")
     def healthz() -> dict[str, str]:

@@ -1,16 +1,24 @@
-import { PRODUCT_NAME } from "@/lib/brand";
+import { Suspense } from "react";
+import { Loading } from "@/components/Loading";
+import { Overview } from "@/components/Overview";
+import { fetchRuns, fetchStats } from "@/lib/api";
+
+async function DashboardData() {
+  const [stats, runs] = await Promise.all([fetchStats(), fetchRuns(25)]);
+  const error = !stats.ok ? stats.error : !runs.ok ? runs.error : undefined;
+  return (
+    <Overview
+      stats={stats.ok ? stats.data : null}
+      runs={runs.ok ? runs.data : null}
+      error={error}
+    />
+  );
+}
 
 export default function Home() {
   return (
-    <main className="mx-auto flex min-h-screen max-w-3xl flex-col justify-center gap-6 px-6">
-      <p className="font-mono text-sm text-accent">{PRODUCT_NAME}</p>
-      <h1 className="text-4xl font-semibold tracking-tight">
-        Pull request intelligence for engineering teams
-      </h1>
-      <p className="text-lg text-muted">
-        No repositories are connected yet. Connect a GitHub repository to see reviews, findings
-        and risk analysis here.
-      </p>
-    </main>
+    <Suspense fallback={<Loading label="Loading reviews" />}>
+      <DashboardData />
+    </Suspense>
   );
 }

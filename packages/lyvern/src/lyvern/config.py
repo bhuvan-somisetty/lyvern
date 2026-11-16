@@ -29,6 +29,9 @@ class Settings(BaseSettings):
     # Repositories the bot may WRITE to (reviews, comments). Everything else is read-only.
     write_allowed_repos: str = "bhuvan-somisetty/lyvern-sandbox"
 
+    # Bearer token for the read-only dashboard API. Unset = the API answers 503 (locked).
+    api_token: SecretStr | None = None
+
     # --- LLM providers (free tiers); only used by the LLM layer
     gemini_api_key: SecretStr | None = None
     groq_api_key: SecretStr | None = None

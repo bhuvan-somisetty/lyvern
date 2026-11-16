@@ -68,9 +68,11 @@ Auto-merging; pushing commits; running the PR's code or tests; replacing formatt
 | ML | Finding classifier, semantic similarity (pgvector), explainable PR risk | P1 | DESIGNED |
 | LLM | Provider-neutral client, schema-validated output, budgets, injection defences | P1 | DESIGNED |
 | Platform | FastAPI service, Celery worker, Postgres + pgvector, Redis, Docker Compose, CI | P0 | **BUILT** (foundation) |
-| Dashboard | Next.js dashboard shell | P1 | **BUILT** (empty-state shell only) |
-| Dashboard | Repos, PR history, findings, analytics, settings | P1 | PLANNED |
-| Quality | Benchmark harness, feedback loop, false-positive tracking | P0 | PLANNED |
+| Dashboard | Overview and review-detail pages reading the database through a token-protected read-only API; honest empty, loading and error states | P1 | **BUILT** (no login yet: single token; no charts) |
+| Dashboard | Repository management, findings explorer, analytics charts, settings, user login | P1 | PLANNED |
+| Quality | Benchmark harness (synthetic suite and read-only real-PR comparison, adjudication sheet, confidence intervals) | P0 | **BUILT**, first results in BENCHMARK.md |
+| Quality | Feedback loop from the dashboard and GitHub, false-positive tracking over time | P0 | PLANNED |
+| LLM | Provider-neutral AI review: schema validation, evidence verification against the diff, redaction, never blocking | P1 | **BUILT** (Groq verified live; Gemini not verified; precision unknown, see BENCHMARK.md) |
 | Reviewer mode | CLI that takes any PR URL, runs the same engine, and prints a DRAFT review for a human reviewer to read and post themselves; never posts on its own | P1 | **BUILT (first version)**: read-only GitHub client, Python analysis via Ruff, diff parsing, placement, verdict proposal; JS/TS/Go analysis not yet (those files are listed as not analysed). Needed because a GitHub App can only be installed by an owner/admin of the repository's account, so a contributor cannot use the App on other people's projects |
 
 ## 8. User experience

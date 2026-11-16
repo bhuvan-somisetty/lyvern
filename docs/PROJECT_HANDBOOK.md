@@ -81,9 +81,11 @@ Review summary:
 | GitHub App connection (signed webhooks, review job, posting inline comments, REQUEST_CHANGES/COMMENT, dismissing its own stale review) | **BUILT**; verified end to end on two PRs in the owner's sandbox repository (Python only, Ruff findings); nothing has been posted anywhere else |
 | Static analysis | **BUILT** for Python (Ruff, curated rules) and JavaScript/TypeScript/TSX (own tree-sitter rules: eval, Function constructor, innerHTML, document.write, React dangerouslySetInnerHTML, child_process.exec, disabled TLS verification, hardcoded secrets, secret-shaped tokens, empty catch, debugger, ts-ignore). PLANNED: Semgrep, ESLint, dependency audit, Go |
 | Code understanding (tree-sitter / `ast`, cross-file) | PLANNED |
-| ML models (classifier, similarity, risk) and benchmark | DESIGNED / PLANNED |
-| LLM layer | DESIGNED |
-| Dashboard pages and analytics | PLANNED |
+| ML models (finding classifier, similarity search) | DESIGNED; nothing trained (no labelled data yet) |
+| AI review layer (Groq or Gemini, optional, off by default) | **BUILT**: output must pass a schema and quote real added code; AI observations are labelled unverified and can never block. Measured on 12 real PRs: ran on 10, 8 observations, none overlapping human comments, precision unknown (see BENCHMARK.md) |
+| Dashboard: overview and review-detail pages (real data only) | **BUILT**; charts, login, repo management PLANNED |
+| Benchmark harness and first measured results | **BUILT** (docs/BENCHMARK.md) |
+| Explainable risk score | **BUILT** (rule-based; shown in every review) |
 
 **Today it cannot review a real PR end to end.** What exists is the foundation and the part that decides whether a comment is valid and what the review verdict is.
 

@@ -88,3 +88,12 @@ Add JS/TS analysis rules so jaeger-ui and jam style PRs get real analysis, build
 - **`uv` not found:** use `python -m uv ...` exactly as written above.
 - **`gh` not logged in:** run `gh auth login` and follow the prompts (choose GitHub.com and HTTPS).
 - **Docker not running:** start Docker Desktop and wait for the whale icon to stop animating.
+
+---
+
+## Addendum: running the full local system and the dashboard
+1. Start Docker Desktop (database on host port 5433, Redis on 6380): `docker compose up -d db redis`, then `uv run alembic upgrade head`.
+2. API: `uv run uvicorn lyvern_api.main:app --port 8010`. Worker: `uv run celery -A lyvern_worker.app worker --pool=solo`. Webhook forwarder: `npx smee-client --url <your smee url> --target http://127.0.0.1:8010/webhooks/github`. (These three together need roughly 400 MB of free memory.)
+3. Optional AI review: put `LYVERN_LLM_PROVIDER=groq` in your local `.env` (keys stay in `.env`; Groq worked in tests, Gemini model names for new keys were unstable).
+4. Dashboard: generate a token with `python -c "import secrets;print(secrets.token_hex(24))"`, put `LYVERN_API_TOKEN=<token>` in the repo `.env` AND in `apps/web/.env.local` (the web app reads it on the server only), set `LYVERN_API_URL=http://127.0.0.1:8010` in `apps/web/.env.local`, then `cd apps/web && pnpm dev` and open http://localhost:3000. Without a token the API answers 503 and the page shows an error instead of data.
+5. Try reviewer mode on any public PR (read-only): `uv run lyvern review owner/repo#123` and add `--llm groq` for the AI layer.

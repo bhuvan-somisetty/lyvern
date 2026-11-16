@@ -29,7 +29,8 @@ GitHub --webhook--> API (FastAPI) --enqueue--> Redis --> Worker (Celery)
 | Read-only GitHub client (`lyvern.github`), reviewer-mode pipeline and CLI (`lyvern.review_pipeline`, `lyvern.cli`), Ruff adapter | `packages/lyvern` | **BUILT** |
 | Webhook endpoint (`/webhooks/github`), idempotent ingestion, review job, guarded publisher, DB tables `webhook_deliveries` and `review_runs` | `apps/api`, `lyvern.services`, `lyvern.github` | **BUILT**, verified end to end in the sandbox repository |
 | Static-analysis adapters, code intelligence, ML, LLM, orchestrator | `lyvern.engine.*` | PLANNED |
-| Dashboard pages | `apps/web` | shell BUILT; pages PLANNED |
+| Dashboard overview and run-detail pages; read-only token-protected API (`/api/v1/runs`, `/api/v1/stats`) | `apps/web`, `apps/api` | **BUILT** (production build verified) |
+| JS/TS analyser (tree-sitter), explainable risk score, AI layer, benchmark harness | `lyvern.engine`, `lyvern.llm`, `lyvern.benchmark` | **BUILT** |
 
 ## 2. Technology choices and rationale
 | Choice | Why | Alternatives considered |
