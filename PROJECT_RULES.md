@@ -29,6 +29,7 @@ Product name: **Lyvern** (chosen by the owner on 2026-11-16; Python package, rep
 - Never execute pull-request code in the application process. Any future execution happens only in an isolated sandbox with resource limits and no network by default.
 - Never send secrets to an LLM. Redact first.
 - Never log tokens, private keys, webhook secrets, API keys or source code bodies.
+- **Never write to a repository the owner does not own.** No comments, reviews, reactions, issues, labels, branches or any other write on public open-source projects (for example jaeger-ui, joinmarket-webui/jam). Reviewer mode is read-only by construction and tested as such. Any test that posts to GitHub happens only in the owner's own sandbox repository, with the App installed on that repository only. (Rule set by the owner on 2026-11-16.)
 - Four finding origins must stay distinguishable everywhere (DB, API, UI, GitHub comment): `static_analysis`, `ml_prediction`, `llm_observation`, `human_confirmed`.
 
 ## 5. Engineering standards
