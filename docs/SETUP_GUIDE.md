@@ -1,0 +1,90 @@
+# Lyvern: setup guide for the owner (step by step, all free)
+
+Follow the steps in order. Total time about 45 minutes. Nothing here costs money. Never paste a private key, a webhook secret or an API key into the chat or into any file inside the git repository.
+
+Rule reminder: Lyvern never posts or writes anything on repositories you do not own. All tests that post happen only in your own `lyvern-sandbox` repository.
+
+---
+
+## Step 1: open the real code in VS Code (1 minute)
+1. In VS Code choose **File > Open Folder...**
+2. Type or paste `C:\Users\BHUVAN\dev\pr-intel` and press **Select Folder**.
+3. In the left Explorer you should now see `apps`, `packages`, `tests`, `docs`, `docker-compose.yml`. The review logic is in `packages/lyvern/src/lyvern/engine`.
+(The OneDrive folder `AI PR Review Bot` only holds a snapshot copy.)
+
+## Step 2: try reviewer mode yourself (5 minutes)
+This only reads public pull requests. It cannot post anything.
+1. In VS Code choose **Terminal > New Terminal** (it opens PowerShell in the project folder).
+2. Run this (one line):
+   `python -m uv run lyvern review https://github.com/The-PR-Agent/pr-agent/pull/4969`
+3. Wait a few seconds. You will see a block that starts with `DRAFT REVIEW - NOTHING WAS POSTED`, the PR title, a proposed verdict, and the list of findings (it may say "none reported").
+4. Try another one, or ask for machine-readable output:
+   `python -m uv run lyvern review jaegertracing/jaeger-ui#4787 --json`
+5. If you see `error: GitHub rate limit`, wait a few minutes. If you see an authentication error, run `gh auth login` once and try again.
+Note: only Python files are analysed so far. TypeScript files are listed as "not analysed" until JS/TS rules are added.
+
+## Step 3: create your sandbox repository (3 minutes)
+This is the only place the bot will ever post comments during testing.
+1. Open https://github.com/new
+2. **Repository name:** `lyvern-sandbox`
+3. Choose **Private**.
+4. Tick **Add a README file**.
+5. Click **Create repository**.
+
+## Step 4: create the webhook tunnel (2 minutes, free, no account)
+GitHub has to be able to reach your computer while we test. smee.io relays messages for free.
+1. Open https://smee.io and click **Start a new channel**.
+2. Copy the address shown (it looks like `https://smee.io/AbCdEf123`). Keep this tab; you need the address in step 6.
+
+## Step 5: make a folder for secrets (1 minute)
+1. Open PowerShell and run: `New-Item -ItemType Directory -Force C:\Users\BHUVAN\secrets`
+2. This folder is outside OneDrive and outside the git repository on purpose. Private keys will be saved here.
+
+## Step 6: register the GitHub App (15 minutes)
+1. On GitHub click your **profile photo (top right) > Settings**.
+2. In the left menu scroll to the bottom and click **Developer settings**.
+3. Click **GitHub Apps**, then **New GitHub App**.
+4. Fill the form:
+   - **GitHub App name:** a unique name, for example `lyvern-dev-bhuvan`. If it says the name is taken, add digits.
+   - **Homepage URL:** `https://github.com/bhuvan-somisetty/lyvern`
+   - **Identifying and authorizing users:** leave **Callback URL** empty. Untick **Expire user authorization tokens** if it is ticked and you are asked; otherwise leave the defaults.
+   - **Webhook:** tick **Active**. For **Webhook URL** paste your smee address from step 4. For **Secret** make a random value: in PowerShell run `python -c "import secrets;print(secrets.token_hex(32))"`, copy the output into the Secret box, and also save it in a password manager or a private note. You will need it later.
+   - **Repository permissions** (click the dropdown for each):
+     - **Contents:** Read-only
+     - **Pull requests:** Read and write
+     - **Metadata:** Read-only (it is added automatically)
+     - Leave everything else as "No access".
+   - **Subscribe to events:** tick **Pull request**.
+   - **Where can this GitHub App be installed?** choose **Only on this account**.
+5. Click **Create GitHub App**.
+6. On the next page write down the **App ID** (a number near the top). The App ID is not secret.
+7. Scroll to **Private keys** and click **Generate a private key**. A `.pem` file downloads. Move it to `C:\Users\BHUVAN\secrets\` and rename it `lyvern-dev.pem`. Do not open it in a chat, do not upload it anywhere, do not put it in the repo or OneDrive.
+8. In the left menu of the App page click **Install App**, click **Install** next to your account, choose **Only select repositories**, select **lyvern-sandbox** only, and click **Install**.
+
+## Step 7: get a free AI key (5 minutes)
+Choose ONE. All have free tiers with limits; read their terms. For now only public code is sent.
+- **Google AI Studio:** open https://aistudio.google.com/apikey, sign in, click **Create API key**, copy it.
+- **Groq:** open https://console.groq.com/keys, sign in, click **Create API Key**, copy it.
+- **Ollama (no key, runs on your computer):** install from https://ollama.com . It uses several GB of disk and your CPU; your disk has about 12 GB free, so this is the tightest option.
+Save the key in a password manager. Do not paste it in the chat.
+
+## Step 8: Docker (only when I ask)
+For the full stack tests, Docker Desktop must be running (whale icon in the system tray). Start it from the Start menu if needed.
+
+## What to send me when you finish
+Send me only these (none are secret):
+1. The sandbox repository name (`lyvern-sandbox`, or what you chose).
+2. The **App ID** number.
+3. Which AI provider you chose (Google AI Studio, Groq or Ollama).
+4. The smee channel address is NOT secret either, but you can keep it; I will ask for it when needed.
+Never send: the `.pem` file contents, the webhook secret, the API key.
+
+## What I will do next
+Add JS/TS analysis rules so jaeger-ui and jam style PRs get real analysis, build the benchmark against real human review comments (read-only), then connect the GitHub App flow in `lyvern-sandbox`.
+
+## If something goes wrong
+- **"Name already taken" when creating the App:** change the name.
+- **Cannot find "Developer settings":** it is at the very bottom of the left menu in Settings, below "Security log".
+- **`uv` not found:** use `python -m uv ...` exactly as written above.
+- **`gh` not logged in:** run `gh auth login` and follow the prompts (choose GitHub.com and HTTPS).
+- **Docker not running:** start Docker Desktop and wait for the whale icon to stop animating.
