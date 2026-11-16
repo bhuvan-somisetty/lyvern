@@ -395,3 +395,78 @@ def test_cli_llm_option_without_a_key_fails_cleanly(
     get_settings.cache_clear()
     assert cli.main(["review", "o/r#1", "--llm", "groq"]) == 2
     assert "no Groq API key" in capsys.readouterr().err
+
+
+def test_provider_error_message_is_included_but_the_key_is_redacted() -> None:
+    body = {
+        "error": {
+            "message": "Request too large for SECRETKEY on tokens per minute: limit 8000, requested 9500"
+        }
+    }
+    client = GroqClient(
+        "SECRETKEY",
+        transport=httpx.MockTransport(lambda r: httpx.Response(413, json=body)),
+        sleep=lambda _s: None,
+    )
+    with pytest.raises(LlmError) as info:
+        client.complete("s", "u")
+    text = str(info.value)
+    assert (
+        "HTTP 413" in text
+        and "tokens per minute" in text
+        and "SECRETKEY" not in text
+        and "[REDACTED]" in text
+    )
+
+
+def test_retry_after_header_is_honoured_up_to_a_cap() -> None:
+    sleeps: list[float] = []
+    responses = [
+        httpx.Response(429, headers={"retry-after": "7"}),
+        httpx.Response(429, headers={"retry-after": "9999"}),
+        httpx.Response(200, json={"choices": [{"message": {"content": "{}"}}]}),
+    ]
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        return responses.pop(0)
+
+    client = GroqClient("k", transport=httpx.MockTransport(handler), sleep=sleeps.append)
+    assert client.complete("s", "u").text == "{}"
+    assert (
+        sleeps[0] >= 7 and sleeps[1] == 60.0
+    )  # waits what the provider asked, capped at 60 seconds
+
+
+def test_groq_retries_once_without_strict_json_mode_when_json_mode_fails() -> None:
+    bodies: list[dict[str, Any]] = []
+    failing = httpx.Response(
+        400, json={"error": {"message": "Failed to generate JSON. Please adjust your prompt."}}
+    )
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        bodies.append(json.loads(request.content))
+        return (
+            failing
+            if len(bodies) == 1
+            else httpx.Response(200, json={"choices": [{"message": {"content": "{}"}}]})
+        )
+
+    out = GroqClient("k", transport=httpx.MockTransport(handler), sleep=lambda _s: None).complete(
+        "s", "u"
+    )
+    assert out.text == "{}" and len(bodies) == 2
+    assert "response_format" in bodies[0] and "response_format" not in bodies[1]
+
+
+def test_other_400_errors_are_not_retried() -> None:
+    calls = {"n": 0}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        calls["n"] += 1
+        return httpx.Response(400, json={"error": {"message": "invalid model"}})
+
+    with pytest.raises(LlmError, match="HTTP 400"):
+        GroqClient("k", transport=httpx.MockTransport(handler), sleep=lambda _s: None).complete(
+            "s", "u"
+        )
+    assert calls["n"] == 1

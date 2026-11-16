@@ -28,6 +28,14 @@ Everything here was measured by running the code in this repository. Numbers are
 - Why: a sample of the human comments shows what reviewers actually raise: "use the `useConfig()` hook instead of `getConfig()`", "this runs on every mount so the chunk downloads even when unused", "needs i18n keys", "this check is copy-pasted three times", "why are there no tests for this". These need repository conventions, behaviour and intent; pattern-based static rules cannot see them.
 - Reading: static analysis alone is quiet and safe on well-reviewed code (it would have posted zero comments on these 30 PRs) but gives no coverage of what human reviewers discuss. That is the case for the AI layer, and this harness is how its value will be measured: coverage, agreement, and labelled precision.
 
+## 5. AI layer on real PRs (`lyvern benchmark real --llm groq`), 12 PRs
+Model: `openai/gpt-oss-120b` on Groq's free tier. 6 jaeger-ui PRs and 6 jam PRs (the first 6 of each in the 30-PR list). Read-only; only public code was sent, secrets redacted.
+- The AI stage was unreliable on the free tier, which is itself a finding. Four runs of the same 12 PRs: first run AI ran on 2/12 PRs (5 rate-limit errors, 4 "request too large", 1 JSON-mode error); after smaller prompts, retry-after handling and pacing: 9/12; after a retry without strict JSON mode: **10/12** (the 2 failures were the model returning invalid JSON; those runs kept their static results and said "AI review could not run").
+- **Result of the final run:** 8 AI observations on 5 of 12 PRs (41.7%, 95% CI 19.3-68.0%); 0 of 12 human inline comments on these PRs had a finding within +/-3 lines (95% CI 0.0-24.3%); **0 of 8 AI observations near a human comment** (95% CI 0.0-32.4%). The evidence check discarded 0 observations in the final run (all quoted real added code).
+- **Run-to-run variation:** the count of observations changed between runs (5, 2, 6, 8) partly because different PRs failed each time, and a model run is not deterministic. Any single run should be read with that in mind.
+- **Quality, honestly:** precision is UNKNOWN until a person labels the 8 observations in the adjudication sheet. The author's quick reading (not ground truth) suggests several are likely false positives: two warn about `currentSchedule?.x.y` although optional chaining already prevents the crash; two flag tests that expect raw i18n keys, which is what the test mocks return; a couple are plausible (a removed `outline: none` focus style; a read-only set cast). If most are false, the AI layer in its current prompt would be noisy, and the evidence check proves only that the quoted code exists, not that the claim is true.
+- What would improve it (not done): repository context (conventions, related files), a second verification pass per finding, a stricter prompt about language semantics, and labelled data to measure each change.
+
 ## 5. How to reproduce
 ```bash
 uv run lyvern benchmark synthetic
@@ -36,4 +44,4 @@ uv run lyvern benchmark real --prs prs.txt --tolerance 3 --sheet sheet.jsonl
 `prs.txt`: one `owner/repo#N` or PR URL per line. The command only reads from GitHub.
 
 ## 6. Known limitations
-Small samples (30 PRs, 43 human comments); three repositories, two ecosystems; location matching is a proxy for "same issue"; human comments include questions and nits; no labelled precision yet; synthetic cases are author-written; the benchmark covers the static layer only until the AI layer is measured.
+Small samples (30 PRs, 43 human comments; the AI run used 12 PRs and 12 human comments); free-tier models and rate limits; non-deterministic model output; three repositories, two ecosystems; location matching is a proxy for "same issue"; human comments include questions and nits; no labelled precision yet; synthetic cases are author-written; the benchmark covers the static layer only until the AI layer is measured.

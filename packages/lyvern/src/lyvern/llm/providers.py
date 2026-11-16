@@ -9,8 +9,31 @@ from typing import Any
 import httpx
 
 from lyvern.llm.base import LlmError, LlmResponse, LlmUsage
+from lyvern.llm.redact import redact_secrets
 
 _RETRY = {429, 500, 502, 503, 504}
+
+
+def _provider_message(response: httpx.Response, secret: str) -> str:
+    """The provider's own error text, with our key and any token-shaped strings removed."""
+    try:
+        data = response.json()
+        message = (
+            str((data.get("error") or {}).get("message") or "") if isinstance(data, dict) else ""
+        )
+    except ValueError:
+        return ""
+    if secret:
+        message = message.replace(secret, "[REDACTED]")
+    return redact_secrets(message)[0][:160]
+
+
+def _retry_after(response: httpx.Response) -> float:
+    value = response.headers.get("retry-after", "")
+    try:
+        return min(60.0, max(0.0, float(value)))
+    except ValueError:
+        return 0.0
 
 
 def _post_json(
@@ -19,18 +42,21 @@ def _post_json(
     headers: dict[str, str],
     body: dict[str, Any],
     sleep: Callable[[float], None],
+    secret: str = "",
     retries: int = 2,
 ) -> dict[str, Any]:
     response = http.post(url, headers=headers, json=body)
     for attempt in range(retries):
         if response.status_code not in _RETRY:
             break
-        sleep(1.5 * (2**attempt))
+        sleep(max(1.5 * (2**attempt), _retry_after(response)))
         response = http.post(url, headers=headers, json=body)
+    detail = _provider_message(response, secret) if response.status_code >= 400 else ""
+    suffix = f": {detail}" if detail else ""
     if response.status_code == 429:
-        raise LlmError("provider rate limit reached (HTTP 429)")
+        raise LlmError(f"provider rate limit reached (HTTP 429){suffix}")
     if response.status_code >= 400:
-        raise LlmError(f"provider returned HTTP {response.status_code}")
+        raise LlmError(f"provider returned HTTP {response.status_code}{suffix}")
     try:
         data = response.json()
     except ValueError as error:
@@ -71,7 +97,9 @@ class GeminiClient:
                 "responseMimeType": "application/json",
             },
         }
-        data = _post_json(self._http, url, {"x-goog-api-key": self._key}, body, self._sleep)
+        data = _post_json(
+            self._http, url, {"x-goog-api-key": self._key}, body, self._sleep, self._key
+        )
         try:
             text = "".join(p.get("text", "") for p in data["candidates"][0]["content"]["parts"])
         except (KeyError, IndexError, TypeError) as error:
@@ -103,19 +131,33 @@ class GroqClient:
         self._http = httpx.Client(transport=transport, timeout=90.0)
 
     def complete(self, system: str, user: str, *, max_output_tokens: int = 2048) -> LlmResponse:
-        body = {
+        try:
+            return self._call(system, user, max_output_tokens, strict_json=True)
+        except LlmError as error:
+            # Groq's strict JSON mode rejects some outputs with HTTP 400 ("Failed to generate
+            # JSON"). Retry once without it; our own validation is the real judge of the output.
+            if "HTTP 400" in str(error) and "JSON" in str(error):
+                return self._call(system, user, max_output_tokens, strict_json=False)
+            raise
+
+    def _call(
+        self, system: str, user: str, max_output_tokens: int, *, strict_json: bool
+    ) -> LlmResponse:
+        body: dict[str, Any] = {
             "model": self.model,
             "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}],
             "temperature": 0,
             "max_tokens": max_output_tokens,
-            "response_format": {"type": "json_object"},
         }
+        if strict_json:
+            body["response_format"] = {"type": "json_object"}
         data = _post_json(
             self._http,
             "https://api.groq.com/openai/v1/chat/completions",
             {"Authorization": f"Bearer {self._key}"},
             body,
             self._sleep,
+            self._key,
         )
         try:
             text = data["choices"][0]["message"]["content"] or ""

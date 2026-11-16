@@ -16,6 +16,7 @@ What this measures, and what it does NOT:
 from __future__ import annotations
 
 import json
+import time
 from collections import Counter
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field
@@ -30,7 +31,7 @@ from lyvern.engine.llm_review import LlmReviewer
 from lyvern.github.client import GitHubError, GitHubReadClient
 from lyvern.github.models import ReviewCommentInfo
 from lyvern.github.refs import PullRequestRef
-from lyvern.review_pipeline import review_pull_request
+from lyvern.review_pipeline import DraftReview, review_pull_request
 
 
 @dataclass
@@ -48,6 +49,7 @@ class PrResult:
     ours_matched: int
     error: str = ""
     not_introduced: int = 0  # found in code the PR did not change; never published
+    ai: str = "off"  # "off", "ok (N kept, M discarded)" or "failed: <reason>"
 
 
 @dataclass
@@ -60,6 +62,14 @@ class RealReport:
     @property
     def ok(self) -> list[PrResult]:
         return [r for r in self.results if not r.error]
+
+    @staticmethod
+    def _ai_summary(ok: list[PrResult]) -> str:
+        used = [r for r in ok if r.ai != "off"]
+        if not used:
+            return "not used"
+        failed = sum(1 for r in used if r.ai.startswith("failed"))
+        return f"ran on {len(used) - failed} of {len(used)} PRs, failed on {failed}"
 
     def render(self) -> str:
         ok = self.ok
@@ -74,6 +84,7 @@ class RealReport:
             f"({len(self.results) - len(ok)} failed), match tolerance +/-{self.tolerance} lines",
             f"Source files: {analysed_files} considered, {sum(r.unanalyzed for r in ok)} not analysed",
             f"PRs where Lyvern raised at least one finding: {fmt_ratio(with_findings, len(ok))}",
+            f"AI stage: {self._ai_summary(ok)}",
             f"Findings reported on the PRs' own changes: {sum(r.findings for r in ok)} "
             f"({inline} inline); found only in untouched code and NOT reported: "
             f"{sum(r.not_introduced for r in ok)}",
@@ -94,9 +105,17 @@ class RealReport:
                 f"- {r.ref}: {r.source_files} src files, {r.findings} findings ({r.inline} inline, "
                 f"{r.not_introduced} pre-existing not reported), "
                 f"risk {r.risk_level}, verdict {r.event}; human comments {r.human_comments} "
-                f"(near a finding: {r.human_matched}); {r.title[:60]}"
+                f"(near a finding: {r.human_matched}); AI {r.ai}; {r.title[:50]}"
             )
         return "\n".join(lines)
+
+
+def _ai_label(draft: DraftReview) -> str:
+    if draft.llm_error is not None:
+        return f"failed: {draft.llm_error[:60]}"
+    if draft.llm is not None:
+        return f"ok ({len(draft.llm.findings)} kept, {len(draft.llm.dropped)} discarded)"
+    return "off"
 
 
 def human_comments(comments: Iterable[ReviewCommentInfo]) -> list[ReviewCommentInfo]:
@@ -117,9 +136,12 @@ def run_real_benchmark(
     refs: Sequence[PullRequestRef],
     tolerance: int = 3,
     llm: LlmReviewer | None = None,
+    pause_seconds: float = 20.0,
 ) -> RealReport:
     report = RealReport(tolerance=tolerance)
-    for ref in refs:
+    for position, ref in enumerate(refs):
+        if llm is not None and position:
+            time.sleep(pause_seconds)  # stay under free-tier rate limits
         try:
             draft = review_pull_request(client, ref, llm=llm)
             people = human_comments(client.list_review_comments(ref))
@@ -148,6 +170,7 @@ def run_real_benchmark(
                 human_comments=len(theirs),
                 human_matched=count_matched(theirs, finding_locs, tolerance),
                 ours_matched=count_matched(ours, theirs, tolerance),
+                ai=_ai_label(draft),
             )
         )
         for f in reported:

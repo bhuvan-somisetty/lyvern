@@ -223,7 +223,7 @@ def validate_findings(
 
 
 class LlmReviewer:
-    def __init__(self, client: LlmClient, *, max_chars: int = 24_000) -> None:
+    def __init__(self, client: LlmClient, *, max_chars: int = 12_000) -> None:
         self._client = client
         self._max_chars = max_chars
 
@@ -233,7 +233,7 @@ class LlmReviewer:
 
     def review(self, pr: PullRequestInfo, diffs: dict[str, FileDiff]) -> LlmReviewResult:
         prompt, cut, redactions = build_prompt(pr, diffs, self._max_chars)
-        response = self._client.complete(SYSTEM_PROMPT, prompt)
+        response = self._client.complete(SYSTEM_PROMPT, prompt, max_output_tokens=1500)
         findings, dropped = validate_findings(response.text, diffs, self._client.model)
         return LlmReviewResult(
             findings=tuple(findings),
