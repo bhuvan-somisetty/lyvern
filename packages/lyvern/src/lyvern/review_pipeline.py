@@ -27,6 +27,7 @@ from lyvern.engine.diff import DiffParseError, FileDiff, FileStatus, parse_patch
 from lyvern.engine.placement import Placement, plan_placement
 from lyvern.engine.policy import ReviewPolicy
 from lyvern.engine.render import render_inline, render_summary
+from lyvern.engine.risk import RiskAssessment, RiskFile, assess_risk
 from lyvern.github.models import ChangedFileInfo, PullRequestInfo
 from lyvern.github.refs import PullRequestRef
 
@@ -60,6 +61,7 @@ class DraftReview:
     state: AnalysisState
     findings: tuple[Finding, ...]
     placement: Placement
+    risk: RiskAssessment
     unanalyzed: tuple[tuple[str, str], ...]
     summary: str
     inline: tuple[tuple[str, int, int | None, str], ...]  # path, line, start_line, text
@@ -141,15 +143,25 @@ def review_pull_request(
 
     findings = rank(mark_blocking(dedupe(raw_findings), policy))
     placement = plan_placement(findings, diffs, policy)
+    risk = assess_risk(
+        files=[
+            RiskFile(i.filename, i.additions, i.deletions, is_source=not _is_non_code(i.filename))
+            for i in changed
+        ],
+        findings=findings,
+        files_total=considered,
+        files_unanalyzed=len(unanalyzed),
+    )
     state = AnalysisState(
         run_status=RunStatus.PARTIAL if analyzer_failed else RunStatus.SUCCEEDED,
         stages={
             "diff": StageState.COMPLETED,
             "static_analysis": StageState.FAILED if analyzer_failed else StageState.COMPLETED,
+            "risk": StageState.COMPLETED,
         },
         files_total=considered,
         files_unanalyzed=len(unanalyzed),
-        risk_score=None,  # the risk stage is not built yet, so approval is never possible
+        risk_score=risk.score,
     )
     decision = decide(findings, state, policy)
     summary = render_summary(
@@ -159,6 +171,7 @@ def review_pull_request(
         findings=findings,
         placement=placement,
         unanalyzed=unanalyzed,
+        risk=risk,
     )
     inline = tuple(
         (c.path, c.line, c.start_line, render_inline(c.finding)) for c in placement.inline
@@ -169,6 +182,7 @@ def review_pull_request(
         state=state,
         findings=tuple(findings),
         placement=placement,
+        risk=risk,
         unanalyzed=tuple(unanalyzed),
         summary=summary,
         inline=inline,

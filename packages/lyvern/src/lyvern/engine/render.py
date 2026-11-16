@@ -13,6 +13,7 @@ from collections.abc import Sequence
 from lyvern.engine.contracts import Finding, Origin, ReviewEvent, Severity
 from lyvern.engine.decision import AnalysisState, Decision
 from lyvern.engine.placement import Placement
+from lyvern.engine.risk import RiskAssessment
 
 MAX_BODY_CHARS = 60_000  # GitHub's limit is 65,536
 MAX_EVIDENCE_LINES = 12
@@ -107,6 +108,7 @@ def render_summary(
     findings: Sequence[Finding],
     placement: Placement,
     unanalyzed: Sequence[tuple[str, str]] = (),
+    risk: RiskAssessment | None = None,
 ) -> str:
     """``findings`` are the findings that survived dedup (not the dropped ones)."""
     published = [c.finding for c in placement.inline] + [g.finding for g in placement.general]
@@ -134,6 +136,8 @@ def render_summary(
         f"Source files: {state.files_total} changed, {analyzed} analyzed, "
         f"{state.files_unanalyzed} not analyzed."
     )
+    if risk is not None:
+        lines.append(f"Risk: {risk.score}/100 ({risk.level}). {risk.explain()}.")
     if unanalyzed:
         lines.append("Not analyzed:")
         for path, why in list(unanalyzed)[:10]:

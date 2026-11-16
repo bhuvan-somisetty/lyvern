@@ -110,20 +110,51 @@ def test_pipeline_only_uses_read_methods_and_reads_the_head_repo() -> None:
     assert "get_file_text:alice/repo@aaaa" in src.calls  # fork head repo, head sha
 
 
-def test_clean_pr_with_unanalysed_files_can_never_be_approved() -> None:
-    files = [f("ok.py", "added", "@@ -0,0 +1,2 @@\n+def add(a, b):\n+    return a + b\n", 2)]
+CLEAN_FILES = [f("ok.py", "added", "@@ -0,0 +1,2 @@\n+def add(a, b):\n+    return a + b\n", 2)]
+CLEAN_CONTENT = {"ok.py": "def add(a, b):\n    return a + b\n"}
+
+
+def test_small_clean_pr_is_approved_only_when_the_repository_opted_in() -> None:
     from lyvern.engine.policy import ReviewPolicy
 
-    draft = review_pull_request(
-        FakeSource(files, {"ok.py": "def add(a, b):\n    return a + b\n"}),
-        REF,
-        ReviewPolicy(allow_approve=True),
+    off = review_pull_request(FakeSource(CLEAN_FILES, CLEAN_CONTENT), REF)
+    assert off.decision.event == ReviewEvent.COMMENT
+    assert any("not enabled" in r for r in off.decision.reasons)
+
+    on = review_pull_request(
+        FakeSource(CLEAN_FILES, CLEAN_CONTENT), REF, ReviewPolicy(allow_approve=True)
     )
-    assert draft.findings == ()
-    assert (
-        draft.decision.event == ReviewEvent.COMMENT
-    )  # risk stage does not exist yet -> no approval
-    assert any("risk was not assessed" in r for r in draft.decision.reasons)
+    assert on.findings == () and on.risk.level == "low" and on.risk.score < 30
+    assert on.decision.event == ReviewEvent.APPROVE
+    assert "Approved by automated policy" in on.summary and "not by a person" in on.summary
+    assert f"Risk: {on.risk.score}/100 (low)" in on.summary
+
+
+def test_unanalysed_files_or_a_failed_analyser_prevent_approval_even_on_a_clean_pr() -> None:
+    from lyvern.engine.policy import ReviewPolicy
+
+    files = [*CLEAN_FILES, f("svc/main.go", "added", "@@ -0,0 +1 @@\n+package main\n")]
+    draft = review_pull_request(
+        FakeSource(files, CLEAN_CONTENT), REF, ReviewPolicy(allow_approve=True)
+    )
+    assert draft.decision.event == ReviewEvent.COMMENT
+    assert any("could not be analyzed" in r for r in draft.decision.reasons)
+    assert draft.risk.factors[-1].name == "unanalyzed" and draft.risk.factors[-1].points > 0
+
+
+def test_risky_change_cannot_be_approved_even_with_no_findings() -> None:
+    from lyvern.engine.policy import ReviewPolicy
+
+    patch = "@@ -0,0 +1,3 @@\n+a = 1\n+b = 2\n+c = 3\n"
+    files = [f(f"auth/mod{i}.py", "added", patch, 3) for i in range(11)] + [
+        f("migrations/0001.sql", "added", patch, 3),
+        f(".github/workflows/ci.yml", "added", patch, 3),
+    ]
+    contents = {x.filename: "a = 1\nb = 2\nc = 3\n" for x in files}
+    draft = review_pull_request(FakeSource(files, contents), REF, ReviewPolicy(allow_approve=True))
+    assert draft.findings == () and draft.risk.score > 30
+    assert draft.decision.event == ReviewEvent.COMMENT
+    assert any("exceeds the approval ceiling" in r for r in draft.decision.reasons)
 
 
 def test_analyzer_failure_marks_the_run_partial_and_is_reported(

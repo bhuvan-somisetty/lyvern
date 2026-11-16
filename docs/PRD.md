@@ -47,7 +47,7 @@ Auto-merging; pushing commits; running the PR's code or tests; replacing formatt
 | U5 | I want a summary with real numbers | Counts in the summary equal the counts of reported findings | BUILT |
 | U6 | As a maintainer I want approval only when it is really safe | APPROVE requires opt-in, a fully successful run, no serious findings, low risk; otherwise COMMENT | BUILT (logic) |
 | U7 | I want to dismiss a wrong finding and have the system learn carefully | Feedback is stored with context; not used as training labels until reviewed | DESIGNED |
-| U8 | I want to see risk and why | Explainable risk score with factor breakdown | DESIGNED |
+| U8 | I want to see risk and why | Explainable risk score with factor breakdown | **BUILT** (rule-based; shown in every review summary) |
 | U9 | I want to define repository rules | Repo-level policy/guidelines file affects review | DESIGNED (policy object BUILT) |
 | U10 | As a security engineer I want secrets and tokens never leaked | Secret redaction before any LLM call; no tokens in logs | PARTIAL: log scrubbing BUILT; LLM redaction PLANNED |
 

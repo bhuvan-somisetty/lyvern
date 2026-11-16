@@ -76,6 +76,13 @@ def draft_to_json(draft: DraftReview) -> dict[str, object]:
         "proposed_event": draft.decision.event.value,
         "reasons": list(draft.decision.reasons),
         "incomplete": draft.decision.incomplete,
+        "risk": {
+            "score": draft.risk.score,
+            "level": draft.risk.level,
+            "factors": [
+                {"name": x.name, "points": x.points, "reason": x.reason} for x in draft.risk.factors
+            ],
+        },
         "summary": draft.summary,
         "inline": [
             {"path": p, "line": ln, "start_line": st, "body": body}
