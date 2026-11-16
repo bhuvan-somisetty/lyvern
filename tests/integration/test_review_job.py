@@ -91,14 +91,16 @@ def make_run(sha: str = "a" * 40, status: str = "queued") -> UUID:
         return run.id
 
 
-def run_job(run_id: UUID, source: FakeSource, rec: Recorder) -> None:
+def run_job(
+    run_id: UUID, source: FakeSource, rec: Recorder, policy: ReviewPolicy | None = None
+) -> None:
     publisher = GitHubPublisher(WriteGuard([REPO]), lambda: "t", transport=httpx.MockTransport(rec))
     execute_review(
         get_engine(),
         run_id,
         make_source=lambda _i: source,
         publisher=publisher,
-        policy=ReviewPolicy(),
+        policy=policy or ReviewPolicy(),
     )
 
 
@@ -258,3 +260,32 @@ def test_clean_unknown_or_failing_mergeability_posts_no_notice(db: None) -> None
         rid, rec = make_run(sha=str(index) * 40), Recorder()
         run_job(rid, ConflictingSource(state), rec)
         assert load(rid).status == "succeeded" and conflict_posts(rec) == []
+
+
+def make_previous_approval(review_id: int = 888) -> UUID:
+    with Session(get_engine()) as s:
+        run = ReviewRun(
+            repo_full_name=REPO, pr_number=4, head_sha="8" * 40, installation_id=5,
+            trigger_delivery_id="d8", status="succeeded", event_posted="APPROVE",
+            github_review_id=review_id,
+        )  # fmt: skip
+        s.add(run)
+        s.commit()
+        return run.id
+
+
+def test_an_earlier_approval_is_withdrawn_when_the_latest_review_does_not_approve(db: None) -> None:
+    previous = make_previous_approval(888)
+    rid, rec = make_run(sha="a" * 40), Recorder()
+    run_job(rid, ConflictingSource(MergeState(mergeable=False, state="dirty")), rec)
+    assert load(rid).event_posted == "COMMENT"
+    assert rec.puts == [f"/repos/{REPO}/pulls/4/reviews/888/dismissals"]
+    assert load(previous).changes_dismissed is True
+
+
+def test_an_earlier_approval_stays_when_the_latest_review_approves_again(db: None) -> None:
+    previous = make_previous_approval(888)
+    rid, rec = make_run(sha="a" * 40), Recorder()
+    run_job(rid, FakeSource(clean=True), rec, ReviewPolicy(allow_approve=True))
+    assert load(rid).event_posted == "APPROVE"
+    assert rec.puts == [] and load(previous).changes_dismissed is False

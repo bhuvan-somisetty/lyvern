@@ -45,15 +45,20 @@ def _newer_run_exists(session: Session, run: ReviewRun) -> bool:
     return newer is not None
 
 
-def _dismiss_stale_changes_requested(
-    session: Session, publisher: GitHubPublisher, run: ReviewRun, head_sha: str
+def _dismiss_stale(
+    session: Session,
+    publisher: GitHubPublisher,
+    run: ReviewRun,
+    event: ReviewEvent,
+    message: str,
 ) -> None:
+    """Dismiss OUR earlier reviews of this kind on the PR (the column marks any dismissal)."""
     stale = session.scalars(
         select(ReviewRun).where(
             ReviewRun.repo_full_name == run.repo_full_name,
             ReviewRun.pr_number == run.pr_number,
             ReviewRun.id != run.id,
-            ReviewRun.event_posted == ReviewEvent.REQUEST_CHANGES.value,
+            ReviewRun.event_posted == event.value,
             ReviewRun.github_review_id.is_not(None),
             ReviewRun.changes_dismissed.is_(False),
         )
@@ -62,11 +67,7 @@ def _dismiss_stale_changes_requested(
         assert old.github_review_id is not None  # filtered above  # noqa: S101
         try:
             dismissed = publisher.dismiss_review(
-                run.repo_full_name,
-                run.pr_number,
-                old.github_review_id,
-                f"Dismissed automatically: the blocking findings from the earlier review are no "
-                f"longer present in commit {head_sha[:8]}. A person should still review it.",
+                run.repo_full_name, run.pr_number, old.github_review_id, message
             )
         except Exception:
             logger.exception("could not dismiss an earlier review")
@@ -74,6 +75,33 @@ def _dismiss_stale_changes_requested(
         if dismissed:
             old.changes_dismissed = True
             session.commit()
+
+
+def _dismiss_stale_changes_requested(
+    session: Session, publisher: GitHubPublisher, run: ReviewRun, head_sha: str
+) -> None:
+    _dismiss_stale(
+        session,
+        publisher,
+        run,
+        ReviewEvent.REQUEST_CHANGES,
+        f"Dismissed automatically: the blocking findings from the earlier review are no "
+        f"longer present in commit {head_sha[:8]}. A person should still review it.",
+    )
+
+
+def _dismiss_stale_approvals(
+    session: Session, publisher: GitHubPublisher, run: ReviewRun, head_sha: str
+) -> None:
+    """An approval only speaks for the commit it saw: withdraw it once a later review declines."""
+    _dismiss_stale(
+        session,
+        publisher,
+        run,
+        ReviewEvent.APPROVE,
+        f"Dismissed automatically: the latest review of commit {head_sha[:8]} did not approve "
+        "it (see that review for the reason). An earlier approval no longer applies.",
+    )
 
 
 def _notify_merge_conflicts(
@@ -146,6 +174,8 @@ def execute_review(
             # or replaces it. If this complete review found nothing blocking, dismiss ours.
             if result.event_posted != ReviewEvent.REQUEST_CHANGES and not draft.decision.incomplete:
                 _dismiss_stale_changes_requested(session, publisher, run, draft.pr.head_sha)
+            if result.event_posted != ReviewEvent.APPROVE:
+                _dismiss_stale_approvals(session, publisher, run, draft.pr.head_sha)
             _notify_merge_conflicts(
                 publisher, draft.pr, PullRequestRef(owner, name, number), draft.merge_state
             )
