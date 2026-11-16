@@ -23,6 +23,10 @@ class StageState(StrEnum):
     SKIPPED = "skipped"
 
 
+# Merge conflicts are reported in their own comment, never inside the review text.
+MERGE_CONFLICT_REASON = "the pull request has merge conflicts"
+
+
 @dataclass(frozen=True)
 class AnalysisState:
     """What actually ran. Built by the orchestrator from real step outcomes."""
@@ -136,7 +140,7 @@ def _approve_obstacles(
     if not policy.allow_approve:
         obstacles.append("approval is not enabled for this repository")
     if state.merge_conflicts:
-        obstacles.append("the pull request has merge conflicts")
+        obstacles.append(MERGE_CONFLICT_REASON)
     if state.run_status != RunStatus.SUCCEEDED:
         obstacles.append(f"run status is {state.run_status.value}, not succeeded")
     missing = sorted(
@@ -169,7 +173,6 @@ def _approve_obstacles(
     ]
     if serious:
         obstacles.append(
-            f"{len(serious)} finding(s) at {policy.approve_blocked_by_severity.value} severity or "
-            "above need a human look"
+            f"{len(serious)} finding(s) left to address (approval requires none, even minor ones)"
         )
     return obstacles

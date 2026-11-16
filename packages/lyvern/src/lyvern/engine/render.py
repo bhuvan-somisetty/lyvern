@@ -11,7 +11,7 @@ from collections import Counter
 from collections.abc import Sequence
 
 from lyvern.engine.contracts import Finding, Origin, ReviewEvent, Severity
-from lyvern.engine.decision import AnalysisState, Decision
+from lyvern.engine.decision import MERGE_CONFLICT_REASON, AnalysisState, Decision
 from lyvern.engine.placement import Placement
 from lyvern.engine.risk import RiskAssessment
 
@@ -129,7 +129,8 @@ def render_summary(
     else:
         lines.append(f"Result: {_EVENT_HEADLINE[decision.event]}.")
     for reason in decision.reasons:
-        lines.append(f"- {reason}")
+        if reason != MERGE_CONFLICT_REASON:  # it has its own comment
+            lines.append(f"- {reason}")
     lines.append("")
 
     analyzed = state.files_total - state.files_unanalyzed

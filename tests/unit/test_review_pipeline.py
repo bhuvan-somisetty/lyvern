@@ -305,3 +305,21 @@ def test_unknown_or_failing_mergeability_does_not_block_and_is_not_guessed() -> 
         draft = review_pull_request(MergeStateSource(state), REF, policy)
         assert draft.decision.event == ReviewEvent.APPROVE
         assert draft.merge_state is None or not draft.merge_state.has_conflicts
+
+
+def test_merge_conflicts_stay_out_of_the_review_summary_and_inline_comments() -> None:
+    from lyvern.engine.policy import ReviewPolicy
+    from lyvern.github.models import MergeState
+
+    source = MergeStateSource(MergeState(mergeable=False, state="dirty"))
+    draft = review_pull_request(source, REF, ReviewPolicy(allow_approve=True))
+    assert draft.decision.event == ReviewEvent.COMMENT  # still never approved
+    assert any("merge conflicts" in r for r in draft.decision.reasons)
+    assert "conflict" not in draft.summary.lower()
+    assert all("conflict" not in text.lower() for _p, _l, _s, text in draft.inline)
+
+    bad = MergeStateSource(MergeState(mergeable=False, state="dirty"))
+    bad.files, bad.contents = standard_source().files, {"a.py": A_PY, "b.py": B_PY}
+    with_findings = review_pull_request(bad, REF, ReviewPolicy(allow_approve=True))
+    assert with_findings.inline and "conflict" not in with_findings.summary.lower()
+    assert all("conflict" not in text.lower() for _p, _l, _s, text in with_findings.inline)

@@ -110,6 +110,7 @@ def test_clean_run_with_opt_in_approves() -> None:
         good_state(files_unanalyzed=1),
         good_state(risk_score=None),
         good_state(risk_score=80),
+        good_state(merge_conflicts=True),
     ],
 )
 def test_approve_is_blocked_by_any_incomplete_or_risky_state(state: AnalysisState) -> None:
@@ -121,6 +122,32 @@ def test_medium_finding_prevents_approval_but_does_not_block() -> None:
     f = mk(severity=Severity.MEDIUM, category=Category.PERFORMANCE)
     d = decide([f], good_state(), APPROVING)
     assert d.event == ReviewEvent.COMMENT and d.blocking == ()
+
+
+@pytest.mark.parametrize("severity", list(Severity))
+def test_any_finding_even_a_nit_prevents_approval_under_the_default_policy(
+    severity: Severity,
+) -> None:
+    f = mk(severity=severity, confidence=0.3, category=Category.MAINTAINABILITY)
+    d = decide([f], good_state(), APPROVING)
+    assert d.event != ReviewEvent.APPROVE
+    assert any("left to address" in r for r in d.reasons) or d.blocking
+
+
+def test_an_uncorroborated_ai_observation_also_prevents_approval() -> None:
+    f = mk(
+        origin=Origin.LLM_OBSERVATION,
+        severity=Severity.INFO,
+        confidence=0.4,
+        detection_source="llm:x",
+    )
+    assert decide([f], good_state(), APPROVING).event == ReviewEvent.COMMENT
+
+
+def test_merge_conflicts_prevent_approval_even_with_nothing_else_wrong() -> None:
+    d = decide([], good_state(merge_conflicts=True), APPROVING)
+    assert d.event == ReviewEvent.COMMENT
+    assert any("merge conflicts" in r for r in d.reasons)
 
 
 def test_confirmed_high_finding_requests_changes() -> None:
@@ -192,6 +219,7 @@ state_st = st.builds(
     files_total=st.integers(0, 10),
     files_unanalyzed=st.integers(0, 10),
     risk_score=st.none() | st.integers(0, 100),
+    merge_conflicts=st.booleans(),
 )
 policy_st = st.builds(
     ReviewPolicy,
@@ -219,6 +247,7 @@ def test_decision_invariants_hold_for_arbitrary_inputs(
         assert not d.blocking and not d.incomplete
         assert state.risk_score is not None and state.risk_score <= policy.approve_max_risk_score
         assert state.unanalyzed_share <= policy.max_unanalyzed_share
+        assert not state.merge_conflicts
         assert not any(
             f.introduced_by_pr and f.severity.rank >= policy.approve_blocked_by_severity.rank
             for f in findings

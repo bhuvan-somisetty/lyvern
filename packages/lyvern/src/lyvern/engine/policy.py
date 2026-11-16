@@ -22,8 +22,9 @@ class ReviewPolicy(BaseModel):
     required_stages: frozenset[str] = frozenset({"diff", "static_analysis"})
     max_unanalyzed_share: float = Field(default=0.0, ge=0.0, le=1.0)
     approve_max_risk_score: int = Field(default=30, ge=0, le=100)
-    # even a non-blocking finding at/above this severity prevents an approval
-    approve_blocked_by_severity: Severity = Severity.MEDIUM
+    # any finding at/above this severity prevents an approval. INFO = every finding, even a
+    # nit: the bot approves only when there is nothing left for the author to address.
+    approve_blocked_by_severity: Severity = Severity.INFO
 
     # --- publishing limits
     max_inline_comments: int = Field(default=25, ge=0, le=100)
