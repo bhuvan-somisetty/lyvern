@@ -17,7 +17,7 @@ from sqlalchemy.orm import Session
 
 from lyvern.db.models import ReviewRun, WebhookDelivery
 from lyvern.github.publisher import WriteGuard, WriteNotAllowed
-from lyvern.github.webhook import InvalidWebhook, parse_pull_request_event
+from lyvern.github.webhook import InvalidWebhook, parse_pull_request_event, parse_push_event
 
 
 @dataclass(frozen=True)
@@ -39,11 +39,15 @@ def ingest_delivery(
     body: bytes,
     guard: WriteGuard,
     enqueue: Callable[[UUID], object],
+    enqueue_conflict_check: Callable[[str, int, str], object] | None = None,
 ) -> IngestResult:
     event = _header(headers, "x-github-event") or ""
     delivery_id = _header(headers, "x-github-delivery") or ""
     if not delivery_id:
         return IngestResult(400, "invalid", detail="missing X-GitHub-Delivery")
+
+    if event == "push":
+        return _ingest_push(engine, headers, body, guard, enqueue_conflict_check)
 
     try:
         pr = parse_pull_request_event(headers, body)
@@ -117,3 +121,54 @@ def ingest_delivery(
         session.commit()
     enqueue(run_id)
     return IngestResult(202, "queued", run_id=run_id)
+
+
+def _ingest_push(
+    engine: Engine,
+    headers: Mapping[str, str],
+    body: bytes,
+    guard: WriteGuard,
+    enqueue_conflict_check: Callable[[str, int, str], object] | None,
+) -> IngestResult:
+    delivery_id = _header(headers, "x-github-delivery") or ""
+    try:
+        push = parse_push_event(headers, body)
+    except InvalidWebhook as error:
+        return IngestResult(400, "invalid", detail=str(error)[:200])
+
+    with Session(engine) as session:
+        delivery = WebhookDelivery(
+            delivery_id=delivery_id,
+            event="push",
+            action=None,
+            installation_id=push.installation_id if push else None,
+            repo_full_name=push.repo_full_name if push else None,
+            status="ignored",
+        )
+        session.add(delivery)
+        try:
+            session.flush()
+        except IntegrityError:
+            session.rollback()
+            return IngestResult(200, "duplicate", detail="delivery already processed")
+
+        if push is None or not push.should_check:
+            delivery.detail = "push is not to an existing branch"
+            session.commit()
+            return IngestResult(202, "ignored", detail=delivery.detail)
+        if enqueue_conflict_check is None:
+            delivery.detail = "conflict re-check is not configured"
+            session.commit()
+            return IngestResult(202, "ignored", detail=delivery.detail)
+        try:
+            guard.assert_allowed(push.repo_full_name)
+        except WriteNotAllowed as error:
+            delivery.status = "rejected"
+            delivery.detail = str(error)[:300]
+            session.commit()
+            return IngestResult(202, "rejected", detail="repository is not on the write allowlist")
+        delivery.status = "queued"
+        delivery.detail = f"conflict re-check for branch {push.branch}"[:300]
+        session.commit()
+    enqueue_conflict_check(push.repo_full_name, push.installation_id, push.branch)
+    return IngestResult(202, "queued", detail="conflict re-check queued")

@@ -100,3 +100,6 @@ Add JS/TS analysis rules so jaeger-ui and jam style PRs get real analysis, build
 
 ### Automated approval (off by default)
 `LYVERN_APPROVE_ALLOWED_REPOS=owner/name` (comma separated, exact names) is the only way the bot may APPROVE a pull request, and only when the change is small, has no findings, every file was analysed and the risk score is at most 30. Leave it empty to disable approval everywhere.
+
+### Re-checking conflicts when the target branch changes (one extra App setting)
+GitHub sends no `pull_request` event when a push to `main` makes an open pull request conflict. Lyvern handles the `push` event for that: open the App's settings page, **Permissions & events**, and under **Subscribe to events** tick **Push** (it needs no new permission), then save. After that, each push to a branch re-checks the open pull requests that target it (at most 50, drafts skipped): a pull request that now conflicts gets the conflict comment and the bot's earlier approval of it is dismissed. Without the Push subscription this feature simply never triggers; nothing else changes.

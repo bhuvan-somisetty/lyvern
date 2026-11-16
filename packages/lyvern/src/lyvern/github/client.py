@@ -96,7 +96,29 @@ class GitHubReadClient:
     # --------------------------------------------------------------------- reads
 
     def get_pull_request(self, ref: PullRequestRef) -> PullRequestInfo:
-        data = self._get(f"/repos/{ref.owner}/{ref.repo}/pulls/{ref.number}")
+        return self._pr_info(ref, self._get(f"/repos/{ref.owner}/{ref.repo}/pulls/{ref.number}"))
+
+    def list_open_pull_requests(
+        self, owner: str, repo: str, base: str, *, limit: int = 50
+    ) -> list[PullRequestInfo]:
+        """Open pull requests whose target branch is ``base`` (bounded, newest first)."""
+        found: list[PullRequestInfo] = []
+        page = 1
+        while len(found) < limit:
+            batch = self._get(
+                f"/repos/{owner}/{repo}/pulls",
+                {"state": "open", "base": base, "sort": "updated", "per_page": 50, "page": page},
+            )
+            for item in batch:
+                ref = PullRequestRef(owner, repo, int(item["number"]))
+                found.append(self._pr_info(ref, item))
+            if len(batch) < 50:
+                break
+            page += 1
+        return found[:limit]
+
+    @staticmethod
+    def _pr_info(ref: PullRequestRef, data: dict[str, Any]) -> PullRequestInfo:
         head_repo = (data["head"].get("repo") or {}).get("full_name") or f"{ref.owner}/{ref.repo}"
         return PullRequestInfo(
             owner=ref.owner,

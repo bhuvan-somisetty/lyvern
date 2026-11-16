@@ -92,3 +92,44 @@ def parse_pull_request_event(headers: Mapping[str, str], body: bytes) -> PullReq
         )
     except (KeyError, TypeError, ValueError) as error:
         raise InvalidWebhook(f"malformed pull_request payload: {error}") from error
+
+
+class PushEvent(BaseModel):
+    """A push to a branch: open pull requests targeting it may have just become conflicting."""
+
+    model_config = ConfigDict(frozen=True)
+
+    delivery_id: str
+    installation_id: int
+    repo_full_name: str
+    branch: str
+    deleted: bool
+    sender: str
+
+    @property
+    def should_check(self) -> bool:
+        return not self.deleted
+
+
+def parse_push_event(headers: Mapping[str, str], body: bytes) -> PushEvent | None:
+    """Parse a ``push`` delivery for a branch. None for other events and for tag pushes."""
+    if _header(headers, "x-github-event") != "push":
+        return None
+    delivery = _header(headers, "x-github-delivery")
+    if not delivery:
+        raise InvalidWebhook("missing X-GitHub-Delivery header")
+    try:
+        data: Any = json.loads(body)
+        ref = str(data["ref"])
+        if not ref.startswith("refs/heads/"):
+            return None
+        return PushEvent(
+            delivery_id=delivery,
+            installation_id=int(data["installation"]["id"]),
+            repo_full_name=str(data["repository"]["full_name"]),
+            branch=ref.removeprefix("refs/heads/"),
+            deleted=bool(data.get("deleted", False)),
+            sender=str((data.get("sender") or {}).get("login", "")),
+        )
+    except (KeyError, TypeError, ValueError) as error:
+        raise InvalidWebhook(f"malformed push payload: {error}") from error

@@ -15,7 +15,7 @@ from lyvern.github.publisher import WriteGuard
 from lyvern.github.webhook import verify_signature
 from lyvern.logging import configure_logging, correlation_id
 from lyvern.services.ingest import ingest_delivery
-from lyvern.tasks import run_review
+from lyvern.tasks import check_conflicts, run_review
 from lyvern_api.dashboard import router as dashboard_router
 
 MAX_WEBHOOK_BYTES = 5_000_000
@@ -78,6 +78,7 @@ def create_app() -> FastAPI:
             body,
             WriteGuard.from_setting(cfg.write_allowed_repos),
             lambda run_id: run_review.delay(str(run_id)),
+            lambda repo, installation, branch: check_conflicts.delay(repo, installation, branch),
         )
         content: dict[str, str] = {"status": result.status}
         if result.run_id is not None:
