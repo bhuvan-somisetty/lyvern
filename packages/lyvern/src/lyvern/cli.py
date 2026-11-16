@@ -99,7 +99,39 @@ def build_parser() -> argparse.ArgumentParser:
     review = sub.add_parser("review", help="print a DRAFT review of a pull request (never posts)")
     review.add_argument("pr", help="https://github.com/owner/repo/pull/123 or owner/repo#123")
     review.add_argument("--json", action="store_true", help="machine-readable output")
+    bench = sub.add_parser("benchmark", help="measure the analysers (read-only)")
+    bsub = bench.add_subparsers(dest="bench_command", required=True)
+    bsub.add_parser("synthetic", help="labelled synthetic suite (regression check)")
+    real = bsub.add_parser("real", help="compare with human review comments on real public PRs")
+    real.add_argument("--prs", required=True, help="text file: one PR URL or owner/repo#N per line")
+    real.add_argument("--tolerance", type=int, default=3, help="line distance for a match")
+    real.add_argument("--sheet", help="write the adjudication sheet (JSON lines) to this path")
     return parser
+
+
+def run_benchmark(args: argparse.Namespace) -> int:
+    from lyvern.benchmark.real_prs import run_real_benchmark, write_adjudication_sheet
+    from lyvern.benchmark.synthetic import run_synthetic
+
+    if args.bench_command == "synthetic":
+        print(run_synthetic().render())
+        return 0
+    refs = []
+    with open(args.prs, encoding="utf-8") as handle:
+        for raw in handle:
+            text = raw.strip()
+            if text and not text.startswith("#"):
+                refs.append(parse_pr_reference(text))
+    client = GitHubReadClient(resolve_token())
+    try:
+        report = run_real_benchmark(client, refs, args.tolerance)
+    finally:
+        client.close()
+    print(report.render())
+    if args.sheet:
+        write_adjudication_sheet(report, args.sheet)
+        print(f"\nAdjudication sheet written to {args.sheet} ({len(report.adjudication)} findings)")
+    return 0
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -108,6 +140,12 @@ def main(argv: Sequence[str] | None = None) -> int:
         if reconfigure is not None:
             reconfigure(encoding="utf-8", errors="replace")
     args = build_parser().parse_args(argv)
+    if args.command == "benchmark":
+        try:
+            return run_benchmark(args)
+        except (InvalidPullRequestRef, OSError) as error:
+            print(f"error: {error}", file=sys.stderr)
+            return 2
     try:
         ref = parse_pr_reference(args.pr)
     except InvalidPullRequestRef as error:

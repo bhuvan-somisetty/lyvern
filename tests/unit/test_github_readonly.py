@@ -47,6 +47,8 @@ def test_client_source_contains_no_write_capable_http_calls() -> None:
 
 def test_client_exposes_no_write_methods() -> None:
     public = [n for n in dir(GitHubReadClient) if not n.startswith("_")]
+    # every public method is either close() or a read (get_* / list_*); nothing can write
+    assert [n for n in public if n != "close" and not n.startswith(("get_", "list_"))] == []
     forbidden = (
         "post",
         "put",
@@ -54,12 +56,18 @@ def test_client_exposes_no_write_methods() -> None:
         "delete",
         "create",
         "submit",
-        "comment",
         "merge",
         "approve",
+        "dismiss",
     )
-    assert [n for n in public if any(w in n.lower() for w in forbidden)] == []
-    assert set(public) == {"close", "get_pull_request", "list_changed_files", "get_file_text"}
+    assert [n for n in public if any(n.lower().startswith(w) for w in forbidden)] == []
+    assert set(public) == {
+        "close",
+        "get_pull_request",
+        "list_changed_files",
+        "list_review_comments",
+        "get_file_text",
+    }
 
 
 def test_every_request_sent_is_a_get() -> None:

@@ -17,7 +17,7 @@ from urllib.parse import quote
 
 import httpx
 
-from lyvern.github.models import ChangedFileInfo, PullRequestInfo
+from lyvern.github.models import ChangedFileInfo, PullRequestInfo, ReviewCommentInfo
 from lyvern.github.refs import PullRequestRef
 
 API = "https://api.github.com"
@@ -124,6 +124,31 @@ class GitHubReadClient:
             if len(batch) < 100:
                 break
         return files
+
+    def list_review_comments(self, ref: PullRequestRef) -> list[ReviewCommentInfo]:
+        """Inline review comments already written on the pull request (read-only)."""
+        out: list[ReviewCommentInfo] = []
+        for page in range(1, MAX_FILE_PAGES + 1):
+            batch = self._get(
+                f"/repos/{ref.owner}/{ref.repo}/pulls/{ref.number}/comments",
+                {"per_page": 100, "page": page},
+            )
+            for item in batch:
+                user = item.get("user") or {}
+                out.append(
+                    ReviewCommentInfo(
+                        path=item.get("path") or "",
+                        body=item.get("body") or "",
+                        author=user.get("login") or "",
+                        author_type=user.get("type") or "",
+                        line=item.get("line"),
+                        original_line=item.get("original_line"),
+                        in_reply_to_id=item.get("in_reply_to_id"),
+                    )
+                )
+            if len(batch) < 100:
+                break
+        return out
 
     def get_file_text(self, repo_full_name: str, path: str, ref: str) -> str | None:
         """Return the file's text at ``ref``; None if missing, binary, too big or undecodable."""

@@ -36,3 +36,21 @@ class ChangedFileInfo(BaseModel):
     deletions: int
     patch: str | None = None  # absent for binary or very large files
     previous_filename: str | None = None
+
+
+class ReviewCommentInfo(BaseModel):
+    """An inline review comment written on a pull request (by a person or a bot)."""
+
+    model_config = ConfigDict(frozen=True, extra="ignore")
+
+    path: str
+    body: str
+    author: str
+    author_type: str  # "User" or "Bot"
+    line: int | None = None
+    original_line: int | None = None
+    in_reply_to_id: int | None = None
+
+    @property
+    def anchor_line(self) -> int | None:
+        return self.line if self.line is not None else self.original_line
