@@ -38,7 +38,7 @@ class PrResult:
     title: str
     source_files: int
     unanalyzed: int
-    findings: int
+    findings: int  # reported on the PR's own changes (inline + general)
     inline: int
     risk_level: str
     event: str
@@ -46,6 +46,7 @@ class PrResult:
     human_matched: int
     ours_matched: int
     error: str = ""
+    not_introduced: int = 0  # found in code the PR did not change; never published
 
 
 @dataclass
@@ -72,7 +73,9 @@ class RealReport:
             f"({len(self.results) - len(ok)} failed), match tolerance +/-{self.tolerance} lines",
             f"Source files: {analysed_files} considered, {sum(r.unanalyzed for r in ok)} not analysed",
             f"PRs where Lyvern raised at least one finding: {fmt_ratio(with_findings, len(ok))}",
-            f"Lyvern findings: {sum(r.findings for r in ok)} total, {inline} inline",
+            f"Findings reported on the PRs' own changes: {sum(r.findings for r in ok)} "
+            f"({inline} inline); found only in untouched code and NOT reported: "
+            f"{sum(r.not_introduced for r in ok)}",
             f"Human coverage (human inline comments near a Lyvern finding): {fmt_ratio(human_hit, human)}",
             f"Agreement (Lyvern inline findings near a human comment): {fmt_ratio(ours_hit, inline)}",
             "By detection source: "
@@ -87,7 +90,8 @@ class RealReport:
                 lines.append(f"- {r.ref}: FAILED ({r.error})")
                 continue
             lines.append(
-                f"- {r.ref}: {r.source_files} src files, {r.findings} findings ({r.inline} inline), "
+                f"- {r.ref}: {r.source_files} src files, {r.findings} findings ({r.inline} inline, "
+                f"{r.not_introduced} pre-existing not reported), "
                 f"risk {r.risk_level}, verdict {r.event}; human comments {r.human_comments} "
                 f"(near a finding: {r.human_matched}); {r.title[:60]}"
             )
@@ -122,14 +126,18 @@ def run_real_benchmark(
             continue
         theirs: list[Location] = [(c.path, c.anchor_line or 0) for c in people]
         ours: list[Location] = [(p, ln) for p, ln, _s, _t in draft.inline]
-        finding_locs: list[Location] = [(f.file_path, f.line_start) for f in draft.findings]
+        reported = [c.finding for c in draft.placement.inline] + [
+            g.finding for g in draft.placement.general
+        ]
+        finding_locs: list[Location] = [(f.file_path, f.line_start) for f in reported]
         report.results.append(
             PrResult(
                 ref=str(ref),
                 title=draft.pr.title,
                 source_files=draft.state.files_total,
                 unanalyzed=draft.state.files_unanalyzed,
-                findings=len(draft.findings),
+                findings=len(reported),
+                not_introduced=len(draft.placement.dropped),
                 inline=len(ours),
                 risk_level=draft.risk.level,
                 event=draft.decision.event.value,
@@ -138,7 +146,7 @@ def run_real_benchmark(
                 ours_matched=count_matched(ours, theirs, tolerance),
             )
         )
-        for f in draft.findings:
+        for f in reported:
             report.by_rule[f.detection_source] += 1
             report.adjudication.append(
                 {
