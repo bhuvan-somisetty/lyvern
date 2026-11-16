@@ -26,7 +26,8 @@ GitHub --webhook--> API (FastAPI) --enqueue--> Redis --> Worker (Celery)
 | Docker Compose stack (db, redis, migrate, api, worker) with healthchecks | `docker-compose.yml` | BUILT |
 | CI (lint, format, strict types, migrations up/down/up, tests, web build) | `.github/workflows/ci.yml` | BUILT, green on GitHub |
 | Review engine: contracts, diff, dedup, placement, decision, render, policy | `packages/lyvern/src/lyvern/engine` | **BUILT** |
-| Webhook endpoint, GitHub client, publisher | `apps/api`, `lyvern.github` | PLANNED |
+| Read-only GitHub client (`lyvern.github`), reviewer-mode pipeline and CLI (`lyvern.review_pipeline`, `lyvern.cli`), Ruff adapter | `packages/lyvern` | **BUILT** |
+| Webhook endpoint, publisher (write path) | `apps/api`, `lyvern.github` | PLANNED |
 | Static-analysis adapters, code intelligence, ML, LLM, orchestrator | `lyvern.engine.*` | PLANNED |
 | Dashboard pages | `apps/web` | shell BUILT; pages PLANNED |
 

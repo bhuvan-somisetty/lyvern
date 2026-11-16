@@ -131,7 +131,7 @@ def render_summary(
 
     analyzed = state.files_total - state.files_unanalyzed
     lines.append(
-        f"Files: {state.files_total} changed, {analyzed} analyzed, "
+        f"Source files: {state.files_total} changed, {analyzed} analyzed, "
         f"{state.files_unanalyzed} not analyzed."
     )
     if unanalyzed:

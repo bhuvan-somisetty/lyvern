@@ -440,7 +440,7 @@ def test_summary_numbers_are_computed_from_the_findings() -> None:
         unanalyzed=[("big.bin", "binary file")],
     )
     assert "Result: Changes requested." in text
-    assert "Files: 4 changed, 3 analyzed, 1 not analyzed." in text
+    assert "Source files: 4 changed, 3 analyzed, 1 not analyzed." in text
     assert "`big.bin`: binary file" in text
     assert "2 reported (high: 1, medium: 1); 2 inline, 0 general." in text
     assert "does not replace human review" in text and not EMOJI.search(text)

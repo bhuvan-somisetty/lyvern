@@ -29,7 +29,7 @@ It is not a chatbot wrapped around a diff. The language model is one input among
 ### Whose PRs does it review? Where can I use it?
 - **The App reviews every PR, by any author, in every repository where it is installed.** It is not limited to your own PRs.
 - **Installing needs an owner or admin of that account or organization.** On your own repositories you can install it yourself. On other people's projects (for example a contributor or member role in a large open-source organization) you normally cannot, and you should not ask a maintainer to add a bot just for you.
-- **Reviewer mode (PLANNED, priority P1):** a command you run on your own machine, for example `lyvern review <PR URL>`. It reads the public PR with your own GitHub login, runs the same engine, and prints a **draft** review: findings with file/line, evidence and a proposed verdict. You read it, keep what is right, and post it yourself under your own name. It never posts anything. This is how it would help when you review PRs in repositories you do not own.
+- **Reviewer mode (BUILT, first version; run `uv run lyvern review <PR URL>`):** a command you run on your own machine, for example `lyvern review <PR URL>`. It reads the public PR with your own GitHub login, runs the same engine, and prints a **draft** review: findings with file/line, evidence and a proposed verdict. You read it, keep what is right, and post it yourself under your own name. It never posts anything. This is how it would help when you review PRs in repositories you do not own.
 - **Etiquette:** a draft is an aid, not a review. Check each point yourself, and check the project's own policy on AI-assisted contributions and reviews before using generated text in a public review.
 
 ### Example of what a developer sees
@@ -77,7 +77,8 @@ Review summary:
 |---|---|
 | Repo, CI on GitHub (green), Docker stack, API health, worker, DB migrations, dashboard shell | **BUILT** |
 | Review engine: finding model, diff parser, dedup/ranking, placement, decision engine, rendering | **BUILT**, 75 unit tests + property tests against real `git diff` |
-| GitHub App connection (webhooks, fetch PR, post reviews) | PLANNED, next milestone |
+| Reviewer mode CLI (read-only fetch of any public PR, Ruff analysis for Python, draft review, never posts) | **BUILT** (first version; tested with a fake source and run on real public PRs) |
+| GitHub App connection (webhooks, post reviews) | PLANNED, next milestone |
 | Static analysis (Semgrep, Ruff, ESLint, secrets, dependencies) | PLANNED |
 | Code understanding (tree-sitter / `ast`, cross-file) | PLANNED |
 | ML models (classifier, similarity, risk) and benchmark | DESIGNED / PLANNED |
