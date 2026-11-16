@@ -228,3 +228,9 @@ Verify Docker daemon, scaffold M1, run tests, commit on a feature branch.
 - Tests: +21 (`tests/unit/test_github_app.py`); `pytest tests/unit` 140 passed; ruff, format, mypy --strict clean.
 - Mutation check: replacing the guard condition with `if False:` made 2 tests fail; restored, 21 pass.
 - Test bug found: my refresh test used a wrong epoch (01:46:40 vs 02:46:40 UTC for 1e9); the cache logic was right; fixed the data and verified the epoch with Python.
+
+### Session 2: webhook ingestion, review job and database tables (2026-11-16 IST)
+- Added tables `webhook_deliveries` (unique delivery id) and `review_runs` (unique repo+PR+head sha) with Alembic migration 0002 (verified: upgrade, downgrade to 0001, upgrade; `alembic current` = 0002).
+- Added `POST /webhooks/github` (raw-body HMAC check first: 401 on bad/missing signature, 413 above 5 MB, 400 on malformed payload), `lyvern.services.ingest` (idempotent via the two unique constraints; non-review events and actions are recorded as ignored; repositories outside the write allowlist are recorded as rejected and never queued), `lyvern.services.review_job` (queued -> running -> succeeded/partial/failed/superseded; reads PR, analyses, publishes through the guarded publisher, records event, review id and counts; a newer run for the same PR supersedes an older one; failures are stored without secrets) and Celery task `lyvern.review.run`.
+- Tests: +13 integration tests against real Postgres (8 webhook flow, 5 review job); full suite `pytest tests` 158 passed; ruff, format, mypy --strict clean. Mutation check: removing the allowlist check in ingestion made `test_repository_outside_the_write_allowlist_is_never_queued` fail; restored.
+- Not yet done: the end-to-end run in the sandbox repository through the smee tunnel (needs API and worker running locally and a test PR created in lyvern-sandbox).
