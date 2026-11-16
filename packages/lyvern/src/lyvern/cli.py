@@ -18,6 +18,7 @@ from lyvern.github.client import GitHubError, GitHubRateLimited, GitHubReadClien
 from lyvern.github.refs import InvalidPullRequestRef, parse_pr_reference
 from lyvern.llm.base import LlmError
 from lyvern.llm.factory import make_llm_reviewer
+from lyvern.ml.model import load_model
 from lyvern.review_pipeline import DraftReview, review_pull_request
 
 
@@ -113,6 +114,24 @@ def build_parser() -> argparse.ArgumentParser:
         help="also check pinned dependencies against the OSV vulnerability database "
         "(sends package names and versions, never code, to api.osv.dev)",
     )
+    ml = sub.add_parser("ml", help="collect data and train the pull-request attention model")
+    msub = ml.add_subparsers(dest="ml_command", required=True)
+    collect = msub.add_parser("collect", help="read public PR history into a CSV (GET only)")
+    collect.add_argument("--repos", required=True, help="text file: one owner/name per line")
+    collect.add_argument("--per-repo", type=int, default=250)
+    collect.add_argument("--out", default="data/ml/prs.csv")
+    backfill = msub.add_parser("backfill", help="add the inline-comment count to older rows")
+    backfill.add_argument("--data", default="data/ml/prs.csv")
+    train = msub.add_parser("train", help="train, evaluate once on held-out data, write the model")
+    train.add_argument("--data", default="data/ml/prs.csv")
+    train.add_argument("--target", default="inline_feedback")
+    train.add_argument("--model-out", default="packages/lyvern/src/lyvern/ml/attention_model.json")
+    train.add_argument("--card-out", default="docs/ML_MODEL_CARD.md")
+    review.add_argument(
+        "--no-attention",
+        action="store_true",
+        help="leave out the advisory statistical attention estimate",
+    )
     bench = sub.add_parser("benchmark", help="measure the analysers (read-only)")
     bsub = bench.add_subparsers(dest="bench_command", required=True)
     bsub.add_parser("synthetic", help="labelled synthetic suite (regression check)")
@@ -122,6 +141,37 @@ def build_parser() -> argparse.ArgumentParser:
     real.add_argument("--sheet", help="write the adjudication sheet (JSON lines) to this path")
     real.add_argument("--llm", choices=["gemini", "groq"], help="include the AI reviewer")
     return parser
+
+
+def run_ml(args: argparse.Namespace) -> int:
+    from pathlib import Path
+
+    if args.ml_command == "collect":
+        from lyvern.ml.dataset import collect
+
+        repos = [
+            line.strip()
+            for line in Path(args.repos).read_text(encoding="utf-8").splitlines()
+            if line.strip() and not line.startswith("#")
+        ]
+        client = GitHubReadClient(resolve_token())
+        try:
+            total = collect(client, repos, Path(args.out), per_repo=args.per_repo)
+        finally:
+            client.close()
+        print(f"added {total} rows to {args.out}")
+        return 0
+
+    if args.ml_command == "featurize":
+        from lyvern.ml.dataset import featurize
+
+        print(f"wrote {featurize(Path(args.raw), Path(args.out))} rows to {args.out}")
+        return 0
+
+    from lyvern.ml.train import train_and_report
+
+    print(train_and_report(Path(args.data), args.target, Path(args.model_out), Path(args.card_out)))
+    return 0
 
 
 def run_benchmark(args: argparse.Namespace) -> int:
@@ -155,6 +205,12 @@ def main(argv: Sequence[str] | None = None) -> int:
         if reconfigure is not None:
             reconfigure(encoding="utf-8", errors="replace")
     args = build_parser().parse_args(argv)
+    if args.command == "ml":
+        try:
+            return run_ml(args)
+        except (OSError, GitHubError, ValueError) as error:
+            print(f"error: {error}", file=sys.stderr)
+            return 3
     if args.command == "benchmark":
         try:
             return run_benchmark(args)
@@ -179,7 +235,13 @@ def main(argv: Sequence[str] | None = None) -> int:
     client = GitHubReadClient(resolve_token())
     osv = OsvClient() if args.deps else None
     try:
-        draft = review_pull_request(client, ref, llm=reviewer, deps=osv)
+        draft = review_pull_request(
+            client,
+            ref,
+            llm=reviewer,
+            deps=osv,
+            attention=None if args.no_attention else load_model(),
+        )
     except GitHubRateLimited as error:
         print(
             f"error: GitHub rate limit reached (resets at epoch {error.reset_epoch}).",

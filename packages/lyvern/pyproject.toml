@@ -20,6 +20,10 @@ dependencies = [
     "tree-sitter-go>=0.25.0",
 ]
 
+[project.optional-dependencies]
+# only needed to retrain the attention model; running it needs nothing extra
+ml = ["scikit-learn>=1.5"]
+
 [project.scripts]
 lyvern = "lyvern.cli:main"
 

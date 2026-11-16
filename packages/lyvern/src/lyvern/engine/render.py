@@ -110,6 +110,7 @@ def render_summary(
     unanalyzed: Sequence[tuple[str, str]] = (),
     risk: RiskAssessment | None = None,
     ai_note: str | None = None,
+    attention_note: str | None = None,
 ) -> str:
     """``findings`` are the findings that survived dedup (not the dropped ones)."""
     published = [c.finding for c in placement.inline] + [g.finding for g in placement.general]
@@ -140,6 +141,8 @@ def render_summary(
     )
     if risk is not None:
         lines.append(f"Risk: {risk.score}/100 ({risk.level}). {risk.explain()}.")
+    if attention_note:
+        lines.append(attention_note)
     if ai_note:
         lines.append(ai_note)
     if unanalyzed:

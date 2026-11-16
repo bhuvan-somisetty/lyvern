@@ -219,13 +219,14 @@ def test_cli_main_runs_with_a_fake_client_and_handles_bad_input(
 def test_cli_has_no_command_that_posts() -> None:
     parser = cli.build_parser()
     commands = next(a for a in parser._actions if getattr(a, "choices", None)).choices  # type: ignore[attr-defined]
-    assert set(commands) == {"review", "benchmark"}  # both are read-only
+    assert set(commands) == {"review", "benchmark", "ml"}  # all three only read from GitHub
     # structurally: the CLI and the benchmark code never import or call the write path
     import inspect
 
     from lyvern.benchmark import real_prs, synthetic
+    from lyvern.ml import dataset
 
-    for module in (cli, real_prs, synthetic):
+    for module in (cli, real_prs, synthetic, dataset):
         source = inspect.getsource(module)
         assert "GitHubPublisher" not in source and "publish_review" not in source
         assert "dismiss_review" not in source and "lyvern.github.publisher" not in source

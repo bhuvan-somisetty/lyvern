@@ -42,6 +42,8 @@ class Settings(BaseSettings):
     # 'osv' turns on the known-vulnerability check for pinned dependencies (sends package names
     # and versions, never code, to api.osv.dev). Empty = off.
     dependency_check: str = ""
+    # Show the advisory attention estimate (a statistical model, see docs/ML_MODEL_CARD.md).
+    attention_model: bool = True
     llm_provider: str = ""
     llm_model: str | None = None
 

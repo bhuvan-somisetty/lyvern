@@ -24,6 +24,7 @@ from lyvern.github.models import MergeState, PullRequestInfo
 from lyvern.github.publisher import GitHubPublisher, ReviewComment, WriteGuard
 from lyvern.github.refs import PullRequestRef
 from lyvern.llm.factory import make_llm_reviewer
+from lyvern.ml.model import AttentionModel, load_model
 from lyvern.review_pipeline import DraftReview, PullRequestSource, review_pull_request
 
 logger = logging.getLogger(__name__)
@@ -162,6 +163,7 @@ def execute_review(
     policy: ReviewPolicy,
     llm: LlmReviewer | None = None,
     deps: DependencyLookup | None = None,
+    attention: AttentionModel | None = None,
 ) -> None:
     with Session(engine) as session:
         run = session.get(ReviewRun, run_id)
@@ -181,6 +183,7 @@ def execute_review(
                 policy,
                 llm=llm,
                 deps=deps,
+                attention=attention,
             )
             session.refresh(run)
             if _newer_run_exists(session, run) or not draft.decision.publish:
@@ -259,6 +262,7 @@ def execute_review_from_settings(run_id: UUID, settings: Settings | None = None)
             policy=policy_for_repo(repo_full_name, settings),
             llm=make_llm_reviewer(settings.llm_provider, settings),
             deps=osv,
+            attention=load_model() if settings.attention_model else None,
         )
     finally:
         if osv is not None:

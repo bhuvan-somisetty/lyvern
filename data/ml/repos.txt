@@ -1,0 +1,9 @@
+# Public repositories read (GET only) to build the training data. One owner/name per line.
+jaegertracing/jaeger-ui
+jaegertracing/jaeger
+joinmarket-webui/jam
+pallets/flask
+psf/requests
+fastapi/fastapi
+prometheus/prometheus
+vitejs/vite

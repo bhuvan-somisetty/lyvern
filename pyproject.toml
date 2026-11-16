@@ -23,11 +23,13 @@ dev = [
     "lyvern-api",
     "lyvern-worker",
     "hypothesis>=6.170.15",
+    "scikit-learn>=1.9.1",
 ]
 
 [tool.ruff]
 line-length = 100
 target-version = "py312"
+extend-exclude = ["scripts/brand"]  # one-off logo generators, not product code
 src = ["packages/lyvern/src", "apps/api/src", "apps/worker/src", "tests"]
 
 [tool.ruff.lint]

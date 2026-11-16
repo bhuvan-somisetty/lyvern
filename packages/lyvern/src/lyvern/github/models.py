@@ -25,6 +25,9 @@ class PullRequestInfo(BaseModel):
     changed_files: int
     additions: int
     deletions: int
+    author_association: str = ""  # OWNER, MEMBER, CONTRIBUTOR, FIRST_TIME_CONTRIBUTOR, NONE...
+    created_at: str = ""
+    merged: bool = False
 
 
 class MergeState(BaseModel):
@@ -67,3 +70,14 @@ class ReviewCommentInfo(BaseModel):
     @property
     def anchor_line(self) -> int | None:
         return self.line if self.line is not None else self.original_line
+
+
+class ReviewInfo(BaseModel):
+    """One submitted review on a pull request (state: APPROVED, CHANGES_REQUESTED, COMMENTED...)."""
+
+    model_config = ConfigDict(frozen=True, extra="ignore")
+
+    state: str
+    author: str
+    author_type: str  # "User" or "Bot"
+    submitted_at: str = ""

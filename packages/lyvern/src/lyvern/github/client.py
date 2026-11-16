@@ -22,6 +22,7 @@ from lyvern.github.models import (
     MergeState,
     PullRequestInfo,
     ReviewCommentInfo,
+    ReviewInfo,
 )
 from lyvern.github.refs import PullRequestRef
 
@@ -117,6 +118,52 @@ class GitHubReadClient:
             page += 1
         return found[:limit]
 
+    def list_pull_requests(
+        self, owner: str, repo: str, *, state: str = "closed", limit: int = 100, start_page: int = 1
+    ) -> list[PullRequestInfo]:
+        """Pull requests of a repository, newest first (bounded)."""
+        found: list[PullRequestInfo] = []
+        page = start_page
+        while len(found) < limit:
+            batch = self._get(
+                f"/repos/{owner}/{repo}/pulls",
+                {
+                    "state": state,
+                    "sort": "created",
+                    "direction": "desc",
+                    "per_page": 50,
+                    "page": page,
+                },
+            )
+            for item in batch:
+                ref = PullRequestRef(owner, repo, int(item["number"]))
+                found.append(self._pr_info(ref, item))
+            if len(batch) < 50:
+                break
+            page += 1
+        return found[:limit]
+
+    def list_reviews(self, ref: PullRequestRef) -> list[ReviewInfo]:
+        reviews: list[ReviewInfo] = []
+        for page in range(1, 6):
+            batch = self._get(
+                f"/repos/{ref.owner}/{ref.repo}/pulls/{ref.number}/reviews",
+                {"per_page": 100, "page": page},
+            )
+            for item in batch:
+                user = item.get("user") or {}
+                reviews.append(
+                    ReviewInfo(
+                        state=str(item.get("state") or ""),
+                        author=str(user.get("login") or ""),
+                        author_type=str(user.get("type") or ""),
+                        submitted_at=str(item.get("submitted_at") or ""),
+                    )
+                )
+            if len(batch) < 100:
+                break
+        return reviews
+
     @staticmethod
     def _pr_info(ref: PullRequestRef, data: dict[str, Any]) -> PullRequestInfo:
         head_repo = (data["head"].get("repo") or {}).get("full_name") or f"{ref.owner}/{ref.repo}"
@@ -138,6 +185,9 @@ class GitHubReadClient:
             changed_files=int(data.get("changed_files") or 0),
             additions=int(data.get("additions") or 0),
             deletions=int(data.get("deletions") or 0),
+            author_association=str(data.get("author_association") or ""),
+            created_at=str(data.get("created_at") or ""),
+            merged=bool(data.get("merged_at")),
         )
 
     def get_merge_state(

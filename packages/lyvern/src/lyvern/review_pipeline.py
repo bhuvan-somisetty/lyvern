@@ -40,6 +40,8 @@ from lyvern.engine.risk import RiskAssessment, RiskFile, assess_risk
 from lyvern.github.models import ChangedFileInfo, MergeState, PullRequestInfo
 from lyvern.github.refs import PullRequestRef
 from lyvern.llm.base import LlmError
+from lyvern.ml.features import extract_features
+from lyvern.ml.model import AttentionEstimate, AttentionModel, render_attention
 
 PRODUCT_NAME = "Lyvern"
 
@@ -78,6 +80,7 @@ class DraftReview:
     llm: LlmReviewResult | None = None
     llm_error: str | None = None
     merge_state: MergeState | None = None
+    attention: AttentionEstimate | None = None
 
 
 def _merge_state(source: object, ref: PullRequestRef) -> MergeState | None:
@@ -148,6 +151,7 @@ def review_pull_request(
     *,
     llm: LlmReviewer | None = None,
     deps: DependencyLookup | None = None,
+    attention: AttentionModel | None = None,
 ) -> DraftReview:
     policy = policy or ReviewPolicy()
     pr = source.get_pull_request(ref)
@@ -249,6 +253,11 @@ def review_pull_request(
         merge_conflicts=merge_state is not None and merge_state.has_conflicts,
     )
     decision = decide(findings, state, policy)
+    estimate = (
+        attention.estimate(extract_features(pr, changed))
+        if attention is not None and attention.displayable
+        else None
+    )
     summary = render_summary(
         product_name=PRODUCT_NAME,
         decision=decision,
@@ -258,6 +267,7 @@ def review_pull_request(
         unanalyzed=unanalyzed,
         risk=risk,
         ai_note=_ai_note(llm_result, llm_error),
+        attention_note=render_attention(estimate) if estimate is not None else None,
     )
     inline = tuple(
         (c.path, c.line, c.start_line, render_inline(c.finding)) for c in placement.inline
@@ -273,6 +283,7 @@ def review_pull_request(
         llm=llm_result,
         llm_error=llm_error,
         merge_state=merge_state,
+        attention=estimate,
         summary=summary,
         inline=inline,
     )
