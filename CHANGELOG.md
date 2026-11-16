@@ -16,3 +16,4 @@ All notable changes. Dates are in IST. This project is a work in progress; see `
 - 2026-11-16: Go analyser (8 rules, tree-sitter) wired into the review pipeline; 18 Go cases added to the synthetic suite (79 cases).
 - 2026-11-16: cross-file check for removed symbols that other files still reference; dashboard user accounts with roles (migration 0005), `lyvern user ...` admin CLI, verdicts record who gave them; advisory attention model (data collection, training, model card).
 - 2026-11-16: dependency vulnerability check against OSV (pinned requirements.txt, package.json, go.mod), opt-in; `lyvern review --deps`.
+- 2026-11-16: `docker compose up -d --build` now runs the dashboard (new `web` service and image) next to the API, worker, database and Redis; GitHub App settings are passed as environment variables and the private key is mounted read-only from the host.

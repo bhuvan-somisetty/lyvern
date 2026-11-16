@@ -8,6 +8,20 @@ x-python: &python
     LYVERN_ENVIRONMENT: dev
     LYVERN_DATABASE_URL: postgresql+psycopg://lyvern:lyvern@db:5432/lyvern
     LYVERN_REDIS_URL: redis://redis:6379/0
+    # GitHub App and optional switches come from your shell or the .env file next to this file
+    LYVERN_GITHUB_APP_ID: ${LYVERN_GITHUB_APP_ID:-}
+    LYVERN_GITHUB_APP_PRIVATE_KEY_PATH: /run/secrets/github-app.pem
+    LYVERN_GITHUB_WEBHOOK_SECRET: ${LYVERN_GITHUB_WEBHOOK_SECRET:-}
+    LYVERN_WRITE_ALLOWED_REPOS: ${LYVERN_WRITE_ALLOWED_REPOS:-bhuvan-somisetty/lyvern-sandbox}
+    LYVERN_APPROVE_ALLOWED_REPOS: ${LYVERN_APPROVE_ALLOWED_REPOS:-}
+    LYVERN_DEPENDENCY_CHECK: ${LYVERN_DEPENDENCY_CHECK:-}
+    LYVERN_LLM_PROVIDER: ${LYVERN_LLM_PROVIDER:-}
+    LYVERN_GROQ_API_KEY: ${LYVERN_GROQ_API_KEY:-}
+    LYVERN_GEMINI_API_KEY: ${LYVERN_GEMINI_API_KEY:-}
+    LYVERN_API_TOKEN: ${LYVERN_API_TOKEN:-}
+  volumes:
+    # path of the App's private key file on THIS computer (never inside the repository)
+    - ${LYVERN_GITHUB_APP_PRIVATE_KEY_HOST_PATH:-/dev/null}:/run/secrets/github-app.pem:ro
 
 services:
   db:
@@ -63,6 +77,19 @@ services:
       interval: 15s
       timeout: 10s
       retries: 6
+
+  web:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/Dockerfile.web
+    environment:
+      LYVERN_API_URL: http://api:8000
+      LYVERN_API_TOKEN: ${LYVERN_API_TOKEN:-}
+      LYVERN_SESSION_SECRET: ${LYVERN_SESSION_SECRET:-}
+      LYVERN_DASHBOARD_PASSWORD: ${LYVERN_DASHBOARD_PASSWORD:-}
+    ports: ["${LYVERN_WEB_PORT:-3000}:3000"]
+    depends_on:
+      api: { condition: service_healthy }
 
 volumes:
   dbdata:
