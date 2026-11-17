@@ -362,3 +362,17 @@ Verify Docker daemon, scaffold M1, run tests, commit on a feature branch.
 ## 2026-11-17: public snapshot (owner chose option 2)
 
 The owner chose a real-data snapshot with names hidden for the public site. Added `LYVERN_SNAPSHOT=1` mode: the pages read `apps/web/src/data/snapshot.json`, an export of the real runs, findings and human verdicts (19 runs, 69 stored findings, 67 verdicts). Repositories become `repo-A`, files `file-N.ext`, commit ids a short hash; links, notes and errors are dropped. Tests check the anonymisation. Refresh it with `python -m uv run python scripts/export_dashboard_snapshot.py`.
+
+## 2026-11-17: model accuracy experiment (history features), not shipped
+
+Question: can the attention model beat "size of the change alone" (held-out AUC 0.702) with features known when a pull request opens that describe its history? Added, computed only from pull requests opened at least 3 days earlier in the same repository: the repository's smoothed review rate, its rate over the last 60 days, the author's number of earlier pull requests, the author's smoothed rate, and "new to this repository". Same temporal split as the model card (360 test rows, 29 positives). Script: `scripts/ml_experiments/history_features.py`.
+
+| Model | Held-out AUC (95% CI) | Average precision |
+| --- | --- | --- |
+| Size only | 0.702 (0.598 to 0.791) | 0.145 |
+| Current 33 features | 0.704 (0.605 to 0.803) | 0.268 |
+| History only | 0.663 | 0.134 |
+| 33 + history, logistic | 0.714 (0.622 to 0.802) | 0.189 |
+| 33 + history, gradient boosting | 0.679 | 0.178 |
+
+Paired bootstrap gain of 33+history over the current model: +0.011 AUC, 95% CI -0.019 to +0.045. Average precision went DOWN (0.268 to 0.189). Decision: not shipped; the current model stays. The limit is the data: 29 positive test cases cannot separate models that differ by about 0.01 AUC. The next useful step is more labelled pull requests (several thousand), not more features.
