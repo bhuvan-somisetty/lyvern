@@ -18,17 +18,15 @@ export function RunDetail({
   findings = [],
   verdictAction,
   canLabel = true,
-  demo = false,
 }: {
   run: Run;
   findings?: Finding[];
   verdictAction?: (formData: FormData) => void | Promise<void>;
   canLabel?: boolean;
-  demo?: boolean;
 }) {
   return (
     <main className="mx-auto w-full max-w-4xl px-5 py-8 sm:px-8">
-      <SiteHeader demo={demo} />
+      <SiteHeader />
       <Link href="/" className="mt-8 inline-block text-sm text-muted underline-offset-4 hover:underline">
         Back to all reviews
       </Link>
@@ -66,13 +64,11 @@ export function RunDetail({
 
       <h2 className="font-display mt-12 text-2xl">Findings</h2>
       <p className="mt-1 text-sm text-muted">
-        {demo
-          ? "This is a read-only demo with sample data, so verdicts cannot be saved here."
-          : canLabel
-            ? "Mark each one as a real problem or a false alarm. The overview turns your marks into a measured precision figure."
-            : "Your account can read reviews but not mark findings. Ask an admin for the reviewer role."}
+        {canLabel
+          ? "Mark each one as a real problem or a false alarm. The overview turns your marks into a measured precision figure."
+          : "Your account can read reviews but not mark findings. Ask an admin for the reviewer role."}
       </p>
-      <Findings findings={findings} runId={run.id} action={canLabel && !demo ? verdictAction : undefined} />
+      <Findings findings={findings} runId={run.id} action={canLabel ? verdictAction : undefined} />
     </main>
   );
 }

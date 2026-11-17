@@ -200,3 +200,43 @@ def test_minified_and_bundled_files_get_security_rules_only() -> None:
         for f in analyze_js_ts("dist/app.js", minified, include_noisy=True)
     }
     assert found == {"eval"}
+
+
+SAFE_HTML = [
+    "const A = () => <div dangerouslySetInnerHTML={{ __html: '<b>x</b>' }} />;",
+    "const A = () => <div dangerouslySetInnerHTML={{ __html: `<b>x</b>` }} />;",
+    "const init = `(function(){})()`;\nconst A = () => <script dangerouslySetInnerHTML={{ __html: init }} />;",
+    "const A = ({h}) => <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(h) }} />;",
+    "const A = ({h}) => <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(h) }} />;",
+    "const A = ({d}) => <script dangerouslySetInnerHTML={{ __html: JSON.stringify(d).replace(/</g, '\\u003c') }} />;",
+]
+RISKY_HTML = [
+    "const A = ({html}) => <div dangerouslySetInnerHTML={{ __html: html }} />;",
+    "const A = ({n}) => <div dangerouslySetInnerHTML={{ __html: `<b>${n}</b>` }} />;",
+    "const A = ({d}) => <script dangerouslySetInnerHTML={{ __html: JSON.stringify(d) }} />;",
+    "const A = ({d}) => <div dangerouslySetInnerHTML={{ __html: render(d) }} />;",
+    "const A = (p) => <div dangerouslySetInnerHTML={p.markup} />;",
+    "let h = '<b>x</b>';\nconst A = () => <div dangerouslySetInnerHTML={{ __html: h }} />;",
+    "function f(init) { const h = init; return <div dangerouslySetInnerHTML={{ __html: h }} />; }",
+]
+
+
+@pytest.mark.parametrize("source", SAFE_HTML)
+def test_constant_sanitised_and_escaped_json_html_is_not_flagged(source: str) -> None:
+    # found on real code: all 5 findings of this rule on a first real-code run were these patterns
+    assert "react-dangerous-html" not in rules("src/A.tsx", source)
+
+
+@pytest.mark.parametrize("source", RISKY_HTML)
+def test_html_from_variable_or_unescaped_input_is_still_flagged(source: str) -> None:
+    assert "react-dangerous-html" in rules("src/A.tsx", source)
+
+
+def test_dangerous_html_is_opt_in_like_empty_catch() -> None:
+    # measured on real code: right in 0 of about 45 labelled cases, so it is off by default
+    source = "const A = ({html}) => <div dangerouslySetInnerHTML={{ __html: html }} />;\neval(x);\n"
+    default = {f.detection_source.split(":")[1] for f in analyze_js_ts("a.tsx", source)}
+    strict = {
+        f.detection_source.split(":")[1] for f in analyze_js_ts("a.tsx", source, include_noisy=True)
+    }
+    assert default == {"eval"} and strict == {"eval", "react-dangerous-html"}

@@ -2,7 +2,6 @@
 
 # Lyvern
 
-**Live demo (sample data): https://lyvern.vercel.app**
 
 Pull request intelligence for engineering teams: a GitHub App and dashboard that reviews pull requests using structural code analysis, established static-analysis tools, evaluated ML components and an LLM, and publishes evidence-backed feedback. It assists reviewers; it never merges, approves or pushes code.
 

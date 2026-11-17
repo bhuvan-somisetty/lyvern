@@ -14,8 +14,8 @@ const EVENT_LABEL: Record<string, string> = {
 
 const EVENT_DOT: Record<string, string> = {
   REQUEST_CHANGES: "var(--accent)",
-  COMMENT: "#8b8176",
-  APPROVE: "var(--good)",
+  COMMENT: "rgba(255, 240, 213, 0.45)",
+  APPROVE: "var(--porcelain)",
 };
 
 export function eventLabel(event: string | null): string {
@@ -27,7 +27,7 @@ export function EventDot({ event }: { event: string | null }) {
     <span
       aria-hidden
       className="mr-2 inline-block h-2 w-2 rounded-full align-middle"
-      style={{ background: (event && EVENT_DOT[event]) || "#4a3d3d" }}
+      style={{ background: (event && EVENT_DOT[event]) || "rgba(255, 240, 213, 0.18)" }}
     />
   );
 }
@@ -85,7 +85,6 @@ export function Overview({
   feedback = null,
   logout,
   who = null,
-  demo = false,
 }: {
   stats: Stats | null;
   runs: Run[] | null;
@@ -93,11 +92,10 @@ export function Overview({
   feedback?: FeedbackSummary | null;
   logout?: () => void | Promise<void>;
   who?: Session | null;
-  demo?: boolean;
 }) {
   return (
     <main className="mx-auto w-full max-w-6xl px-5 py-8 sm:px-8">
-      <SiteHeader who={who} logout={logout} demo={demo} />
+      <SiteHeader who={who} logout={logout} />
 
       <section className="rise pb-10 pt-12">
         <p className="text-sm text-accent">Pull request intelligence</p>
@@ -105,20 +103,8 @@ export function Overview({
           Pull request reviews
         </h1>
         <p className="mt-4 max-w-2xl text-lg text-muted">
-          {demo
-            ? "A reviewer that comments on the exact lines, asks for changes only when it is confident, and approves only when nothing is left to fix."
-            : "Every number on this page is read from the review database. Nothing is estimated."}
+          Every number on this page is read from the review database. Nothing is estimated.
         </p>
-        {demo ? (
-          <p
-            role="note"
-            className="mt-6 max-w-2xl rounded-xl border border-line bg-surface p-4 text-sm text-muted"
-          >
-            This public demo shows <strong className="text-foreground">invented sample data</strong>: the
-            repositories, pull requests and findings are made up so you can explore the dashboard. The
-            real product reads its numbers from the review database, and signing in is required there.
-          </p>
-        ) : null}
       </section>
 
       {error ? (

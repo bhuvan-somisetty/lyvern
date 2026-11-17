@@ -1,10 +1,10 @@
 // How the reviews ended: one stacked bar, with the exact counts in a legend underneath.
 
 const PARTS: { key: string; label: string; color: string }[] = [
-  { key: "APPROVE", label: "Approved by policy", color: "var(--good)" },
-  { key: "COMMENT", label: "Comment only", color: "#8b8176" },
+  { key: "APPROVE", label: "Approved by policy", color: "var(--porcelain)" },
+  { key: "COMMENT", label: "Comment only", color: "rgba(255, 240, 213, 0.45)" },
   { key: "REQUEST_CHANGES", label: "Changes requested", color: "var(--accent)" },
-  { key: "none", label: "No review posted", color: "#4a3d3d" },
+  { key: "none", label: "No review posted", color: "rgba(255, 240, 213, 0.18)" },
 ];
 
 export function DecisionBar({ events }: { events: Record<string, number> }) {

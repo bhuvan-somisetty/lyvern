@@ -6,14 +6,13 @@ import { setVerdict } from "@/app/actions";
 import { currentSession } from "@/lib/current-session";
 import { canLabel } from "@/lib/session";
 import { fetchFindings, fetchRun } from "@/lib/api";
-import { DEMO_MODE } from "@/lib/demo";
 
 async function RunContent({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const [result, findings, who] = await Promise.all([
     fetchRun(id),
     fetchFindings(id),
-    DEMO_MODE ? Promise.resolve(null) : currentSession(), // the demo has no sign-in
+    currentSession(),
   ]);
   if (!result.ok) {
     return (
@@ -34,7 +33,6 @@ async function RunContent({ params }: { params: Promise<{ id: string }> }) {
       findings={findings.ok ? findings.data : []}
       verdictAction={setVerdict}
       canLabel={canLabel(who?.role)}
-      demo={DEMO_MODE}
     />
   );
 }

@@ -28,10 +28,12 @@ TS_SUFFIXES = {".ts", ".mts", ".cts"}
 TSX_SUFFIXES = {".tsx"}
 SUPPORTED_SUFFIXES = JS_SUFFIXES | TS_SUFFIXES | TSX_SUFFIXES
 MAX_EVIDENCE_LINES = 5
-# Rules that were right too rarely on real code to be on by default: an empty catch was a real
-# problem in 8 of 56 labelled cases (14%), because deliberate best-effort catches are common.
+# Rules that were right too rarely on real code to be on by default. Measured on labelled real
+# code: empty-catch was a real problem in 8 of 56 cases (14%) because deliberate best-effort
+# catches are common; react-dangerous-html in 0 of about 45 (almost every use is a constant, build
+# time content, a prop passed through or a test page, and the rule cannot see where data comes from).
 # They run only when asked for (`include_noisy=True`, setting LYVERN_STRICT_STYLE_RULES).
-NOISY_RULES = frozenset({"empty-catch"})
+NOISY_RULES = frozenset({"empty-catch", "react-dangerous-html"})
 MAX_SPAN_LINES = 20
 
 _SECRET_NAME = re.compile(
@@ -328,6 +330,74 @@ def _empty_catch(caps: dict[str, list[Node]]) -> Node | None:
     return None if _is_best_effort(try_block) else body
 
 
+_SANITIZERS = {"sanitize", "sanitizeHtml", "sanitizeHTML", "purify"}
+
+
+def _html_value(attribute: Node) -> Node | None:
+    """The value of the ``__html`` key in ``dangerouslySetInnerHTML={{ __html: value }}``."""
+    stack = [attribute]
+    while stack:
+        node = stack.pop()
+        if node.type == "pair":
+            key = node.child_by_field_name("key")
+            if key is not None and _text(key).strip("'\"") == "__html":
+                return node.child_by_field_name("value")
+        stack.extend(node.children)
+    return None
+
+
+def _module_constant_is_literal(identifier: Node) -> bool:
+    """True if the name is a top-level ``const`` of this file initialised with a plain string."""
+    root = identifier
+    while root.parent is not None:
+        root = root.parent
+    name = _text(identifier)
+    for statement in root.named_children:
+        if statement.type != "lexical_declaration" or not _text(statement).startswith("const "):
+            continue
+        for declarator in statement.named_children:
+            if declarator.type != "variable_declarator":
+                continue
+            target = declarator.child_by_field_name("name")
+            value = declarator.child_by_field_name("value")
+            if target is not None and _text(target) == name and _is_literal(value):
+                return True
+    return False
+
+
+def _html_is_safe(value: Node | None) -> bool:
+    """Patterns that are not injection: a constant, a sanitiser call, JSON with `<` escaped."""
+    if value is None:
+        return False
+    if _is_literal(value):
+        return True
+    if value.type == "identifier":
+        return _module_constant_is_literal(value)
+    if value.type != "call_expression":
+        return False
+    callee = value.child_by_field_name("function")
+    if callee is None:
+        return False
+    callee_text = _text(callee)
+    if callee_text.split(".")[-1] in _SANITIZERS:
+        return True
+    prop = callee.child_by_field_name("property") if callee.type == "member_expression" else None
+    if prop is not None and _text(prop) == "replace":
+        inner = callee.child_by_field_name("object")
+        args = value.child_by_field_name("arguments")
+        first = args.named_children[0] if args is not None and args.named_children else None
+        is_json = inner is not None and _text(inner).startswith("JSON.stringify(")
+        return bool(is_json and first is not None and "<" in _text(first))  # escapes "</script>"
+    return False
+
+
+def _dangerous_html(caps: dict[str, list[Node]]) -> Node | None:
+    node = _one(caps, "node")
+    if node is None:
+        return None
+    return None if _html_is_safe(_html_value(node)) else node
+
+
 def _ts_suppress(caps: dict[str, list[Node]]) -> Node | None:
     comment = _one(caps, "comment")
     return comment if comment is not None and _TS_SUPPRESS.search(_text(comment)) else None
@@ -407,7 +477,7 @@ _RULES: tuple[_Rule, ...] = (
         "dangerouslySetInnerHTML renders raw HTML and bypasses React's escaping; unsanitised input allows cross-site scripting.",
         "Render text through React, or sanitise the HTML with a vetted library before passing it.",
         '(jsx_attribute (property_identifier) @a (#eq? @a "dangerouslySetInnerHTML")) @node',
-        _always,
+        _dangerous_html,
         True,
     ),
     _Rule(

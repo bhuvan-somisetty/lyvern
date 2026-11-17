@@ -11,7 +11,7 @@ const ORDER: Verdict[] = ["true_positive", "false_positive", "unsure"];
 const SEVERITY_STYLE: Record<string, string> = {
   critical: "border-accent text-accent",
   high: "border-accent/70 text-accent",
-  medium: "border-[#c9a46a]/60 text-[#d9b97f]",
+  medium: "border-foreground/50 text-foreground",
   low: "border-line text-muted",
   info: "border-line text-muted",
 };
@@ -74,7 +74,7 @@ export function Findings({
                   name="verdict"
                   value={v}
                   aria-pressed={f.verdict === v}
-                  className="rounded-full border border-line px-4 py-1.5 text-sm transition-colors hover:bg-surface-2 aria-pressed:border-accent aria-pressed:text-accent"
+                  className="rounded-full border border-line px-4 py-1.5 text-sm transition-colors hover:bg-surface-2 aria-pressed:border-accent aria-pressed:bg-accent aria-pressed:text-foreground"
                 >
                   {VERDICT_LABEL[v]}
                 </button>

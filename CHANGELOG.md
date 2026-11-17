@@ -14,7 +14,8 @@ All notable changes. Dates are in IST. This project is a work in progress; see `
 - 2026-11-16: development App renamed to `lyvern-bot`; logo added.
 - 2026-11-16: provider network errors now surface as clean errors; Gemini default model changed to `gemini-flash-lite-latest`.
 - 2026-11-16: Go analyser (8 rules, tree-sitter) wired into the review pipeline; 18 Go cases added to the synthetic suite (79 cases).
-- 2026-11-17: public demo dashboard on Vercel (sample data), redesigned interface; the empty-catch rule is now opt-in (`LYVERN_STRICT_STYLE_RULES`, `--strict-style`) after it was right in 8 of 56 labelled cases; minified and bundled files are treated as generated; exact line numbers for CRLF files.
+- 2026-11-17: the public demo and its sample data were removed at the owner's request (no fake data); dashboard restyled with the owner's saved palette and fonts; Lyvern logo as the browser-tab icon; `dangerouslySetInnerHTML` rule made opt-in after 0 of about 45 labelled cases were real (it also now recognises constants, sanitiser calls and escaped JSON-LD when enabled).
+- 2026-11-17: (earlier today, now superseded) public demo dashboard on Vercel (sample data), redesigned interface; the empty-catch rule is now opt-in (`LYVERN_STRICT_STYLE_RULES`, `--strict-style`) after it was right in 8 of 56 labelled cases; minified and bundled files are treated as generated; exact line numbers for CRLF files.
 - 2026-11-16: attention model trained on 1,200 real public pull requests; `docs/ML_MODEL_CARD.md`; `data/ml/prs.csv`.
 - 2026-11-16: cross-file check for removed symbols that other files still reference; dashboard user accounts with roles (migration 0005), `lyvern user ...` admin CLI, verdicts record who gave them; advisory attention model (data collection, training, model card).
 - 2026-11-16: dependency vulnerability check against OSV (pinned requirements.txt, package.json, go.mod), opt-in; `lyvern review --deps`.

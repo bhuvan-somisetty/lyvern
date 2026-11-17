@@ -46,7 +46,7 @@ class Settings(BaseSettings):
     attention_model: bool = True
     # Look for references to symbols a pull request removes (reads up to 60 repository files).
     cross_file_check: bool = True
-    # Also run style rules that were right too rarely on real code to be on by default.
+    # Also run rules that were right too rarely on real code to be on by default (see NOISY_RULES).
     strict_style_rules: bool = False
     llm_provider: str = ""
     llm_model: str | None = None

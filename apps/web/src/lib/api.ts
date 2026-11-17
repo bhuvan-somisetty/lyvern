@@ -1,11 +1,3 @@
-import {
-  DEMO_MODE,
-  demoFeedback,
-  demoFindings,
-  demoRun,
-  demoRuns,
-  demoStats,
-} from "@/lib/demo";
 import type { Role } from "@/lib/session";
 
 // Server-side access to the read-only dashboard API. The token never reaches the browser.
@@ -83,22 +75,7 @@ export type Result<T> = { ok: true; data: T } | { ok: false; error: string };
 
 const baseUrl = () => process.env.LYVERN_API_URL ?? "http://127.0.0.1:8010";
 
-function demoGet<T>(path: string): Result<T> {
-  const url = new URL(path, "http://demo.local");
-  const route = url.pathname;
-  const ok = (data: unknown): Result<T> => ({ ok: true, data: data as T });
-  if (route === "/api/v1/stats") return ok(demoStats());
-  if (route === "/api/v1/feedback/summary") return ok(demoFeedback());
-  if (route === "/api/v1/runs") return ok(demoRuns(Number(url.searchParams.get("limit") ?? 25)));
-  const findings = route.match(/^\/api\/v1\/runs\/([^/]+)\/findings$/);
-  if (findings) return ok(demoFindings(decodeURIComponent(findings[1])));
-  const one = route.match(/^\/api\/v1\/runs\/([^/]+)$/);
-  const run = one ? demoRun(decodeURIComponent(one[1])) : undefined;
-  return run ? ok(run) : { ok: false, error: "Not found." };
-}
-
 async function get<T>(path: string): Promise<Result<T>> {
-  if (DEMO_MODE) return demoGet<T>(path);
   const token = process.env.LYVERN_API_TOKEN;
   if (!token) {
     return { ok: false, error: "The dashboard API token is not configured (set LYVERN_API_TOKEN)." };
@@ -128,7 +105,6 @@ export async function putVerdict(
   verdict: Verdict,
   reviewer: string,
 ): Promise<Result<Finding>> {
-  if (DEMO_MODE) return { ok: false, error: "The demo is read-only." };
   const token = process.env.LYVERN_API_TOKEN;
   if (!token) return { ok: false, error: "The dashboard API token is not configured." };
   try {
@@ -154,7 +130,6 @@ export type LoginResult =
 
 /** Ask the API to check a username and password. Server-side only. */
 export async function verifyLogin(username: string, password: string): Promise<LoginResult> {
-  if (DEMO_MODE) return { ok: false, status: 0 };
   const token = process.env.LYVERN_API_TOKEN;
   if (!token) return { ok: false, status: 0 };
   try {

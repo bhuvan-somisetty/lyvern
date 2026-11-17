@@ -1,22 +1,24 @@
 import type { Metadata } from "next";
-import { Fraunces, Geist, Geist_Mono } from "next/font/google";
+import { Bodoni_Moda, Geist_Mono, Outfit } from "next/font/google";
 import { PRODUCT_NAME } from "@/lib/brand";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-const display = Fraunces({
+// The owner's saved references: an elegant high-contrast serif for the logo and big headlines
+// (Maison Salome / Runiga look-alike) and a clean geometric sans for interface text.
+const display = Bodoni_Moda({
   variable: "--font-display",
   subsets: ["latin"],
   axes: ["opsz"],
+});
+
+const ui = Outfit({
+  variable: "--font-ui",
+  subsets: ["latin"],
+});
+
+const mono = Geist_Mono({
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
@@ -29,9 +31,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} ${display.variable} h-full antialiased`}
+      className={`${display.variable} ${ui.variable} ${mono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <div className="silk" aria-hidden />
+        {children}
+      </body>
     </html>
   );
 }

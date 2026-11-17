@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { PRODUCT_NAME } from "@/lib/brand";
 
 export const LOGIN_MESSAGES: Record<string, string> = {
@@ -17,44 +18,47 @@ export function LoginForm({
 }) {
   const message = error ? (LOGIN_MESSAGES[error] ?? "Could not sign in.") : null;
   return (
-    <main className="mx-auto max-w-sm px-6 py-20">
-      <p className="font-mono text-sm text-accent">{PRODUCT_NAME}</p>
-      <h1 className="mt-2 text-2xl font-semibold tracking-tight">Sign in</h1>
-      <form action={action} className="mt-6 flex flex-col gap-3">
-        <label htmlFor="username" className="text-sm text-muted">
-          Username
-        </label>
-        <input
-          id="username"
-          name="username"
-          type="text"
-          autoComplete="username"
-          required
-          className="rounded-md border border-white/20 bg-transparent px-3 py-2"
-        />
-        <label htmlFor="password" className="text-sm text-muted">
-          Password
-        </label>
-        <input
-          id="password"
-          name="password"
-          type="password"
-          autoComplete="current-password"
-          required
-          className="rounded-md border border-white/20 bg-transparent px-3 py-2"
-        />
-        {message ? (
-          <p role="alert" className="text-sm text-accent">
-            {message}
-          </p>
-        ) : null}
-        <button
-          type="submit"
-          className="rounded-md bg-accent px-3 py-2 font-medium text-black hover:opacity-90"
-        >
-          Sign in
-        </button>
-      </form>
+    <main className="mx-auto w-full max-w-sm px-6 py-20">
+      <div className="rise rounded-3xl border border-line bg-surface p-8">
+        <div className="flex items-center gap-3">
+          <Image src="/logo.png" alt="" width={44} height={44} className="rounded-xl" priority />
+          <span className="font-display text-2xl">{PRODUCT_NAME}</span>
+        </div>
+        <h1 className="font-display mt-8 text-4xl">Sign in</h1>
+        <p className="mt-2 text-sm text-muted">For the people who run the review bot.</p>
+        <form action={action} className="mt-6 flex flex-col gap-3">
+          <label htmlFor="username" className="text-sm text-muted">
+            Username
+          </label>
+          <input
+            id="username"
+            name="username"
+            type="text"
+            autoComplete="username"
+            required
+            className="rounded-lg border border-line bg-black/25 px-3 py-2.5"
+          />
+          <label htmlFor="password" className="text-sm text-muted">
+            Password
+          </label>
+          <input
+            id="password"
+            name="password"
+            type="password"
+            autoComplete="current-password"
+            required
+            className="rounded-lg border border-line bg-black/25 px-3 py-2.5"
+          />
+          {message ? (
+            <p role="alert" className="text-sm text-accent">
+              {message}
+            </p>
+          ) : null}
+          <button type="submit" className="btn-accent mt-2 rounded-lg px-3 py-2.5">
+            Sign in
+          </button>
+        </form>
+      </div>
     </main>
   );
 }
