@@ -16,7 +16,8 @@ PRISMA = (
 
 
 def rules_js(path: str, source: str) -> set[str]:
-    return {f.detection_source.split(":")[1] for f in analyze_js_ts(path, source)}
+    found = analyze_js_ts(path, source, include_noisy=True)
+    return {f.detection_source.split(":")[1] for f in found}
 
 
 def test_generated_files_are_recognised_by_folder_name_or_header() -> None:

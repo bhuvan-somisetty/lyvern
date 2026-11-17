@@ -28,6 +28,10 @@ TS_SUFFIXES = {".ts", ".mts", ".cts"}
 TSX_SUFFIXES = {".tsx"}
 SUPPORTED_SUFFIXES = JS_SUFFIXES | TS_SUFFIXES | TSX_SUFFIXES
 MAX_EVIDENCE_LINES = 5
+# Rules that were right too rarely on real code to be on by default: an empty catch was a real
+# problem in 8 of 56 labelled cases (14%), because deliberate best-effort catches are common.
+# They run only when asked for (`include_noisy=True`, setting LYVERN_STRICT_STYLE_RULES).
+NOISY_RULES = frozenset({"empty-catch"})
 MAX_SPAN_LINES = 20
 
 _SECRET_NAME = re.compile(
@@ -235,12 +239,93 @@ def _token_shape(caps: dict[str, list[Node]]) -> Node | None:
     return value if _TOKEN_SHAPES.search(_text(value)) else None
 
 
+# Calls that are routinely wrapped in "try { ... } catch {}" because failing to tidy up is
+# harmless. Found on real code: these made up most of the false alarms of this rule.
+_CLEANUP_METHODS = {
+    "close", "stop", "disconnect", "off", "removeEventListener", "remove", "destroy", "abort",
+    "cancel", "dispose", "unsubscribe", "revokeObjectURL", "releaseLock", "terminate",
+}  # fmt: skip
+_PROBE_ROOTS = {
+    "navigator",
+    "localStorage",
+    "sessionStorage",
+}  # may throw by design (privacy, denied)
+
+
+def _call_of(statement: Node) -> Node | None:
+    """The call in a statement like ``x.close();``, ``await x.close();`` or ``a = JSON.parse(s)``."""
+    node: Node | None = statement
+    while node is not None and node.type in {
+        "expression_statement",
+        "await_expression",
+        "assignment_expression",
+        "lexical_declaration",
+        "variable_declaration",
+        "variable_declarator",
+        "parenthesized_expression",
+    }:
+        children = [c for c in node.named_children if c.type != "comment"]
+        if node.type == "assignment_expression":
+            node = node.child_by_field_name("right")
+        elif node.type == "variable_declarator":
+            node = node.child_by_field_name("value")
+        elif children:
+            node = children[-1]
+        else:
+            return None
+    return node if node is not None and node.type == "call_expression" else None
+
+
+def _chain_root_and_last(call: Node) -> tuple[str, str]:
+    """('navigator', 'query') for navigator.permissions.query(...); ('', name) for name(...)."""
+    fn = call.child_by_field_name("function")
+    last = ""
+    while fn is not None and fn.type in {
+        "member_expression",
+        "call_expression",
+        "await_expression",
+    }:
+        if fn.type == "member_expression":
+            if not last:
+                prop = fn.child_by_field_name("property")
+                last = _text(prop) if prop is not None else ""
+            fn = fn.child_by_field_name("object")
+        elif fn.type == "call_expression":
+            fn = fn.child_by_field_name("function")
+        else:
+            fn = fn.named_children[0] if fn.named_children else None
+    return (_text(fn) if fn is not None and fn.type == "identifier" else "", last)
+
+
+def _is_best_effort(try_block: Node | None) -> bool:
+    """True if the try block is one statement that is idiomatically allowed to fail silently."""
+    if try_block is None:
+        return False
+    statements = [c for c in try_block.named_children if c.type != "comment"]
+    if len(statements) != 1:
+        return False
+    call = _call_of(statements[0])
+    if call is None:
+        return False
+    root, last = _chain_root_and_last(call)
+    if last in _CLEANUP_METHODS:
+        return True
+    if root == "JSON" and last == "parse":  # parse with a fallback value
+        return True
+    return root in _PROBE_ROOTS  # browser features that throw when denied or unavailable
+
+
 def _empty_catch(caps: dict[str, list[Node]]) -> Node | None:
     body = _one(caps, "body")
     if body is None or body.named_children:
         return None
     inner = _text(body).strip()[1:-1].strip()
-    return body if not inner else None  # a comment inside means it was deliberate
+    if inner:  # a comment inside means it was deliberate
+        return None
+    handler = body.parent
+    try_statement = handler.parent if handler is not None else None
+    try_block = try_statement.child_by_field_name("body") if try_statement is not None else None
+    return None if _is_best_effort(try_block) else body
 
 
 def _ts_suppress(caps: dict[str, list[Node]]) -> Node | None:
@@ -435,6 +520,7 @@ def analyze_js_ts(
     source: str,
     *,
     added_lines: set[int] | None = None,
+    include_noisy: bool = False,
 ) -> list[Finding]:
     kind = _kind_for(path)
     if kind is None:
@@ -451,6 +537,8 @@ def analyze_js_ts(
     seen: set[tuple[str, int]] = set()
     for rule in _RULES:
         if (rule.security and skip_security) or (generated and not rule.security):
+            continue
+        if rule.rule_id in NOISY_RULES and not include_noisy:
             continue
         query = _compiled(kind, rule.rule_id)
         if query is None:

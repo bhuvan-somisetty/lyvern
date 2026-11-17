@@ -153,6 +153,11 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="skip the check for references to removed symbols (reads up to 60 files)",
     )
+    review.add_argument(
+        "--strict-style",
+        action="store_true",
+        help="also run noisy style rules (empty catch); off by default, see docs",
+    )
     bench = sub.add_parser("benchmark", help="measure the analysers (read-only)")
     bsub = bench.add_subparsers(dest="bench_command", required=True)
     bsub.add_parser("synthetic", help="labelled synthetic suite (regression check)")
@@ -309,6 +314,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             deps=osv,
             attention=None if args.no_attention else load_model(),
             cross_file=not args.no_xref,
+            strict_style=args.strict_style,
         )
     except GitHubRateLimited as error:
         print(

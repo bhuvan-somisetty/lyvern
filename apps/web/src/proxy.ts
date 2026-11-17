@@ -3,6 +3,15 @@ import { SESSION_COOKIE, verifySession } from "@/lib/session";
 
 // Every page requires a valid session cookie except the login page. Not configured = locked.
 export async function proxy(request: NextRequest) {
+  if (process.env.LYVERN_DEMO === "1") {
+    // The public demo shows invented data only: no sign-in is needed (or possible)
+    if (request.nextUrl.pathname === "/login") {
+      const home = request.nextUrl.clone();
+      home.pathname = "/";
+      return NextResponse.redirect(home);
+    }
+    return NextResponse.next();
+  }
   if (request.nextUrl.pathname === "/login") return NextResponse.next();
   const valid = await verifySession(
     request.cookies.get(SESSION_COOKIE)?.value,

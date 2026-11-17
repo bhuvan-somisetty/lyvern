@@ -165,6 +165,7 @@ def execute_review(
     deps: DependencyLookup | None = None,
     attention: AttentionModel | None = None,
     cross_file: bool = False,
+    strict_style: bool = False,
 ) -> None:
     with Session(engine) as session:
         run = session.get(ReviewRun, run_id)
@@ -186,6 +187,7 @@ def execute_review(
                 deps=deps,
                 attention=attention,
                 cross_file=cross_file,
+                strict_style=strict_style,
             )
             session.refresh(run)
             if _newer_run_exists(session, run) or not draft.decision.publish:
@@ -266,6 +268,7 @@ def execute_review_from_settings(run_id: UUID, settings: Settings | None = None)
             deps=osv,
             attention=load_model() if settings.attention_model else None,
             cross_file=settings.cross_file_check,
+            strict_style=settings.strict_style_rules,
         )
     finally:
         if osv is not None:

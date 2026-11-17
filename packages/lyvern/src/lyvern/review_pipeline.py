@@ -103,8 +103,11 @@ def _run_python(path: str, text: str, added: set[int]) -> list[Finding]:
     return analyze_python(path, text, added_lines=added)
 
 
-def _run_js_ts(path: str, text: str, added: set[int]) -> list[Finding]:
-    return analyze_js_ts(path, text, added_lines=added)
+def _js_ts_runner(include_noisy: bool) -> Analyzer:
+    def run(path: str, text: str, added: set[int]) -> list[Finding]:
+        return analyze_js_ts(path, text, added_lines=added, include_noisy=include_noisy)
+
+    return run
 
 
 def _run_go(path: str, text: str, added: set[int]) -> list[Finding]:
@@ -118,11 +121,11 @@ def _manifest_analyzer(lookup: DependencyLookup) -> Analyzer:
     return run
 
 
-def _analyzer_for(path: str) -> Analyzer | None:
+def _analyzer_for(path: str, strict_style: bool = False) -> Analyzer | None:
     if path.endswith(".py"):
         return _run_python
     if is_js_ts(path):
-        return _run_js_ts
+        return _js_ts_runner(strict_style)
     if is_go(path):
         return _run_go
     return None
@@ -154,6 +157,7 @@ def review_pull_request(
     deps: DependencyLookup | None = None,
     attention: AttentionModel | None = None,
     cross_file: bool = False,
+    strict_style: bool = False,
 ) -> DraftReview:
     policy = policy or ReviewPolicy()
     pr = source.get_pull_request(ref)
@@ -188,7 +192,7 @@ def review_pull_request(
             continue
         diffs[info.filename] = fd
 
-        analyzer = _analyzer_for(info.filename)
+        analyzer = _analyzer_for(info.filename, strict_style)
         if analyzer is None and manifest and deps is not None:
             analyzer = _manifest_analyzer(deps)
 

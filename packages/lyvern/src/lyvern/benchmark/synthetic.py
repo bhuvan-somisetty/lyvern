@@ -257,7 +257,7 @@ class SyntheticReport:
 
 def _analyse(case: Case) -> set[Expected]:
     if is_js_ts(case.path):
-        findings = analyze_js_ts(case.path, case.source)
+        findings = analyze_js_ts(case.path, case.source, include_noisy=True)
     elif is_go(case.path):
         findings = analyze_go(case.path, case.source)
     else:

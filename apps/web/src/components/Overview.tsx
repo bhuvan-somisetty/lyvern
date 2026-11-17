@@ -1,9 +1,10 @@
 import Link from "next/link";
 import type { FeedbackSummary, Run, Stats } from "@/lib/api";
+import { DecisionBar } from "@/components/DecisionBar";
 import { FeedbackCard } from "@/components/FeedbackCard";
-import { LogoutButton } from "@/components/LogoutButton";
+import { ReadingGuide } from "@/components/ReadingGuide";
+import { SiteHeader } from "@/components/SiteHeader";
 import type { Session } from "@/lib/session";
-import { PRODUCT_NAME } from "@/lib/brand";
 
 const EVENT_LABEL: Record<string, string> = {
   REQUEST_CHANGES: "Changes requested",
@@ -11,45 +12,64 @@ const EVENT_LABEL: Record<string, string> = {
   APPROVE: "Approved by policy",
 };
 
+const EVENT_DOT: Record<string, string> = {
+  REQUEST_CHANGES: "var(--accent)",
+  COMMENT: "#8b8176",
+  APPROVE: "var(--good)",
+};
+
 export function eventLabel(event: string | null): string {
   return event ? (EVENT_LABEL[event] ?? event) : "No review posted";
 }
 
+export function EventDot({ event }: { event: string | null }) {
+  return (
+    <span
+      aria-hidden
+      className="mr-2 inline-block h-2 w-2 rounded-full align-middle"
+      style={{ background: (event && EVENT_DOT[event]) || "#4a3d3d" }}
+    />
+  );
+}
+
 function Stat({ label, value }: { label: string; value: number | string }) {
   return (
-    <div className="rounded-lg border border-white/10 bg-white/[0.02] p-4">
+    <div className="rounded-2xl border border-line bg-surface p-5">
       <dt className="text-sm text-muted">{label}</dt>
-      <dd className="mt-1 text-2xl font-semibold tabular-nums">{value}</dd>
+      <dd className="font-display mt-2 text-4xl tabular-nums">{value}</dd>
     </div>
   );
 }
 
 export function RunTable({ runs }: { runs: Run[] }) {
   return (
-    <div className="overflow-x-auto rounded-lg border border-white/10">
-      <table className="w-full text-left text-sm">
+    <div className="overflow-x-auto rounded-2xl border border-line bg-surface">
+      <table className="w-full min-w-[640px] text-left text-sm">
         <caption className="sr-only">Recent review runs</caption>
-        <thead className="bg-white/[0.03] text-muted">
-          <tr>
-            <th scope="col" className="px-4 py-2 font-medium">Pull request</th>
-            <th scope="col" className="px-4 py-2 font-medium">Commit</th>
-            <th scope="col" className="px-4 py-2 font-medium">Result</th>
-            <th scope="col" className="px-4 py-2 font-medium">Findings</th>
-            <th scope="col" className="px-4 py-2 font-medium">Status</th>
+        <thead className="text-muted">
+          <tr className="border-b border-line">
+            <th scope="col" className="px-5 py-3 font-medium">Pull request</th>
+            <th scope="col" className="px-5 py-3 font-medium">Commit</th>
+            <th scope="col" className="px-5 py-3 font-medium">Result</th>
+            <th scope="col" className="px-5 py-3 font-medium">Findings</th>
+            <th scope="col" className="px-5 py-3 font-medium">Status</th>
           </tr>
         </thead>
         <tbody>
           {runs.map((run) => (
-            <tr key={run.id} className="border-t border-white/10">
-              <td className="px-4 py-2">
-                <Link className="text-accent hover:underline" href={`/runs/${run.id}`}>
+            <tr key={run.id} className="border-t border-line transition-colors hover:bg-surface-2">
+              <td className="px-5 py-3">
+                <Link className="text-accent underline-offset-4 hover:underline" href={`/runs/${run.id}`}>
                   {run.repo}#{run.pr_number}
                 </Link>
               </td>
-              <td className="px-4 py-2 font-mono text-muted">{run.head_sha.slice(0, 8)}</td>
-              <td className="px-4 py-2">{eventLabel(run.event_posted)}</td>
-              <td className="px-4 py-2 tabular-nums">{run.findings_count ?? "-"}</td>
-              <td className="px-4 py-2">{run.status}</td>
+              <td className="px-5 py-3 font-mono text-muted">{run.head_sha.slice(0, 8)}</td>
+              <td className="px-5 py-3">
+                <EventDot event={run.event_posted} />
+                {eventLabel(run.event_posted)}
+              </td>
+              <td className="px-5 py-3 tabular-nums">{run.findings_count ?? "-"}</td>
+              <td className="px-5 py-3 text-muted">{run.status}</td>
             </tr>
           ))}
         </tbody>
@@ -65,6 +85,7 @@ export function Overview({
   feedback = null,
   logout,
   who = null,
+  demo = false,
 }: {
   stats: Stats | null;
   runs: Run[] | null;
@@ -72,54 +93,76 @@ export function Overview({
   feedback?: FeedbackSummary | null;
   logout?: () => void | Promise<void>;
   who?: Session | null;
+  demo?: boolean;
 }) {
   return (
-    <main className="mx-auto max-w-5xl px-6 py-12">
-      <div className="flex items-center justify-between">
-        <p className="font-mono text-sm text-accent">{PRODUCT_NAME}</p>
-        <div className="flex items-center gap-4 text-sm text-muted">
-          {who ? (
-            <span>
-              Signed in as {who.username} ({who.role})
-            </span>
-          ) : null}
-          {logout ? <LogoutButton action={logout} /> : null}
-        </div>
-      </div>
-      <h1 className="mt-2 text-3xl font-semibold tracking-tight">Pull request reviews</h1>
-      <p className="mt-2 max-w-2xl text-muted">
-        Every number on this page is read from the review database. Nothing is estimated.
-      </p>
+    <main className="mx-auto w-full max-w-6xl px-5 py-8 sm:px-8">
+      <SiteHeader who={who} logout={logout} demo={demo} />
+
+      <section className="rise pb-10 pt-12">
+        <p className="text-sm text-accent">Pull request intelligence</p>
+        <h1 className="font-display mt-3 max-w-3xl text-4xl leading-tight sm:text-5xl">
+          Pull request reviews
+        </h1>
+        <p className="mt-4 max-w-2xl text-lg text-muted">
+          {demo
+            ? "A reviewer that comments on the exact lines, asks for changes only when it is confident, and approves only when nothing is left to fix."
+            : "Every number on this page is read from the review database. Nothing is estimated."}
+        </p>
+        {demo ? (
+          <p
+            role="note"
+            className="mt-6 max-w-2xl rounded-xl border border-line bg-surface p-4 text-sm text-muted"
+          >
+            This public demo shows <strong className="text-foreground">invented sample data</strong>: the
+            repositories, pull requests and findings are made up so you can explore the dashboard. The
+            real product reads its numbers from the review database, and signing in is required there.
+          </p>
+        ) : null}
+      </section>
 
       {error ? (
-        <div role="alert" className="mt-8 rounded-lg border border-accent/40 p-4">
+        <div role="alert" className="rounded-2xl border border-accent/40 bg-surface p-5">
           <p className="font-medium">The dashboard could not load its data.</p>
           <p className="mt-1 text-muted">{error}</p>
         </div>
       ) : (
         <>
-          <dl className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-4" aria-label="Totals">
+          <dl className="rise grid grid-cols-2 gap-3 lg:grid-cols-4" aria-label="Totals">
             <Stat label="Reviews run" value={stats?.runs_total ?? 0} />
             <Stat label="Findings reported" value={stats?.findings_total ?? 0} />
             <Stat label="Inline comments" value={stats?.inline_comments_total ?? 0} />
             <Stat label="Webhook deliveries" value={stats?.deliveries_total ?? 0} />
           </dl>
 
-          <h2 className="mt-10 text-xl font-semibold">Recent reviews</h2>
+          <div className="mt-6 grid gap-6 lg:grid-cols-5">
+            <div className="lg:col-span-2">
+              <DecisionBar events={stats?.runs_by_event ?? {}} />
+              <ReadingGuide />
+            </div>
+            <div className="lg:col-span-3">
+              <FeedbackCard summary={feedback} />
+            </div>
+          </div>
+
+          <h2 className="font-display mt-12 text-2xl">Recent reviews</h2>
           {runs && runs.length > 0 ? (
-            <div className="mt-3">
+            <div className="mt-4">
               <RunTable runs={runs} />
             </div>
           ) : (
-            <p className="mt-3 rounded-lg border border-white/10 p-6 text-muted">
+            <p className="mt-4 rounded-2xl border border-line bg-surface p-6 text-muted">
               No reviews yet. Install the GitHub App on a repository and open a pull request; its
               review will appear here.
             </p>
           )}
-
-          <FeedbackCard summary={feedback} />
         </>
       )}
+
+      <footer className="mt-16 border-t border-line pt-6 text-sm text-muted">
+        Lyvern&apos;s reviews are advisory and do not replace human review. AI observations are
+        optional, labelled as unverified, and never block a merge.
+      </footer>
     </main>
   );
 }

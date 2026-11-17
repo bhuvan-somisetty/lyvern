@@ -13,12 +13,13 @@ import re
 from pathlib import PurePosixPath
 
 _DIRS = {"generated", "__generated__", ".generated"}
-_NAME_HINTS = (".generated.", ".gen.", "_gen.", ".pb.", "_pb.", ".g.")
+_NAME_HINTS = (".generated.", ".gen.", "_gen.", ".pb.", "_pb.", ".g.", ".min.", ".bundle.")
 _MARKERS = re.compile(
     r"(@generated|auto-?generated|generated (?:file|by|code)|code generated|do not edit)",
     re.IGNORECASE,
 )
 HEADER_CHARS = 1500  # generators put their notice at the top of the file
+MINIFIED_LINE = 1000  # a source line this long is machine output
 
 
 def is_generated(path: str, source: str) -> bool:
@@ -28,4 +29,7 @@ def is_generated(path: str, source: str) -> bool:
     name = p.name.lower()
     if any(hint in name for hint in _NAME_HINTS):
         return True
-    return bool(_MARKERS.search(source[:HEADER_CHARS]))
+    if _MARKERS.search(source[:HEADER_CHARS]):
+        return True
+    # minified code: nobody reads it, and its "lines" are thousands of characters long
+    return any(len(line) > MINIFIED_LINE for line in source[:20_000].split("\n")[:30])

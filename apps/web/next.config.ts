@@ -2,7 +2,8 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   /* config options here */
-  output: "standalone", // a small self-contained server for the Docker image
+  // a small self-contained server for the Docker image (Vercel builds its own way)
+  output: process.env.VERCEL ? undefined : "standalone",
   cacheComponents: true,
   partialPrefetching: true,
   turbopack: {

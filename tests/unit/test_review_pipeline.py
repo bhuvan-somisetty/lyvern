@@ -361,3 +361,15 @@ def test_cli_deps_flag_uses_the_dependency_lookup_and_closes_it(
     assert "osv:GHSA-1" in out and "requirements.txt:1" in out and FakeOsv.closed is True
     assert cli.main(["review", "octo/repo#7"]) == 0  # without the flag nothing is looked up
     assert "osv:" not in capsys.readouterr().out
+
+
+def test_strict_style_switches_on_the_noisy_rules_and_is_off_by_default() -> None:
+    code = "try { run(); } catch (e) {}\n"
+    patch_text = "@@ -0,0 +1 @@\n+try { run(); } catch (e) {}\n"
+    files = [f("web/a.js", "added", patch_text, 1)]
+    source = FakeSource(files, {"web/a.js": code})
+    off = review_pull_request(source, REF)
+    on = review_pull_request(source, REF, strict_style=True)
+    assert off.findings == () and {x.detection_source for x in on.findings} == {
+        "lyvern-js:empty-catch"
+    }

@@ -10,7 +10,8 @@ from lyvern.engine.policy import ReviewPolicy
 
 
 def rules(path: str, source: str, **kw: object) -> set[str]:
-    return {f.detection_source.split(":")[1] for f in analyze_js_ts(path, source, **kw)}  # type: ignore[arg-type]
+    options = {"include_noisy": True, **kw}  # the rules under test include the opt-in ones
+    return {f.detection_source.split(":")[1] for f in analyze_js_ts(path, source, **options)}  # type: ignore[arg-type]
 
 
 POSITIVE = [
@@ -139,3 +140,63 @@ def test_false_positives_seen_on_real_code_stay_fixed() -> None:
     assert analyze_js_ts("src/lib/user.ts", story) == []  # a bare hash digest is not a credential
     assert is_test_path("src/stories/Dialog.stories.tsx")
     assert "hardcoded-secret" in rules("src/lib/user.ts", "const password = 'hunter2hunter2';\n")
+
+
+@pytest.mark.parametrize(
+    "source",
+    [
+        "function f() { try { pc.close(); } catch {} }",
+        "async function f() { try { await stt.stop(); } catch (e) {} }",
+        "function f() { try { socket.off('x', h); } catch (e) {} }",
+        "let x; try { x = JSON.parse(text); } catch {}",
+        "const v = (() => { let y = 1; try { y = JSON.parse(t); } catch {} return y; })();",
+        "async function f() { try { await navigator.permissions?.query({ name: 'geolocation' }); } catch {} }",
+        "try { localStorage.setItem('a', 'b'); } catch {}",
+        "try { await navigator.clipboard?.writeText(url); } catch {}",
+    ],
+)
+def test_best_effort_idioms_are_not_flagged_as_empty_catch(source: str) -> None:
+    # found on real code: these accepted patterns were most of this rule's false alarms
+    assert "empty-catch" not in rules("src/a.ts", source)
+
+
+@pytest.mark.parametrize(
+    "source",
+    [
+        "async function f() { try { await fetch('/api/x'); } catch {} }",
+        "async function f() { try { n = await db.count({}); } catch (err) {} }",
+        "try { saveEverything(); } catch {}",
+        "try { a(); pc.close(); } catch {}",  # more than one statement
+        "try { pc.close(); other(); } catch {}",
+        "try { cleanup.run(); } catch {}",  # not a known cleanup method
+        "try { x.close; } catch {}",  # not a call
+    ],
+)
+def test_real_failures_that_are_silently_dropped_are_still_flagged(source: str) -> None:
+    assert "empty-catch" in rules("src/a.ts", source)
+
+
+def test_empty_catch_is_opt_in_because_it_was_wrong_far_more_often_than_right() -> None:
+    # measured on real code: right in 8 of 56 labelled cases (14%), so it is off by default
+    source = "try { run(); } catch (e) {}\neval(x);\n"
+    default = {f.detection_source.split(":")[1] for f in analyze_js_ts("a.js", source)}
+    strict = {
+        f.detection_source.split(":")[1] for f in analyze_js_ts("a.js", source, include_noisy=True)
+    }
+    assert default == {"eval"} and strict == {
+        "eval",
+        "empty-catch",
+    }  # security rules are unaffected
+
+
+def test_minified_and_bundled_files_get_security_rules_only() -> None:
+    from lyvern.engine.analyzers.generated import is_generated
+
+    minified = "var a=1;" + "x=1;" * 400 + "try{f()}catch(e){}debugger;eval(u);\n"
+    assert is_generated("dist/app.js", minified) and is_generated("a/lib.min.js", "var a=1;")
+    assert not is_generated("src/app.js", "const a = 1;\n" * 50)
+    found = {
+        f.detection_source.split(":")[1]
+        for f in analyze_js_ts("dist/app.js", minified, include_noisy=True)
+    }
+    assert found == {"eval"}
