@@ -1,0 +1,63 @@
+# Lyvern as a free GitHub Action: no server, no hosting. Copy this file into any repository the
+# Lyvern GitHub App is installed on. Needs three repository secrets (see docs/ACTIONS_MODE.md):
+#   LYVERN_APP_ID, LYVERN_APP_PRIVATE_KEY  (the GitHub App), and optionally LYVERN_GROQ_API_KEY.
+name: Lyvern review
+
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: lyvern-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: lyvern
+          POSTGRES_PASSWORD: lyvern
+          POSTGRES_DB: lyvern
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U lyvern" --health-interval 5s --health-timeout 5s
+          --health-retries 10
+    env:
+      LYVERN_DATABASE_URL: postgresql+psycopg://lyvern:lyvern@localhost:5432/lyvern
+      LYVERN_GITHUB_APP_ID: ${{ secrets.LYVERN_APP_ID }}
+      LYVERN_GITHUB_APP_PRIVATE_KEY_PATH: ${{ runner.temp }}/lyvern-app.pem
+      LYVERN_WRITE_ALLOWED_REPOS: ${{ github.repository }}
+      LYVERN_APPROVE_ALLOWED_REPOS: ${{ vars.LYVERN_APPROVE_ALLOWED_REPOS }}
+      LYVERN_LLM_PROVIDER: ${{ secrets.LYVERN_GROQ_API_KEY != '' && 'groq' || '' }}
+      LYVERN_GROQ_API_KEY: ${{ secrets.LYVERN_GROQ_API_KEY }}
+    steps:
+      # The workflow runs from the base branch and never executes the pull request's code:
+      # Lyvern reads the diff through the GitHub API only.
+      - name: Check out Lyvern
+        uses: actions/checkout@v4
+        with:
+          repository: bhuvan-somisetty/lyvern
+          ref: develop
+      - uses: astral-sh/setup-uv@v5
+      - name: Install
+        run: uv sync --all-packages --frozen
+      - name: Write the App private key
+        env:
+          KEY: ${{ secrets.LYVERN_APP_PRIVATE_KEY }}
+        run: |
+          umask 077
+          printf '%s\n' "$KEY" > "$RUNNER_TEMP/lyvern-app.pem"
+      - name: Prepare the database
+        run: uv run alembic upgrade head
+      - name: Review
+        run: uv run lyvern action --event "$GITHUB_EVENT_PATH"
+      - name: Remove the key
+        if: always()
+        run: rm -f "$RUNNER_TEMP/lyvern-app.pem"

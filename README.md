@@ -100,7 +100,7 @@ Two modes, one codebase:
 | Private (default) | The owner, admins and reviewers | Sign-in with roles (viewer, reviewer, admin). Reviewers can label findings. Reads the live API |
 | Snapshot (`LYVERN_SNAPSHOT=1`) | Anyone | The public Vercel site. Serves a frozen export of the real database, with repositories, files, commit ids and links hidden. No login, no writes |
 
-The bot itself and its database run locally. The deployed site is a snapshot, refreshed on demand with `scripts/export_dashboard_snapshot.py`.
+The deployed site is a snapshot, refreshed on demand with `scripts/export_dashboard_snapshot.py`.
 
 ## See it work on real pull requests
 
@@ -135,6 +135,12 @@ A fresh labelled batch of findings on real code is still needed before quoting a
 - GitHub Actions CI on every push.
 - Signed commits; webhook signatures verified; secrets never committed; `.env` and the GitHub App private key stay outside the repository.
 - No data is invented: the dashboard reads the database or the anonymised export of it.
+
+## Run it for free, with no server
+
+**Actions mode:** copy one workflow file (`.github/workflows/lyvern-review.yml`) into a repository and add the App secrets. The review then runs on a free GitHub-hosted runner for every pull request, with nothing to host or keep running. Setup and limits: [`docs/ACTIONS_MODE.md`](docs/ACTIONS_MODE.md).
+
+**Local mode:** run the whole stack on your own machine (below). This also feeds the dashboard database.
 
 ## Run it yourself
 
@@ -185,7 +191,11 @@ Start with `docs/PROJECT_HANDBOOK.md` (everything, A to Z). Then `docs/PRD.md` (
 
 ## Honest scope
 
-Built: everything above. Not built: a full call graph and type-aware analysis, Semgrep and ESLint integration, single sign-on, and a hosted multi-tenant version of the bot. The name is a working name; trademark and domain checks are still open.
+Built: everything above. Not built: a full call graph and type-aware analysis, ESLint integration, single sign-on, and a hosted multi-tenant version of the bot. The name is a working name; trademark and domain checks are still open.
+
+## License
+
+MIT, see [`LICENSE`](LICENSE).
 
 ---
 

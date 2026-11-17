@@ -164,6 +164,19 @@ class GitHubReadClient:
                 break
         return reviews
 
+    def list_review_records(self, ref: PullRequestRef) -> list[dict[str, Any]]:
+        """Reviews with their ids and commits (rebuilds history on a stateless runner)."""
+        records: list[dict[str, Any]] = []
+        for page in range(1, 6):
+            batch = self._get(
+                f"/repos/{ref.owner}/{ref.repo}/pulls/{ref.number}/reviews",
+                {"per_page": 100, "page": page},
+            )
+            records.extend(batch)
+            if len(batch) < 100:
+                break
+        return records
+
     @staticmethod
     def _pr_info(ref: PullRequestRef, data: dict[str, Any]) -> PullRequestInfo:
         head_repo = (data["head"].get("repo") or {}).get("full_name") or f"{ref.owner}/{ref.repo}"

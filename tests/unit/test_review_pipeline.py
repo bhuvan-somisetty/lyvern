@@ -219,8 +219,9 @@ def test_cli_main_runs_with_a_fake_client_and_handles_bad_input(
 def test_cli_has_no_command_that_posts() -> None:
     parser = cli.build_parser()
     commands = next(a for a in parser._actions if getattr(a, "choices", None)).choices  # type: ignore[attr-defined]
-    # review, benchmark and ml only read from GitHub; user only edits the local accounts table
-    assert set(commands) == {"review", "benchmark", "ml", "user"}
+    # review, benchmark and ml only read from GitHub; user only edits the local accounts table.
+    # action is the CI entry point: it posts only through the App and the write allow-list.
+    assert set(commands) == {"review", "benchmark", "ml", "user", "action"}
     # structurally: the CLI and the benchmark code never import or call the write path
     import inspect
 

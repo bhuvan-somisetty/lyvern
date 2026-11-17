@@ -114,6 +114,13 @@ def build_parser() -> argparse.ArgumentParser:
         help="also check pinned dependencies against the OSV vulnerability database "
         "(sends package names and versions, never code, to api.osv.dev)",
     )
+    action = sub.add_parser(
+        "action", help="review the pull request in a GitHub Actions event file (free runner)"
+    )
+    action.add_argument(
+        "--event", required=True, help="path to the event payload (GITHUB_EVENT_PATH)"
+    )
+
     user = sub.add_parser("user", help="manage dashboard accounts (run on the server)")
     usub = user.add_subparsers(dest="user_command", required=True)
     add = usub.add_parser("add", help="create an account; the password is read from a prompt")
@@ -275,6 +282,10 @@ def main(argv: Sequence[str] | None = None) -> int:
         if reconfigure is not None:
             reconfigure(encoding="utf-8", errors="replace")
     args = build_parser().parse_args(argv)
+    if args.command == "action":
+        from lyvern.services.actions_mode import run_event_file
+
+        return run_event_file(args.event)
     if args.command == "user":
         return run_user(args)
     if args.command == "ml":

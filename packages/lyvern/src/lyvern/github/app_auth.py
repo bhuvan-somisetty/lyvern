@@ -47,6 +47,34 @@ class AppAuth:
         claims = {"iat": now - 60, "exp": now + 540, "iss": self._app_id}
         return jwt.encode(claims, self._key, algorithm="RS256")
 
+    def bot_login(self) -> str:
+        """The login this App's reviews carry on GitHub (``<slug>[bot]``)."""
+        response = self._http.get(
+            "/app",
+            headers={
+                "Authorization": f"Bearer {self.app_jwt()}",
+                "Accept": "application/vnd.github+json",
+                "X-GitHub-Api-Version": "2022-11-28",
+            },
+        )
+        if response.status_code != 200:
+            raise AppAuthError(f"could not read the App identity (HTTP {response.status_code})")
+        return f"{response.json()['slug']}[bot]"
+
+    def installation_for_repo(self, repo_full_name: str) -> int:
+        """The installation id of this App on a repository."""
+        response = self._http.get(
+            f"/repos/{repo_full_name}/installation",
+            headers={
+                "Authorization": f"Bearer {self.app_jwt()}",
+                "Accept": "application/vnd.github+json",
+                "X-GitHub-Api-Version": "2022-11-28",
+            },
+        )
+        if response.status_code != 200:
+            raise AppAuthError(f"the App is not installed on {repo_full_name}")
+        return int(response.json()["id"])
+
     def installation_token(self, installation_id: int) -> str:
         cached = self._cache.get(installation_id)
         if cached and cached[1] - self._clock() > REFRESH_MARGIN_SECONDS:

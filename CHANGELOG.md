@@ -23,3 +23,5 @@ All notable changes. Dates are in IST. This project is a work in progress; see `
 - Read-only snapshot mode for the dashboard (`LYVERN_SNAPSHOT=1`): serves an anonymised export of the real database (`scripts/export_dashboard_snapshot.py`, `apps/web/src/data/snapshot.json`) with repositories, files, commit ids and pull request links hidden. No login, no writes, no invented data. Used for the public Vercel site.
 - README rewritten (live link, how it works, what the bot and dashboard do, measured limits).
 - README: added sandbox PR walkthrough (repo is private; noted).
+- Actions mode: `lyvern action` and `.github/workflows/lyvern-review.yml` run reviews on a free GitHub-hosted runner (no server). Rebuilds the bot's earlier reviews from GitHub so stale reviews are still dismissed. See `docs/ACTIONS_MODE.md`.
+- MIT `LICENSE` added.
