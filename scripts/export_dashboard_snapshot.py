@@ -14,11 +14,11 @@ import hashlib
 import json
 import pathlib
 import string
-from collections import defaultdict
 
 from lyvern_api import dashboard
 
-OUT = pathlib.Path(__file__).resolve().parents[1] / "apps" / "web" / "src" / "data" / "snapshot.json"
+ROOT = pathlib.Path(__file__).resolve().parents[1]
+OUT = ROOT / "apps" / "web" / "src" / "data" / "snapshot.json"
 
 
 def _short(value: str) -> str:
