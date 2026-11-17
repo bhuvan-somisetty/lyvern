@@ -1,4 +1,5 @@
 import type { Role } from "@/lib/session";
+import { isSnapshot } from "@/lib/mode";
 import snapshotData from "@/data/snapshot.json";
 
 // Server-side access to the read-only dashboard API. The token never reaches the browser.
@@ -80,7 +81,7 @@ export type FeedbackSummary = {
  * Snapshot mode (LYVERN_SNAPSHOT=1): the pages read a frozen, anonymised export of the real
  * database (scripts/export_dashboard_snapshot.py) instead of calling the API. No login, no writes.
  */
-export const SNAPSHOT = process.env.LYVERN_SNAPSHOT === "1";
+export const SNAPSHOT = isSnapshot();
 const snap = snapshotData as unknown as {
   stats: Stats;
   feedback: FeedbackSummary;

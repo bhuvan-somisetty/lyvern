@@ -3,6 +3,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { LiveReview, Magnetic, Spotlight } from "@/components/landing/Effects";
 import { CountUp, Tilt } from "@/components/landing/Motion";
+import { SilkShader } from "@/components/landing/SilkShader";
 import type { Finding, FeedbackSummary, Stats } from "@/lib/api";
 import { PRODUCT_NAME } from "@/lib/brand";
 
@@ -314,9 +315,6 @@ function ReviewCard({
           {findings} findings so far across the live reviews.
         </p>
       </div>
-      <p className="mt-6 text-center text-xs text-muted">
-        Real findings from the live system. File names are hidden.
-      </p>
     </Tilt>
   );
 }
@@ -376,62 +374,69 @@ export function Landing({
       <NavBar />
       <Spotlight />
       <main id="top">
-        {/* hero */}
-        <section className="relative mx-auto w-full max-w-6xl px-5 pb-20 pt-20 text-center sm:px-8 sm:pt-28 lg:pb-28">
-          <p className="rise inline-flex items-center gap-2 rounded-full border border-line bg-surface-2 px-4 py-1.5 text-xs text-muted">
-            <span className="h-1.5 w-1.5 rounded-full bg-accent" aria-hidden />
-            Free · Open source · MIT licensed
-          </p>
-          <h1 className="font-display mx-auto mt-8 max-w-5xl text-[2.7rem] leading-[1.02] sm:text-7xl lg:text-[5.6rem]">
-            {HEADLINE.map((word, i) => (
+        {/* hero: live GPU silk behind, a glowing horizon under the centrepiece */}
+        <div className="hero-stage">
+          <SilkShader className="hero-canvas" />
+          <section className="relative mx-auto w-full max-w-6xl px-5 pb-20 pt-20 text-center sm:px-8 sm:pt-28 lg:pb-28">
+            <p className="rise inline-flex items-center gap-2 rounded-full border border-line bg-surface-2 px-4 py-1.5 text-xs text-muted">
               <span
-                key={`${word}-${i}`}
-                className={`word ${word === "yes" ? "shine italic" : ""}`}
-                style={{ "--i": i } as React.CSSProperties}
-              >
-                {word}
-                {" "}
-              </span>
-            ))}
-          </h1>
-          <p
-            className="rise mx-auto mt-8 max-w-2xl text-lg text-muted sm:text-xl"
-            style={{ animationDelay: "0.9s" }}
-          >
-            {PRODUCT_NAME} is a GitHub App. It comments on the exact line, asks
-            for changes, flags merge conflicts, and measures its own accuracy in
-            the open, so you can trust the numbers instead of the pitch.
-          </p>
-          <div
-            className="rise mt-10 flex flex-wrap items-center justify-center gap-4"
-            style={{ animationDelay: "1.1s" }}
-          >
-            <Magnetic>
-              <Link
-                href="/dashboard"
-                className="btn-accent inline-block rounded-full px-8 py-4 text-base shadow-[0_18px_50px_-12px_rgba(255,73,61,0.7)]"
-              >
-                Explore the live data
-              </Link>
-            </Magnetic>
-            <Magnetic>
-              <a
-                href={REPO_URL}
-                rel="noreferrer"
-                className="liquid inline-block rounded-full px-8 py-4 text-base"
-              >
-                View the code
-              </a>
-            </Magnetic>
-          </div>
-          <div
-            className="rise relative mt-16 sm:mt-20"
-            style={{ animationDelay: "1.3s" }}
-          >
-            <div className="hero-glow" aria-hidden />
-            <LiveReview />
-          </div>
-        </section>
+                className="h-1.5 w-1.5 rounded-full bg-accent"
+                aria-hidden
+              />
+              Free · Open source · MIT licensed
+            </p>
+            <h1 className="font-display mx-auto mt-8 max-w-5xl text-[2.7rem] leading-[1.02] sm:text-7xl lg:text-[5.6rem]">
+              {HEADLINE.map((word, i) => (
+                <span
+                  key={`${word}-${i}`}
+                  className={`word ${word === "yes" ? "shine italic" : ""}`}
+                  style={{ "--i": i } as React.CSSProperties}
+                >
+                  {word}
+                  {" "}
+                </span>
+              ))}
+            </h1>
+            <p
+              className="rise mx-auto mt-8 max-w-2xl text-lg text-muted sm:text-xl"
+              style={{ animationDelay: "0.9s" }}
+            >
+              {PRODUCT_NAME} is a GitHub App. It comments on the exact line,
+              asks for changes, flags merge conflicts, and measures its own
+              accuracy in the open, so you can trust the numbers instead of the
+              pitch.
+            </p>
+            <div
+              className="rise mt-10 flex flex-wrap items-center justify-center gap-4"
+              style={{ animationDelay: "1.1s" }}
+            >
+              <Magnetic>
+                <Link
+                  href="/dashboard"
+                  className="btn-accent inline-block rounded-full px-8 py-4 text-base shadow-[0_18px_50px_-12px_rgba(255,73,61,0.7)]"
+                >
+                  Explore the live data
+                </Link>
+              </Magnetic>
+              <Magnetic>
+                <a
+                  href={REPO_URL}
+                  rel="noreferrer"
+                  className="liquid inline-block rounded-full px-8 py-4 text-base"
+                >
+                  View the code
+                </a>
+              </Magnetic>
+            </div>
+            <div
+              className="rise relative mt-16 sm:mt-20"
+              style={{ animationDelay: "1.3s" }}
+            >
+              <div className="horizon" aria-hidden />
+              <LiveReview />
+            </div>
+          </section>
+        </div>
 
         {/* capability strip */}
         <div
