@@ -96,8 +96,8 @@ def test_ruff_is_always_run_isolated_with_our_rules_and_no_shell(
 
     class Ok:
         returncode = 0
-        stdout = "[]"
-        stderr = ""
+        stdout = b"[]"
+        stderr = b""
 
     def fake_run(command: list[str], **kwargs: Any) -> Any:
         captured["command"], captured["kwargs"] = command, kwargs
@@ -110,7 +110,8 @@ def test_ruff_is_always_run_isolated_with_our_rules_and_no_shell(
     assert cmd[cmd.index("--select") + 1] == ruff_module.SELECT
     assert cmd[cmd.index("--stdin-filename") + 1] == "pkg/a.py" and cmd[-1] == "-"
     assert captured["kwargs"].get("shell") is not True
-    assert captured["kwargs"]["input"] == "x = 1\n"  # source goes on stdin, nothing is executed
+    assert captured["kwargs"]["input"] == b"x = 1\n"  # source goes on stdin as bytes, never run
+    assert "text" not in captured["kwargs"]  # text mode would rewrite line endings on Windows
 
 
 def test_unicode_and_crlf_sources_are_handled() -> None:
@@ -128,8 +129,8 @@ def test_timeout_and_tool_failure_raise_analyzer_error(monkeypatch: pytest.Monke
 
     class Bad:
         returncode = 2
-        stdout = ""
-        stderr = "boom"
+        stdout = b""
+        stderr = b"boom"
 
     monkeypatch.setattr(ruff_module.subprocess, "run", lambda *a, **k: Bad())
     with pytest.raises(AnalyzerError, match="failed"):
@@ -137,9 +138,21 @@ def test_timeout_and_tool_failure_raise_analyzer_error(monkeypatch: pytest.Monke
 
     class BadJson:
         returncode = 0
-        stdout = "not json"
-        stderr = ""
+        stdout = b"not json"
+        stderr = b""
 
     monkeypatch.setattr(ruff_module.subprocess, "run", lambda *a, **k: BadJson())
     with pytest.raises(AnalyzerError, match="invalid JSON"):
         analyze_python("a.py", "x = 1\n")
+
+
+def test_line_numbers_are_exact_for_files_with_windows_line_endings() -> None:
+    # found on real code: a CRLF file used to reach Ruff with doubled line breaks on Windows,
+    # so a finding on line 4 was reported on line 7 and the comment landed on the wrong code
+    lf = "import os\nimport sys\n\nprint(sys.argv)\nx = undefined_name\n"
+    crlf = lf.replace("\n", "\r\n")
+    for source in (lf, crlf):
+        found = {(f.detection_source, f.line_start) for f in analyze_python("a.py", source)}
+        assert ("ruff:F401", 1) in found and ("ruff:F821", 5) in found
+    cr_evidence = [f.evidence for f in analyze_python("a.py", crlf) if f.line_start == 5]
+    assert cr_evidence and "x = undefined_name" in cr_evidence[0]

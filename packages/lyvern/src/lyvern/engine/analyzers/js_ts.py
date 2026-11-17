@@ -20,6 +20,7 @@ import tree_sitter_typescript as ts_typescript
 from tree_sitter import Language, Node, Parser, Query, QueryCursor
 
 from lyvern.engine.analyzers.errors import AnalyzerError
+from lyvern.engine.analyzers.generated import is_generated
 from lyvern.engine.contracts import Category, Finding, Origin, Severity
 
 JS_SUFFIXES = {".js", ".jsx", ".mjs", ".cjs"}
@@ -445,10 +446,11 @@ def analyze_js_ts(
 
     lines = source.split("\n")
     skip_security = is_test_path(path)
+    generated = is_generated(path, source)  # style rules are noise on generated code
     findings: list[Finding] = []
     seen: set[tuple[str, int]] = set()
     for rule in _RULES:
-        if rule.security and skip_security:
+        if (rule.security and skip_security) or (generated and not rule.security):
             continue
         query = _compiled(kind, rule.rule_id)
         if query is None:

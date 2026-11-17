@@ -102,12 +102,12 @@ def _run_ruff(path: str, source: str, timeout: float) -> list[dict[str, object]]
         "-",
     ]
     try:
+        # Bytes in and bytes out: text mode rewrites line breaks on Windows, so a file with CRLF
+        # line endings reached Ruff with doubled line breaks and every line number drifted.
         proc = subprocess.run(  # noqa: S603 - fixed argv, no shell, input on stdin
             command,
-            input=source,
+            input=source.encode("utf-8"),
             capture_output=True,
-            text=True,
-            encoding="utf-8",
             timeout=timeout,
             check=False,
         )
@@ -115,10 +115,12 @@ def _run_ruff(path: str, source: str, timeout: float) -> list[dict[str, object]]
         raise AnalyzerError(f"ruff timed out after {timeout:.0f}s") from error
     except OSError as error:
         raise AnalyzerError(f"ruff could not start: {error}") from error
+    stdout = proc.stdout.decode("utf-8", errors="replace")
+    stderr = proc.stderr.decode("utf-8", errors="replace")
     if proc.returncode not in (0, 1):
-        raise AnalyzerError(f"ruff failed (exit {proc.returncode}): {proc.stderr.strip()[:200]}")
+        raise AnalyzerError(f"ruff failed (exit {proc.returncode}): {stderr.strip()[:200]}")
     try:
-        data = json.loads(proc.stdout or "[]")
+        data = json.loads(stdout or "[]")
     except json.JSONDecodeError as error:
         raise AnalyzerError("ruff returned invalid JSON") from error
     if not isinstance(data, list):

@@ -19,6 +19,7 @@ import tree_sitter_go as ts_go
 from tree_sitter import Language, Node, Parser
 
 from lyvern.engine.analyzers.errors import AnalyzerError
+from lyvern.engine.analyzers.generated import is_generated
 from lyvern.engine.contracts import Category, Finding, Origin, Severity
 
 MAX_EVIDENCE_LINES = 5
@@ -346,12 +347,13 @@ def analyze_go(
 
     lines = source.split("\n")
     skip_security = is_test_path(path)
+    generated = is_generated(path, source)  # style rules are noise on generated code
     findings: list[Finding] = []
     seen: set[tuple[str, int]] = set()
     for node in _walk(tree.root_node):
         for rule_id, target in _check_node(node):
             rule = _RULES[rule_id]
-            if rule.security and skip_security:
+            if (rule.security and skip_security) or (generated and not rule.security):
                 continue
             row = target.start_point[0] + 1
             if (rule_id, row) in seen or row > len(lines):
