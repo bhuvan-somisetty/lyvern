@@ -339,3 +339,274 @@ h1,
 h2 {
   text-wrap: balance;
 }
+
+/* ---------------------------------------------------------------- cinematic layer */
+.spotlight {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: -1;
+  width: 600px;
+  height: 600px;
+  pointer-events: none;
+  border-radius: 50%;
+  background: radial-gradient(
+    closest-side,
+    rgba(255, 73, 61, 0.2),
+    transparent 70%
+  );
+  filter: blur(20px);
+  will-change: transform;
+}
+
+/* liquid glass: bright rim, deep inner glow, soft blur */
+.liquid {
+  position: relative;
+  background:
+    linear-gradient(
+      160deg,
+      rgba(255, 240, 213, 0.14),
+      rgba(255, 240, 213, 0.03) 38%,
+      rgba(255, 73, 61, 0.06)
+    ),
+    rgba(24, 5, 13, 0.62);
+  border: 1px solid rgba(255, 240, 213, 0.18);
+  box-shadow:
+    0 1px 0 rgba(255, 240, 213, 0.28) inset,
+    0 -40px 60px -40px rgba(255, 73, 61, 0.18) inset,
+    0 60px 120px -40px rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(22px) saturate(1.2);
+  -webkit-backdrop-filter: blur(22px) saturate(1.2);
+}
+
+.nav-pill {
+  position: sticky;
+  top: 14px;
+  z-index: 30;
+  margin: 14px auto 0;
+  width: min(calc(100% - 24px), 62rem);
+  border-radius: 999px;
+}
+
+.magnetic {
+  transition: transform 0.25s ease-out;
+}
+
+/* headline: each word rises and un-blurs in turn */
+.word {
+  display: inline-block;
+  animation: word-in 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  animation-delay: calc(var(--i) * 70ms + 120ms);
+}
+
+@keyframes word-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.55em);
+    filter: blur(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: blur(0);
+  }
+}
+
+.shine {
+  background: linear-gradient(
+    100deg,
+    var(--porcelain) 30%,
+    var(--accent) 50%,
+    var(--porcelain) 70%
+  );
+  background-size: 220% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: shine 7s ease-in-out infinite alternate;
+}
+
+@keyframes shine {
+  to {
+    background-position: -120% 0;
+  }
+}
+
+/* status chips */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border-radius: 999px;
+  padding: 0.2rem 0.7rem;
+  font-size: 0.75rem;
+  border: 1px solid var(--line);
+  transition:
+    background 0.4s ease-out,
+    color 0.4s ease-out,
+    border-color 0.4s ease-out;
+}
+
+.chip-idle {
+  color: var(--muted);
+}
+
+.chip-bad {
+  color: var(--accent);
+  border-color: rgba(255, 73, 61, 0.55);
+  background: rgba(255, 73, 61, 0.12);
+}
+
+.chip-good {
+  color: var(--porcelain);
+  border-color: rgba(255, 240, 213, 0.5);
+  background: rgba(255, 240, 213, 0.14);
+}
+
+/* animated code lines */
+.code-line {
+  display: block;
+  opacity: 0;
+  transform: translateX(-6px);
+  border-radius: 6px;
+  padding: 0 0.5rem;
+  margin: 0 -0.5rem;
+  transition:
+    opacity 0.35s ease-out,
+    transform 0.35s ease-out,
+    background 0.4s ease-out;
+}
+
+.code-line.on {
+  opacity: 1;
+  transform: none;
+}
+
+.code-line.hot {
+  background: rgba(255, 73, 61, 0.16);
+  box-shadow: 2px 0 0 var(--accent) inset;
+}
+
+.code-line.ok {
+  background: rgba(255, 240, 213, 0.1);
+  box-shadow: 2px 0 0 var(--porcelain) inset;
+}
+
+.ln {
+  display: inline-block;
+  width: 1.6rem;
+  margin-right: 0.9rem;
+  text-align: right;
+  font-weight: 400;
+  color: rgba(255, 240, 213, 0.3);
+}
+
+.scan {
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 3rem;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    transparent,
+    rgba(255, 73, 61, 0.22),
+    transparent
+  );
+  animation: scan 1.2s ease-in-out both;
+}
+
+@keyframes scan {
+  from {
+    transform: translateY(-100%);
+  }
+  to {
+    transform: translateY(520%);
+  }
+}
+
+.finding {
+  position: absolute;
+  inset: 1.25rem;
+  opacity: 0;
+  transform: translateY(10px) scale(0.98);
+  pointer-events: none;
+  transition:
+    opacity 0.5s ease-out,
+    transform 0.5s ease-out;
+}
+
+@media (min-width: 640px) {
+  .finding {
+    inset: 1.5rem;
+  }
+}
+
+.finding.show {
+  opacity: 1;
+  transform: none;
+}
+
+/* bento grid cards with a cursor-lit edge */
+.bento {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1.75rem;
+  isolation: isolate;
+}
+
+.bento::before {
+  content: "";
+  position: absolute;
+  inset: -40% -20% auto auto;
+  width: 70%;
+  height: 90%;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(
+    closest-side,
+    rgba(255, 73, 61, 0.2),
+    transparent 70%
+  );
+  filter: blur(24px);
+  opacity: 0.6;
+  transition: opacity 0.5s ease-out;
+}
+
+.bento:hover::before {
+  opacity: 1;
+}
+
+/* a giant outlined wordmark closes the page */
+.wordmark {
+  font-size: clamp(5rem, 24vw, 21rem);
+  line-height: 0.82;
+  letter-spacing: -0.03em;
+  text-align: center;
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(255, 240, 213, 0.22);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 73, 61, 0.55),
+    rgba(255, 73, 61, 0) 75%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  user-select: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .word,
+  .shine,
+  .scan {
+    animation: none !important;
+  }
+
+  .spotlight {
+    display: none;
+  }
+
+  .code-line,
+  .finding {
+    transition: none;
+  }
+}

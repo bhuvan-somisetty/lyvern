@@ -1,11 +1,39 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { LiveReview, Magnetic, Spotlight } from "@/components/landing/Effects";
 import { CountUp, Tilt } from "@/components/landing/Motion";
 import type { Finding, FeedbackSummary, Stats } from "@/lib/api";
 import { PRODUCT_NAME } from "@/lib/brand";
 
 const REPO_URL = "https://github.com/bhuvan-somisetty/lyvern";
+
+const HEADLINE = "Reviews that say yes only when nothing is left to fix.".split(
+  " ",
+);
+
+const BENTO = [
+  {
+    title: "Exact-line comments",
+    body: "Every problem lands on the line that caused it, with the rule and the reason.",
+    span: "lg:col-span-2",
+  },
+  {
+    title: "Four languages",
+    body: "Python, JavaScript, TypeScript and Go, read on the changed lines only.",
+    span: "",
+  },
+  {
+    title: "Dependency alerts",
+    body: "New packages are checked against the public OSV vulnerability database.",
+    span: "",
+  },
+  {
+    title: "Merge-conflict notes",
+    body: "A separate, once-per-commit note asks for a rebase, never mixed into the code review.",
+    span: "lg:col-span-2",
+  },
+];
 
 const CAPABILITIES = [
   "Python",
@@ -159,10 +187,10 @@ function Section({
 
 function NavBar() {
   return (
-    <header className="sticky top-0 z-30 border-b border-line bg-[rgba(28,6,16,0.55)] backdrop-blur-xl">
+    <header className="nav-pill liquid">
       <nav
         aria-label="Main"
-        className="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 px-5 py-3 sm:px-8"
+        className="flex w-full items-center justify-between gap-4 px-5 py-2.5 sm:px-7"
       >
         <Link href="/" className="flex items-center gap-3">
           <Image
@@ -346,48 +374,62 @@ export function Landing({
   return (
     <>
       <NavBar />
+      <Spotlight />
       <main id="top">
         {/* hero */}
-        <section className="relative mx-auto grid w-full max-w-6xl items-center gap-14 px-5 pb-20 pt-16 sm:px-8 sm:pt-24 lg:grid-cols-[1.2fr_0.8fr] lg:pb-32 lg:pt-32">
-          <div className="rise">
-            <p className="inline-flex items-center gap-2 rounded-full border border-line bg-surface-2 px-4 py-1.5 text-xs text-muted">
+        <section className="relative mx-auto w-full max-w-6xl px-5 pb-20 pt-20 text-center sm:px-8 sm:pt-28 lg:pb-28">
+          <p className="rise inline-flex items-center gap-2 rounded-full border border-line bg-surface-2 px-4 py-1.5 text-xs text-muted">
+            <span className="h-1.5 w-1.5 rounded-full bg-accent" aria-hidden />
+            Free · Open source · MIT licensed
+          </p>
+          <h1 className="font-display mx-auto mt-8 max-w-5xl text-[2.7rem] leading-[1.02] sm:text-7xl lg:text-[5.6rem]">
+            {HEADLINE.map((word, i) => (
               <span
-                className="h-1.5 w-1.5 rounded-full bg-accent"
-                aria-hidden
-              />
-              Free · Open source · MIT licensed
-            </p>
-            <h1 className="font-display mt-7 text-[2.5rem] leading-[1.04] sm:text-6xl lg:text-[4.1rem]">
-              Reviews that say <em className="text-accent">yes</em> only when
-              nothing is left to fix.
-            </h1>
-            <p className="mt-7 max-w-xl text-lg text-muted sm:text-xl">
-              {PRODUCT_NAME} is a GitHub App. It comments on the exact line,
-              asks for changes, flags merge conflicts, and measures its own
-              accuracy in the open, so you can trust the numbers instead of the
-              pitch.
-            </p>
-            <div className="mt-10 flex flex-wrap items-center gap-4">
+                key={`${word}-${i}`}
+                className={`word ${word === "yes" ? "shine italic" : ""}`}
+                style={{ "--i": i } as React.CSSProperties}
+              >
+                {word}
+                {" "}
+              </span>
+            ))}
+          </h1>
+          <p
+            className="rise mx-auto mt-8 max-w-2xl text-lg text-muted sm:text-xl"
+            style={{ animationDelay: "0.9s" }}
+          >
+            {PRODUCT_NAME} is a GitHub App. It comments on the exact line, asks
+            for changes, flags merge conflicts, and measures its own accuracy in
+            the open, so you can trust the numbers instead of the pitch.
+          </p>
+          <div
+            className="rise mt-10 flex flex-wrap items-center justify-center gap-4"
+            style={{ animationDelay: "1.1s" }}
+          >
+            <Magnetic>
               <Link
                 href="/dashboard"
-                className="btn-accent rounded-full px-7 py-3.5 text-base"
+                className="btn-accent inline-block rounded-full px-8 py-4 text-base shadow-[0_18px_50px_-12px_rgba(255,73,61,0.7)]"
               >
                 Explore the live data
               </Link>
+            </Magnetic>
+            <Magnetic>
               <a
                 href={REPO_URL}
                 rel="noreferrer"
-                className="rounded-full border border-line px-7 py-3.5 text-base transition-colors hover:bg-surface-2"
+                className="liquid inline-block rounded-full px-8 py-4 text-base"
               >
                 View the code
               </a>
-            </div>
+            </Magnetic>
           </div>
-          <div className="rise" style={{ animationDelay: "0.15s" }}>
-            <ReviewCard
-              samples={samples}
-              findings={stats?.findings_total ?? 0}
-            />
+          <div
+            className="rise relative mt-16 sm:mt-20"
+            style={{ animationDelay: "1.3s" }}
+          >
+            <div className="hero-glow" aria-hidden />
+            <LiveReview />
           </div>
         </section>
 
@@ -408,6 +450,44 @@ export function Landing({
             ))}
           </div>
         </div>
+
+        {/* bento: what it does */}
+        <Section
+          eyebrow="What it does"
+          title={
+            <>
+              Everything a careful reviewer checks,{" "}
+              <span className="text-muted">none of the fatigue.</span>
+            </>
+          }
+        >
+          <div className="grid gap-5 lg:grid-cols-3">
+            {BENTO.map((card) => (
+              <div
+                key={card.title}
+                className={`reveal bento liquid p-8 ${card.span}`}
+              >
+                <h3 className="font-display text-3xl">{card.title}</h3>
+                <p className="mt-3 max-w-md text-muted">{card.body}</p>
+              </div>
+            ))}
+          </div>
+        </Section>
+
+        {/* real findings */}
+        <section className="mx-auto grid w-full max-w-6xl items-center gap-14 px-5 pb-16 sm:px-8 lg:grid-cols-[0.9fr_1.1fr]">
+          <div className="reveal">
+            <Eyebrow>From the live system</Eyebrow>
+            <h2 className="font-display mt-4 text-4xl leading-[1.05] sm:text-5xl">
+              Real findings, <span className="text-muted">not mock-ups.</span>
+            </h2>
+            <p className="mt-5 text-lg text-muted">
+              This card is built from findings stored in the production
+              database. Only the file names are hidden.
+            </p>
+          </div>
+          <ReviewCard samples={samples} findings={stats?.findings_total ?? 0} />
+        </section>
 
         {/* how it works */}
         <Section
@@ -726,6 +806,9 @@ jobs:
         </section>
       </main>
 
+      <div aria-hidden className="wordmark font-display overflow-hidden">
+        {PRODUCT_NAME}
+      </div>
       <footer className="border-t border-line">
         <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-4 px-5 py-8 text-sm text-muted sm:px-8">
           <span>
