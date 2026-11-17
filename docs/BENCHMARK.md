@@ -45,3 +45,31 @@ uv run lyvern benchmark real --prs prs.txt --tolerance 3 --sheet sheet.jsonl
 
 ## 6. Known limitations
 Small samples (30 PRs, 43 human comments; the AI run used 12 PRs and 12 human comments); free-tier models and rate limits; non-deterministic model output; three repositories, two ecosystems; location matching is a proxy for "same issue"; human comments include questions and nits; no labelled precision yet; synthetic cases are author-written; the benchmark covers the static layer only until the AI layer is measured.
+
+## 7. First evaluation on code the analysers had never seen (2026-11-17)
+
+Six public repositories that were never used to tune any rule: `psf/requests`, `pallets/click`,
+`gin-gonic/gin`, `spf13/cobra`, `sindresorhus/got`, `fastify/fastify` (shallow clones, source
+files only, test and example directories skipped, default settings). Every finding was read in its
+surrounding code and judged by the author of this repository's tooling, so the labels are one
+person's judgement, not an independent panel.
+
+- **Before the fixes: 54 findings, 9 judged correct, 45 false alarms. Precision 9/54 = 16.7%
+  (95% Wilson CI 9.0%-28.7%).** 49 of the 54 came from one repository (`requests`), so the
+  independent evidence is thinner than the count suggests.
+- Causes of the 45 false alarms: 34 unused-import reports on re-export and compatibility modules
+  (`__init__.py`, `compat.py`), 4 bare attribute reads that are deliberate property side effects
+  (`response.content`), 3 disabled-TLS reports in a benchmark script that targets localhost, 2
+  constant-`setattr` style reports, 1 `os.startfile` report, 1 `@ts-ignore` that carried a written
+  reason.
+- **What changed (all covered by `tests/unit/test_fresh_code_noise.py`):** unused imports are ignored
+  in `__init__.py` and in any file with five or more of them; attribute reads as statements are no
+  longer reported as useless expressions; the constant-`setattr` and `os.startfile` style rules are
+  off; `@ts-ignore` with a written reason is accepted (a bare one and any `@ts-nocheck` still count);
+  security rules skip `benchmark/` and `examples/` code like they already skipped tests.
+- **After the fixes, the same sample gives 9 findings** (all "`warnings.warn` without `stacklevel`",
+  judged correct but minor). That is an in-sample result: the fixes were designed from these very
+  findings, so it must not be quoted as accuracy. A genuinely fresh batch is still needed to show
+  the improvement holds.
+- Quiet by design: the Go and JS/TS analysers produced 0 findings on `gin` and `cobra`, and 4 on
+  `got` and `fastify` combined (the ones above).

@@ -20,7 +20,11 @@ async function hmacHex(secret: string, message: string): Promise<string> {
     false,
     ["sign"],
   );
-  const signature = await crypto.subtle.sign("HMAC", key, encoder.encode(message));
+  const signature = await crypto.subtle.sign(
+    "HMAC",
+    key,
+    encoder.encode(message),
+  );
   return Array.from(new Uint8Array(signature))
     .map((byte) => byte.toString(16).padStart(2, "0"))
     .join("");
@@ -30,7 +34,8 @@ async function hmacHex(secret: string, message: string): Promise<string> {
 export function safeEqual(a: string, b: string): boolean {
   if (a.length !== b.length) return false;
   let difference = 0;
-  for (let i = 0; i < a.length; i += 1) difference |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  for (let i = 0; i < a.length; i += 1)
+    difference |= a.charCodeAt(i) ^ b.charCodeAt(i);
   return difference === 0;
 }
 
@@ -48,7 +53,10 @@ export async function createSession(
     throw new Error("invalid session subject");
   }
   const expires = Math.floor(now / 1000) + ttlSeconds;
-  const mac = await hmacHex(secret, `lyvern-session:${expires}:${who.username}:${who.role}`);
+  const mac = await hmacHex(
+    secret,
+    `lyvern-session:${expires}:${who.username}:${who.role}`,
+  );
   return `${expires}.${who.username}.${who.role}.${mac}`;
 }
 
@@ -65,11 +73,15 @@ export async function verifySession(
   const mac = parts[parts.length - 1];
   const role = parts[parts.length - 2] as Role;
   const username = parts.slice(1, -2).join(".");
-  if (!/^\d{1,12}$/.test(expiresText) || !mac || !ROLES.includes(role)) return null;
+  if (!/^\d{1,12}$/.test(expiresText) || !mac || !ROLES.includes(role))
+    return null;
   if (!USERNAME.test(username)) return null;
   const expires = Number(expiresText);
   if (expires * 1000 <= now) return null;
-  const expected = await hmacHex(secret, `lyvern-session:${expires}:${username}:${role}`);
+  const expected = await hmacHex(
+    secret,
+    `lyvern-session:${expires}:${username}:${role}`,
+  );
   return safeEqual(mac, expected) ? { username, role } : null;
 }
 

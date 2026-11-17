@@ -47,43 +47,57 @@ describe("Overview", () => {
     expect(within(totals).getByText("5")).toBeInTheDocument();
     expect(within(totals).getByText("7")).toBeInTheDocument();
     const table = screen.getByRole("table");
-    expect(within(table).getByRole("link", { name: "owner/repo#12" })).toHaveAttribute(
-      "href",
-      "/runs/11111111-1111-1111-1111-111111111111",
-    );
+    expect(
+      within(table).getByRole("link", { name: "owner/repo#12" }),
+    ).toHaveAttribute("href", "/runs/11111111-1111-1111-1111-111111111111");
     expect(within(table).getByText("abcdef01")).toBeInTheDocument();
     expect(within(table).getByText("Changes requested")).toBeInTheDocument();
     expect(screen.getAllByRole("columnheader")).toHaveLength(5);
   });
 
   it("shows an error alert instead of numbers when the API cannot be reached", () => {
-    render(<Overview stats={null} runs={null} error="The API is not reachable. Is it running?" />);
+    render(
+      <Overview
+        stats={null}
+        runs={null}
+        error="The API is not reachable. Is it running?"
+      />,
+    );
     expect(screen.getByRole("alert")).toHaveTextContent("could not load");
     expect(screen.queryByLabelText("Totals")).not.toBeInTheDocument();
   });
 
   it("never shows invented activity", () => {
     render(<Overview stats={null} runs={[]} />);
-    expect(screen.queryByText(/\d+\s*(PRs|findings) reviewed/i)).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/\d+\s*(PRs|findings) reviewed/i),
+    ).not.toBeInTheDocument();
   });
 });
 
 describe("RunDetail", () => {
   it("shows the fields of one run, the dismissal note and a link to GitHub", () => {
     render(<RunDetail run={run} />);
-    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("owner/repo#12");
-    expect(screen.getByText(/Dismissed by this bot/)).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Open on GitHub" })).toHaveAttribute(
-      "href",
-      "https://github.com/owner/repo/pull/12",
+    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(
+      "owner/repo#12",
     );
+    expect(screen.getByText(/Dismissed by this bot/)).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "Open on GitHub" }),
+    ).toHaveAttribute("href", "https://github.com/owner/repo/pull/12");
     expect(screen.queryByText("Error")).not.toBeInTheDocument();
   });
 
   it("shows the error and says when data is not available", () => {
     render(
       <RunDetail
-        run={{ ...run, status: "failed", error: "PublishError: boom", findings_count: null, event_posted: null }}
+        run={{
+          ...run,
+          status: "failed",
+          error: "PublishError: boom",
+          findings_count: null,
+          event_posted: null,
+        }}
       />,
     );
     expect(screen.getByRole("alert")).toHaveTextContent("PublishError: boom");

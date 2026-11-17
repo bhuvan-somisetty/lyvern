@@ -124,6 +124,7 @@ These come from `docs/BENCHMARK.md` and `docs/ML_MODEL_CARD.md`. The limits are 
 |---|---|---|
 | Synthetic suite, 61 cases | precision 31/31, recall 31/31 | A regression guard. The same author wrote the rules and the cases, so it says nothing about real code |
 | First labelled run on real code | 20% precision on 67 labelled findings | An honest low number, produced **before** the noisy rules were switched off. The labels were drafted by the assistant and need a human spot-check. Not a fair figure after tuning on the same sample |
+| Six unseen open-source repositories | 17% precision (9 of 54 findings correct) before fixes; 9 findings after | The false alarms were traced to causes (mostly re-export modules) and fixed. The after figure is in-sample, so it is not an accuracy claim. Labels are one person's judgement |
 | Real pull requests, static only (30 PRs) | 0 findings on the PRs' own changes | Quiet and safe on well-reviewed code. It does not cover what human reviewers discuss (conventions, intent, tests) |
 | Attention model (1,200 public PRs) | held-out AUC 0.70 | About the same as using change size alone. Advisory only, and the model card says so |
 

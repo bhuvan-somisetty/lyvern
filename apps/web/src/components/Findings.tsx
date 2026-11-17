@@ -39,7 +39,10 @@ export function Findings({
   return (
     <ul className="mt-4 flex flex-col gap-3" aria-label="Findings">
       {findings.map((f) => (
-        <li key={f.id} className="rounded-2xl border border-line bg-surface p-5">
+        <li
+          key={f.id}
+          className="rounded-2xl border border-line bg-surface p-5"
+        >
           <div className="flex flex-wrap items-start justify-between gap-3">
             <p className="max-w-3xl font-medium">{f.title}</p>
             <span className="flex flex-wrap items-center gap-2 text-xs">
@@ -56,12 +59,15 @@ export function Findings({
             </span>
           </div>
           <p className="mt-2 font-mono text-sm text-muted">
-            {f.file_path}:{f.line_start} · {f.severity} · {f.category} · {f.detection_source}
+            {f.file_path}:{f.line_start} · {f.severity} · {f.category} ·{" "}
+            {f.detection_source}
             {f.blocking ? " · blocking" : ""}
           </p>
           <p className="mt-3 text-sm">
             <span className="text-muted">Your verdict: </span>
-            <span data-testid={`verdict-${f.id}`}>{verdictLabel(f.verdict)}</span>
+            <span data-testid={`verdict-${f.id}`}>
+              {verdictLabel(f.verdict)}
+            </span>
           </p>
           {action ? (
             <form action={action} className="mt-3 flex flex-wrap gap-2">

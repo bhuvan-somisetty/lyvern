@@ -11,16 +11,18 @@ export function ReadingGuide() {
       </h2>
       <ul className="mt-4 grid gap-3 text-sm text-muted">
         <li>
-          <span className="text-foreground">Changes requested</span> only for confident, serious
-          findings.
+          <span className="text-foreground">Changes requested</span> only for
+          confident, serious findings.
         </li>
         <li>
-          <span className="text-foreground">Approved by policy</span> only when there are no findings
-          at all, no merge conflicts, and every file was checked.
+          <span className="text-foreground">Approved by policy</span> only when
+          there are no findings at all, no merge conflicts, and every file was
+          checked.
         </li>
         <li>
-          <span className="text-foreground">Precision</span> is the share of reported findings that a
-          person marked as a real problem. Findings marked &quot;not sure&quot; are left out.
+          <span className="text-foreground">Precision</span> is the share of
+          reported findings that a person marked as a real problem. Findings
+          marked &quot;not sure&quot; are left out.
         </li>
       </ul>
     </section>

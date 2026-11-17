@@ -56,7 +56,21 @@ def is_test_path(path: str) -> bool:
     name = p.name.lower()
     return (
         any(
-            part in {"test", "tests", "__tests__", "__mocks__", "e2e", "cypress"}
+            part
+            in {
+                "test",
+                "tests",
+                "__tests__",
+                "__mocks__",
+                "e2e",
+                "cypress",
+                "benchmark",
+                "benchmarks",
+                "example",
+                "examples",
+                "fixtures",
+                "__fixtures__",
+            }
             for part in p.parts[:-1]
         )
         or ".test." in name
@@ -398,9 +412,22 @@ def _dangerous_html(caps: dict[str, list[Node]]) -> Node | None:
     return None if _html_is_safe(_html_value(node)) else node
 
 
+_TS_REASON_WORDS = 3
+
+
 def _ts_suppress(caps: dict[str, list[Node]]) -> Node | None:
     comment = _one(caps, "comment")
-    return comment if comment is not None and _TS_SUPPRESS.search(_text(comment)) else None
+    if comment is None:
+        return None
+    match = _TS_SUPPRESS.search(_text(comment))
+    if match is None:
+        return None
+    # A @ts-ignore that says why (at least a few words after it) is a documented decision, not a
+    # silent one. A bare directive, and any @ts-nocheck (it hides a whole file), still count.
+    reason = _text(comment)[match.end() :].strip(" 	-:*/")
+    if match.group(1) == "ignore" and len(reason.split()) >= _TS_REASON_WORDS:
+        return None
+    return comment
 
 
 def _always(caps: dict[str, list[Node]]) -> Node | None:

@@ -49,7 +49,11 @@ body {
   z-index: -2;
   overflow: hidden;
   background:
-    radial-gradient(120% 90% at 50% 120%, var(--cherry) 0%, var(--cherry-deep) 60%),
+    radial-gradient(
+      120% 90% at 50% 120%,
+      var(--cherry) 0%,
+      var(--cherry-deep) 60%
+    ),
     var(--cherry-deep);
 }
 
@@ -67,14 +71,22 @@ body {
 
 .silk::before {
   top: -35vmax;
-  background: radial-gradient(closest-side, rgba(255, 73, 61, 0.55), rgba(255, 73, 61, 0) 70%);
+  background: radial-gradient(
+    closest-side,
+    rgba(255, 73, 61, 0.55),
+    rgba(255, 73, 61, 0) 70%
+  );
   transform: rotate(-14deg);
   animation: drift-a 48s ease-in-out infinite alternate;
 }
 
 .silk::after {
   bottom: -40vmax;
-  background: radial-gradient(closest-side, rgba(120, 22, 46, 0.9), rgba(67, 13, 28, 0) 72%);
+  background: radial-gradient(
+    closest-side,
+    rgba(120, 22, 46, 0.9),
+    rgba(67, 13, 28, 0) 72%
+  );
   transform: rotate(10deg);
   animation: drift-b 60s ease-in-out infinite alternate;
 }
@@ -152,4 +164,178 @@ input:focus-visible {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* ---------------------------------------------------------------- landing page */
+.glass {
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 240, 213, 0.085),
+      rgba(255, 240, 213, 0.02) 42%
+    ),
+    rgba(28, 6, 16, 0.5);
+  border: 1px solid var(--line);
+  box-shadow:
+    0 1px 0 rgba(255, 240, 213, 0.12) inset,
+    0 30px 80px -30px rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+/* hero card follows the pointer in 3D, softly */
+.tilt {
+  perspective: 1100px;
+  --rx: 0deg;
+  --ry: 0deg;
+  --mx: 50%;
+  --my: 0%;
+}
+
+.tilt-inner {
+  transform: rotateX(var(--rx)) rotateY(var(--ry));
+  transition: transform 0.35s ease-out;
+  transform-style: preserve-3d;
+}
+
+.tilt-inner::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: radial-gradient(
+    420px circle at var(--mx) var(--my),
+    rgba(255, 73, 61, 0.16),
+    transparent 60%
+  );
+}
+
+/* the capability strip drifts slowly */
+.marquee {
+  animation: marquee 55s linear infinite;
+}
+
+@keyframes marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+/* outcome bars fill when they come into view */
+.bar {
+  transform-origin: left;
+}
+
+/* scroll reveal, done in CSS only; browsers without scroll timelines just show the content */
+@supports (animation-timeline: view()) {
+  .reveal {
+    animation: reveal linear both;
+    animation-timeline: view();
+    animation-range: entry 4% cover 26%;
+  }
+
+  .bar {
+    animation: grow linear both;
+    animation-timeline: view();
+    animation-range: entry 8% cover 38%;
+  }
+}
+
+@keyframes reveal {
+  from {
+    opacity: 0;
+    transform: translateY(34px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes grow {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal,
+  .bar,
+  .marquee,
+  .tilt-inner {
+    animation: none !important;
+    transform: none !important;
+  }
+}
+
+em {
+  font-style: italic;
+}
+
+/* ---------------------------------------------------------------- premium finish */
+.hero-glow {
+  position: absolute;
+  inset: -18% -12%;
+  z-index: -3;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      closest-side at 60% 40%,
+      rgba(255, 73, 61, 0.3),
+      transparent 70%
+    ),
+    radial-gradient(
+      closest-side at 25% 80%,
+      rgba(255, 240, 213, 0.08),
+      transparent 70%
+    );
+  filter: blur(30px);
+}
+
+/* a fine blueprint grid behind the hero, fading out */
+main#top {
+  position: relative;
+}
+
+main#top::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 900px;
+  z-index: -1;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(255, 240, 213, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 240, 213, 0.05) 1px, transparent 1px);
+  background-size: 72px 72px;
+  mask-image: radial-gradient(70% 70% at 50% 25%, #000, transparent 75%);
+  -webkit-mask-image: radial-gradient(
+    70% 70% at 50% 25%,
+    #000,
+    transparent 75%
+  );
+}
+
+/* cards lift and light their edge on hover */
+.glass {
+  transition:
+    border-color 0.4s ease-out,
+    box-shadow 0.4s ease-out;
+}
+
+li.glass:hover,
+div.glass.reveal:hover {
+  border-color: rgba(255, 73, 61, 0.45);
+  box-shadow:
+    0 1px 0 rgba(255, 240, 213, 0.16) inset,
+    0 40px 90px -30px rgba(255, 73, 61, 0.22);
+}
+
+h1,
+h2 {
+  text-wrap: balance;
 }

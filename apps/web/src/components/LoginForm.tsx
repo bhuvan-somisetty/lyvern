@@ -16,16 +16,27 @@ export function LoginForm({
   error?: string;
   action: (formData: FormData) => void | Promise<void>;
 }) {
-  const message = error ? (LOGIN_MESSAGES[error] ?? "Could not sign in.") : null;
+  const message = error
+    ? (LOGIN_MESSAGES[error] ?? "Could not sign in.")
+    : null;
   return (
     <main className="mx-auto w-full max-w-sm px-6 py-20">
       <div className="rise rounded-3xl border border-line bg-surface p-8">
         <div className="flex items-center gap-3">
-          <Image src="/logo.png" alt="" width={44} height={44} className="rounded-xl" priority />
+          <Image
+            src="/logo.png"
+            alt=""
+            width={44}
+            height={44}
+            className="rounded-xl"
+            priority
+          />
           <span className="font-display text-2xl">{PRODUCT_NAME}</span>
         </div>
         <h1 className="font-display mt-8 text-4xl">Sign in</h1>
-        <p className="mt-2 text-sm text-muted">For the people who run the review bot.</p>
+        <p className="mt-2 text-sm text-muted">
+          For the people who run the review bot.
+        </p>
         <form action={action} className="mt-6 flex flex-col gap-3">
           <label htmlFor="username" className="text-sm text-muted">
             Username
@@ -54,7 +65,10 @@ export function LoginForm({
               {message}
             </p>
           ) : null}
-          <button type="submit" className="btn-accent mt-2 rounded-lg px-3 py-2.5">
+          <button
+            type="submit"
+            className="btn-accent mt-2 rounded-lg px-3 py-2.5"
+          >
             Sign in
           </button>
         </form>

@@ -18,7 +18,13 @@ describe("session cookie", () => {
   it("returns who signed in while the token is fresh and nothing once it has expired", async () => {
     const token = await createSession(SECRET, ALICE, NOW);
     expect(await verifySession(token, SECRET, NOW + 1000)).toEqual(ALICE);
-    expect(await verifySession(token, SECRET, NOW + (SESSION_TTL_SECONDS + 1) * 1000)).toBeNull();
+    expect(
+      await verifySession(
+        token,
+        SECRET,
+        NOW + (SESSION_TTL_SECONDS + 1) * 1000,
+      ),
+    ).toBeNull();
   });
 
   it("supports usernames that contain dots, underscores and dashes", async () => {
@@ -30,10 +36,26 @@ describe("session cookie", () => {
   it("cannot be forged by changing the user, the role or the expiry", async () => {
     const token = await createSession(SECRET, ALICE, NOW);
     const [expires, user, role, mac] = token.split(".");
-    expect(await verifySession(`${expires}.bob.${role}.${mac}`, SECRET, NOW)).toBeNull();
-    expect(await verifySession(`${expires}.${user}.admin.${mac}`, SECRET, NOW)).toBeNull();
-    expect(await verifySession(`${Number(expires) + 99999}.${user}.${role}.${mac}`, SECRET, NOW)).toBeNull();
-    expect(await verifySession(`${expires}.${user}.${role}.${"0".repeat(mac.length)}`, SECRET, NOW)).toBeNull();
+    expect(
+      await verifySession(`${expires}.bob.${role}.${mac}`, SECRET, NOW),
+    ).toBeNull();
+    expect(
+      await verifySession(`${expires}.${user}.admin.${mac}`, SECRET, NOW),
+    ).toBeNull();
+    expect(
+      await verifySession(
+        `${Number(expires) + 99999}.${user}.${role}.${mac}`,
+        SECRET,
+        NOW,
+      ),
+    ).toBeNull();
+    expect(
+      await verifySession(
+        `${expires}.${user}.${role}.${"0".repeat(mac.length)}`,
+        SECRET,
+        NOW,
+      ),
+    ).toBeNull();
     expect(await verifySession(token, "another-secret", NOW)).toBeNull();
   });
 
@@ -59,7 +81,9 @@ describe("session cookie", () => {
   });
 
   it("refuses to create a session for an invalid user or role", async () => {
-    await expect(createSession(SECRET, { username: "Bad Name", role: "admin" }, NOW)).rejects.toThrow();
+    await expect(
+      createSession(SECRET, { username: "Bad Name", role: "admin" }, NOW),
+    ).rejects.toThrow();
     await expect(
       createSession(SECRET, { username: "alice", role: "root" as never }, NOW),
     ).rejects.toThrow();
@@ -75,11 +99,17 @@ describe("session cookie", () => {
 
 describe("password check", () => {
   it("matches only the exact password and never an empty configured password", async () => {
-    expect(await passwordMatches("right horse", "right horse", SECRET)).toBe(true);
-    expect(await passwordMatches("right horsf", "right horse", SECRET)).toBe(false);
+    expect(await passwordMatches("right horse", "right horse", SECRET)).toBe(
+      true,
+    );
+    expect(await passwordMatches("right horsf", "right horse", SECRET)).toBe(
+      false,
+    );
     expect(await passwordMatches("", "right horse", SECRET)).toBe(false);
     expect(await passwordMatches("", "", SECRET)).toBe(false);
-    expect(await passwordMatches("x".repeat(5000), "right horse", SECRET)).toBe(false);
+    expect(await passwordMatches("x".repeat(5000), "right horse", SECRET)).toBe(
+      false,
+    );
   });
 
   it("safeEqual compares whole strings", () => {

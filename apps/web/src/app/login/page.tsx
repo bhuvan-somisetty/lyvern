@@ -3,7 +3,11 @@ import { login } from "@/app/actions";
 import { Loading } from "@/components/Loading";
 import { LoginForm } from "@/components/LoginForm";
 
-async function LoginContent({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
+async function LoginContent({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>;
+}) {
   const { error } = await searchParams;
   return <LoginForm error={error} action={login} />;
 }

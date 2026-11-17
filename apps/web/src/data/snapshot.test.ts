@@ -24,7 +24,10 @@ describe("dashboard snapshot", () => {
   });
 
   it("keeps the counts consistent with the findings", () => {
-    const total = Object.values(snapshot.findings).reduce((n, list) => n + list.length, 0);
+    const total = Object.values(snapshot.findings).reduce(
+      (n, list) => n + list.length,
+      0,
+    );
     // Run counters also include runs from before findings were stored, so they can only be larger.
     expect(snapshot.stats.findings_total).toBeGreaterThanOrEqual(total);
     expect(snapshot.feedback.findings_total).toBe(total);

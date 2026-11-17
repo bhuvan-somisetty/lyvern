@@ -25,3 +25,5 @@ All notable changes. Dates are in IST. This project is a work in progress; see `
 - README: added sandbox PR walkthrough (repo is private; noted).
 - Actions mode: `lyvern action` and `.github/workflows/lyvern-review.yml` run reviews on a free GitHub-hosted runner (no server). Rebuilds the bot's earlier reviews from GitHub so stale reviews are still dismissed. See `docs/ACTIONS_MODE.md`.
 - MIT `LICENSE` added.
+- Accuracy: first evaluation on six unseen repositories (precision 9/54 before fixes). Fixed re-export unused imports, attribute-read statements, justified `@ts-ignore`, benchmark and example code, and two noisy style rules. See `docs/BENCHMARK.md` section 7.
+- Public site: new landing page for the snapshot mode (`/`), dashboard moved to `/dashboard`; real findings, real totals, calm motion, saved palette and fonts.

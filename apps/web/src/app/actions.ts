@@ -24,16 +24,20 @@ export async function login(formData: FormData): Promise<void> {
   if (!secret) redirect("/login?error=config");
   if (!loginThrottle.allowed()) redirect("/login?error=wait");
 
-  const username = String(formData.get("username") ?? "").trim().toLowerCase();
+  const username = String(formData.get("username") ?? "")
+    .trim()
+    .toLowerCase();
   const given = String(formData.get("password") ?? "");
   let who: Session | null = null;
 
   const ownerPassword = process.env.LYVERN_DASHBOARD_PASSWORD;
   if (username === OWNER && ownerPassword) {
-    if (await passwordMatches(given, ownerPassword, secret)) who = { username: OWNER, role: "admin" };
+    if (await passwordMatches(given, ownerPassword, secret))
+      who = { username: OWNER, role: "admin" };
   } else if (username) {
     const result = await verifyLogin(username, given);
-    if (result.ok) who = { username: result.data.username, role: result.data.role };
+    if (result.ok)
+      who = { username: result.data.username, role: result.data.role };
     else if (result.status === 429) redirect("/login?error=wait");
     else if (result.status === 0) redirect("/login?error=api");
   }
@@ -68,7 +72,8 @@ export async function setVerdict(formData: FormData): Promise<void> {
   const findingId = String(formData.get("finding_id") ?? "");
   const runId = String(formData.get("run_id") ?? "");
   const verdict = String(formData.get("verdict") ?? "") as Verdict;
-  if (!UUID.test(findingId) || !UUID.test(runId) || !VERDICTS.includes(verdict)) return;
+  if (!UUID.test(findingId) || !UUID.test(runId) || !VERDICTS.includes(verdict))
+    return;
   await putVerdict(findingId, verdict, session.username);
   revalidatePath(`/runs/${runId}`);
   revalidatePath("/");

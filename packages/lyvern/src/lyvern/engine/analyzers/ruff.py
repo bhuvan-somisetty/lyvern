@@ -11,6 +11,7 @@
 from __future__ import annotations
 
 import json
+import re
 import subprocess
 import sys
 from dataclasses import dataclass
@@ -19,8 +20,14 @@ from lyvern.engine.analyzers.errors import AnalyzerError
 from lyvern.engine.contracts import Category, Finding, Origin, Severity
 
 SELECT = "F,E9,B,S,PLE"
-IGNORE = "S101,S311,S603,S607,S404,S110,B008,B904"
+IGNORE = "S101,S311,S603,S607,S404,S110,B008,B904,B010,S606"
 MAX_EVIDENCE_LINES = 5
+BULK_UNUSED_IMPORTS = 5
+_ATTRIBUTE_STATEMENT = re.compile(r"^\s*[A-Za-z_]\w*(\.[A-Za-z_]\w*)+\s*(#.*)?$")
+
+
+def _is_attribute_statement(line: str) -> bool:
+    return _ATTRIBUTE_STATEMENT.match(line) is not None
 
 
 @dataclass(frozen=True)
@@ -139,10 +146,16 @@ def analyze_python(
     lines = source.split("\n")
     findings: list[Finding] = []
     skip_security = is_test_path(path)
-    for item in _run_ruff(path, source, timeout):
+    items = _run_ruff(path, source, timeout)
+    # Many unused imports in one file is a re-export or compatibility module, not an accident.
+    bulk_reexport = sum(1 for i in items if i.get("code") == "F401") >= BULK_UNUSED_IMPORTS
+    is_init = path.replace("\\", "/").rsplit("/", 1)[-1] == "__init__.py"
+    for item in items:
         code = item.get("code")
         code = code if isinstance(code, str) else None
         if skip_security and code is not None and code.startswith("S"):
+            continue
+        if code == "F401" and (is_init or bulk_reexport):
             continue
         location = item.get("location") or {}
         end_location = item.get("end_location") or {}
@@ -158,6 +171,8 @@ def analyze_python(
         evidence = "\n".join(lines[row - 1 : min(end_row, row - 1 + MAX_EVIDENCE_LINES)]).rstrip()
         if not evidence.strip():
             evidence = lines[row - 1].rstrip() or "<blank line>"
+        if code == "B018" and _is_attribute_statement(lines[row - 1]):
+            continue  # `response.content` as a statement is a deliberate property side effect
         rule = _rule_for(code)
         message = str(item.get("message") or "Ruff reported an issue")
         label = code or "syntax-error"

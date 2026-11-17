@@ -14,7 +14,10 @@ export function SiteHeader({
 }) {
   return (
     <header className="flex flex-wrap items-center justify-between gap-4 border-b border-line pb-5">
-      <Link href="/" className="flex items-center gap-3">
+      <Link
+        href={SNAPSHOT ? "/" : "/dashboard"}
+        className="flex items-center gap-3"
+      >
         <Image
           src="/logo.png"
           alt=""
@@ -27,9 +30,14 @@ export function SiteHeader({
       </Link>
       <div className="flex items-center gap-4 text-sm text-muted">
         {SNAPSHOT ? (
-          <span className="rounded-full border border-line px-3 py-1">
-            Read-only snapshot of real review data, names hidden
-          </span>
+          <>
+            <Link href="/" className="transition-colors hover:text-foreground">
+              About
+            </Link>
+            <span className="hidden rounded-full border border-line px-3 py-1 sm:inline">
+              Read-only snapshot of real review data, names hidden
+            </span>
+          </>
         ) : null}
         {who ? (
           <span>

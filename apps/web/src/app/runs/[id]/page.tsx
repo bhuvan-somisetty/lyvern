@@ -20,7 +20,10 @@ async function RunContent({ params }: { params: Promise<{ id: string }> }) {
         <Link href="/" className="text-sm text-muted hover:underline">
           Back to all reviews
         </Link>
-        <div role="alert" className="mt-6 rounded-lg border border-accent/40 p-4">
+        <div
+          role="alert"
+          className="mt-6 rounded-lg border border-accent/40 p-4"
+        >
           <p className="font-medium">This review could not be loaded.</p>
           <p className="mt-1 text-muted">{result.error}</p>
         </div>
@@ -37,7 +40,11 @@ async function RunContent({ params }: { params: Promise<{ id: string }> }) {
   );
 }
 
-export default function RunPage({ params }: { params: Promise<{ id: string }> }) {
+export default function RunPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   return (
     <Suspense fallback={<Loading label="Loading review" />}>
       <RunContent params={params} />

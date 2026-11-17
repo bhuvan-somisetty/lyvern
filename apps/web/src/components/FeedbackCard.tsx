@@ -14,8 +14,9 @@ export function FeedbackCard({ summary }: { summary: FeedbackSummary | null }) {
       </h2>
       {!summary || decided === 0 ? (
         <p className="mt-3 text-muted">
-          No findings have been labelled yet, so there is no precision number. Open a review and mark
-          each finding as a real problem or a false alarm; the figure appears here.
+          No findings have been labelled yet, so there is no precision number.
+          Open a review and mark each finding as a real problem or a false
+          alarm; the figure appears here.
         </p>
       ) : (
         <>
@@ -27,33 +28,53 @@ export function FeedbackCard({ summary }: { summary: FeedbackSummary | null }) {
             </span>
           </p>
           <p className="mt-1 text-sm text-muted">
-            From {decided} labelled findings ({summary.true_positive} real, {summary.false_positive}{" "}
-            false alarms); {summary.unsure} marked not sure are left out, not guessed.
+            From {decided} labelled findings ({summary.true_positive} real,{" "}
+            {summary.false_positive} false alarms); {summary.unsure} marked not
+            sure are left out, not guessed.
           </p>
           <div className="mt-5 overflow-x-auto">
             <table className="w-full min-w-[420px] text-left text-sm">
               <caption className="sr-only">Precision by rule</caption>
               <thead className="text-muted">
                 <tr className="border-b border-line">
-                  <th scope="col" className="py-2 pr-4 font-medium">Rule</th>
-                  <th scope="col" className="py-2 pr-4 font-medium">Real</th>
-                  <th scope="col" className="py-2 pr-4 font-medium">False alarms</th>
-                  <th scope="col" className="py-2 font-medium">Precision</th>
+                  <th scope="col" className="py-2 pr-4 font-medium">
+                    Rule
+                  </th>
+                  <th scope="col" className="py-2 pr-4 font-medium">
+                    Real
+                  </th>
+                  <th scope="col" className="py-2 pr-4 font-medium">
+                    False alarms
+                  </th>
+                  <th scope="col" className="py-2 font-medium">
+                    Precision
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {summary.by_source.map((s) => (
                   <tr key={s.source} className="border-t border-line">
                     <td className="py-2 pr-4 font-mono text-xs">{s.source}</td>
-                    <td className="py-2 pr-4 tabular-nums">{s.true_positive}</td>
-                    <td className="py-2 pr-4 tabular-nums">{s.false_positive}</td>
+                    <td className="py-2 pr-4 tabular-nums">
+                      {s.true_positive}
+                    </td>
+                    <td className="py-2 pr-4 tabular-nums">
+                      {s.false_positive}
+                    </td>
                     <td className="py-2 tabular-nums">
                       <span className="flex items-center gap-3">
-                        <span className="w-14">{s.precision === null ? "n/a" : pct(s.precision)}</span>
-                        <span aria-hidden className="h-1.5 w-20 overflow-hidden rounded-full bg-surface-2">
+                        <span className="w-14">
+                          {s.precision === null ? "n/a" : pct(s.precision)}
+                        </span>
+                        <span
+                          aria-hidden
+                          className="h-1.5 w-20 overflow-hidden rounded-full bg-surface-2"
+                        >
                           <span
                             className="block h-full rounded-full bg-accent"
-                            style={{ width: `${Math.round((s.precision ?? 0) * 100)}%` }}
+                            style={{
+                              width: `${Math.round((s.precision ?? 0) * 100)}%`,
+                            }}
                           />
                         </span>
                       </span>

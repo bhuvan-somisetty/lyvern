@@ -27,7 +27,9 @@ export function EventDot({ event }: { event: string | null }) {
     <span
       aria-hidden
       className="mr-2 inline-block h-2 w-2 rounded-full align-middle"
-      style={{ background: (event && EVENT_DOT[event]) || "rgba(255, 240, 213, 0.18)" }}
+      style={{
+        background: (event && EVENT_DOT[event]) || "rgba(255, 240, 213, 0.18)",
+      }}
     />
   );
 }
@@ -48,27 +50,47 @@ export function RunTable({ runs }: { runs: Run[] }) {
         <caption className="sr-only">Recent review runs</caption>
         <thead className="text-muted">
           <tr className="border-b border-line">
-            <th scope="col" className="px-5 py-3 font-medium">Pull request</th>
-            <th scope="col" className="px-5 py-3 font-medium">Commit</th>
-            <th scope="col" className="px-5 py-3 font-medium">Result</th>
-            <th scope="col" className="px-5 py-3 font-medium">Findings</th>
-            <th scope="col" className="px-5 py-3 font-medium">Status</th>
+            <th scope="col" className="px-5 py-3 font-medium">
+              Pull request
+            </th>
+            <th scope="col" className="px-5 py-3 font-medium">
+              Commit
+            </th>
+            <th scope="col" className="px-5 py-3 font-medium">
+              Result
+            </th>
+            <th scope="col" className="px-5 py-3 font-medium">
+              Findings
+            </th>
+            <th scope="col" className="px-5 py-3 font-medium">
+              Status
+            </th>
           </tr>
         </thead>
         <tbody>
           {runs.map((run) => (
-            <tr key={run.id} className="border-t border-line transition-colors hover:bg-surface-2">
+            <tr
+              key={run.id}
+              className="border-t border-line transition-colors hover:bg-surface-2"
+            >
               <td className="px-5 py-3">
-                <Link className="text-accent underline-offset-4 hover:underline" href={`/runs/${run.id}`}>
+                <Link
+                  className="text-accent underline-offset-4 hover:underline"
+                  href={`/runs/${run.id}`}
+                >
                   {run.repo}#{run.pr_number}
                 </Link>
               </td>
-              <td className="px-5 py-3 font-mono text-muted">{run.head_sha.slice(0, 8)}</td>
+              <td className="px-5 py-3 font-mono text-muted">
+                {run.head_sha.slice(0, 8)}
+              </td>
               <td className="px-5 py-3">
                 <EventDot event={run.event_posted} />
                 {eventLabel(run.event_posted)}
               </td>
-              <td className="px-5 py-3 tabular-nums">{run.findings_count ?? "-"}</td>
+              <td className="px-5 py-3 tabular-nums">
+                {run.findings_count ?? "-"}
+              </td>
               <td className="px-5 py-3 text-muted">{run.status}</td>
             </tr>
           ))}
@@ -103,22 +125,38 @@ export function Overview({
           Pull request reviews
         </h1>
         <p className="mt-4 max-w-2xl text-lg text-muted">
-          Every number on this page is read from the review database. Nothing is estimated.
+          Every number on this page is read from the review database. Nothing is
+          estimated.
         </p>
       </section>
 
       {error ? (
-        <div role="alert" className="rounded-2xl border border-accent/40 bg-surface p-5">
+        <div
+          role="alert"
+          className="rounded-2xl border border-accent/40 bg-surface p-5"
+        >
           <p className="font-medium">The dashboard could not load its data.</p>
           <p className="mt-1 text-muted">{error}</p>
         </div>
       ) : (
         <>
-          <dl className="rise grid grid-cols-2 gap-3 lg:grid-cols-4" aria-label="Totals">
+          <dl
+            className="rise grid grid-cols-2 gap-3 lg:grid-cols-4"
+            aria-label="Totals"
+          >
             <Stat label="Reviews run" value={stats?.runs_total ?? 0} />
-            <Stat label="Findings reported" value={stats?.findings_total ?? 0} />
-            <Stat label="Inline comments" value={stats?.inline_comments_total ?? 0} />
-            <Stat label="Webhook deliveries" value={stats?.deliveries_total ?? 0} />
+            <Stat
+              label="Findings reported"
+              value={stats?.findings_total ?? 0}
+            />
+            <Stat
+              label="Inline comments"
+              value={stats?.inline_comments_total ?? 0}
+            />
+            <Stat
+              label="Webhook deliveries"
+              value={stats?.deliveries_total ?? 0}
+            />
           </dl>
 
           <div className="mt-6 grid gap-6 lg:grid-cols-5">
@@ -138,16 +176,17 @@ export function Overview({
             </div>
           ) : (
             <p className="mt-4 rounded-2xl border border-line bg-surface p-6 text-muted">
-              No reviews yet. Install the GitHub App on a repository and open a pull request; its
-              review will appear here.
+              No reviews yet. Install the GitHub App on a repository and open a
+              pull request; its review will appear here.
             </p>
           )}
         </>
       )}
 
       <footer className="mt-16 border-t border-line pt-6 text-sm text-muted">
-        Lyvern&apos;s reviews are advisory and do not replace human review. AI observations are
-        optional, labelled as unverified, and never block a merge.
+        Lyvern&apos;s reviews are advisory and do not replace human review. AI
+        observations are optional, labelled as unverified, and never block a
+        merge.
       </footer>
     </main>
   );

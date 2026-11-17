@@ -34,26 +34,41 @@ describe("Findings", () => {
 
   it("shows each finding with its verdict state and submits the chosen verdict", () => {
     const action = vi.fn();
-    render(<Findings findings={[finding({ verdict: "false_positive" })]} runId="run-1" action={action} />);
+    render(
+      <Findings
+        findings={[finding({ verdict: "false_positive" })]}
+        runId="run-1"
+        action={action}
+      />,
+    );
     const list = screen.getByRole("list", { name: "Findings" });
-    expect(within(list).getByText("app.py:5", { exact: false })).toBeInTheDocument();
-    expect(screen.getByTestId("verdict-22222222-2222-2222-2222-222222222222")).toHaveTextContent(
-      "False alarm",
+    expect(
+      within(list).getByText("app.py:5", { exact: false }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByTestId("verdict-22222222-2222-2222-2222-222222222222"),
+    ).toHaveTextContent("False alarm");
+    expect(screen.getByRole("button", { name: "False alarm" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
     );
-    expect(screen.getByRole("button", { name: "False alarm" })).toHaveAttribute("aria-pressed", "true");
-    expect(screen.getByRole("button", { name: "Real problem" })).toHaveAttribute("aria-pressed", "false");
+    expect(
+      screen.getByRole("button", { name: "Real problem" }),
+    ).toHaveAttribute("aria-pressed", "false");
 
-    const form = screen.getByRole("button", { name: "Real problem" }).closest("form");
+    const form = screen
+      .getByRole("button", { name: "Real problem" })
+      .closest("form");
     expect(form).not.toBeNull();
-    expect((form!.querySelector("input[name=finding_id]") as HTMLInputElement).value).toBe(
-      "22222222-2222-2222-2222-222222222222",
-    );
-    expect((form!.querySelector("input[name=run_id]") as HTMLInputElement).value).toBe("run-1");
-    expect(screen.getAllByRole("button").map((b) => (b as HTMLButtonElement).value)).toEqual([
-      "true_positive",
-      "false_positive",
-      "unsure",
-    ]);
+    expect(
+      (form!.querySelector("input[name=finding_id]") as HTMLInputElement).value,
+    ).toBe("22222222-2222-2222-2222-222222222222");
+    expect(
+      (form!.querySelector("input[name=run_id]") as HTMLInputElement).value,
+    ).toBe("run-1");
+    expect(
+      screen.getAllByRole("button").map((b) => (b as HTMLButtonElement).value),
+    ).toEqual(["true_positive", "false_positive", "unsure"]);
     fireEvent.submit(form!);
   });
 
@@ -74,8 +89,20 @@ const summary: FeedbackSummary = {
   precision_ci_low: 0.19,
   precision_ci_high: 0.81,
   by_source: [
-    { source: "ruff:S307", true_positive: 3, false_positive: 0, unsure: 0, precision: 1 },
-    { source: "llm:x", true_positive: 0, false_positive: 3, unsure: 1, precision: 0 },
+    {
+      source: "ruff:S307",
+      true_positive: 3,
+      false_positive: 0,
+      unsure: 0,
+      precision: 1,
+    },
+    {
+      source: "llm:x",
+      true_positive: 0,
+      false_positive: 3,
+      unsure: 1,
+      precision: 0,
+    },
   ],
 };
 
@@ -83,16 +110,24 @@ describe("FeedbackCard", () => {
   it("shows no number when nothing has been labelled", () => {
     render(<FeedbackCard summary={null} />);
     expect(screen.getByText(/no precision number/i)).toBeInTheDocument();
-    render(<FeedbackCard summary={{ ...summary, true_positive: 0, false_positive: 0, unsure: 2 }} />);
+    render(
+      <FeedbackCard
+        summary={{ ...summary, true_positive: 0, false_positive: 0, unsure: 2 }}
+      />,
+    );
     expect(screen.getAllByText(/no precision number/i)).toHaveLength(2);
   });
 
   it("shows precision with its interval and the sample, and leaves unsure out", () => {
     render(<FeedbackCard summary={summary} />);
     expect(screen.getByText(/50\.0%/)).toBeInTheDocument();
-    expect(screen.getByText(/95% interval 19\.0% to 81\.0%/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/95% interval 19\.0% to 81\.0%/),
+    ).toBeInTheDocument();
     expect(screen.getByText(/From 6 labelled findings/)).toBeInTheDocument();
-    expect(screen.getByText(/1 marked not sure are left out/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/1 marked not sure are left out/),
+    ).toBeInTheDocument();
     const rows = within(screen.getByRole("table")).getAllByRole("row");
     expect(rows).toHaveLength(3);
     expect(within(rows[1]).getByText("100.0%")).toBeInTheDocument();
@@ -100,7 +135,9 @@ describe("FeedbackCard", () => {
 
   it("is part of the overview", () => {
     render(<Overview stats={null} runs={[]} feedback={summary} />);
-    expect(screen.getByRole("heading", { name: "Measured precision" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Measured precision" }),
+    ).toBeInTheDocument();
   });
 });
 
@@ -108,7 +145,10 @@ describe("LoginForm", () => {
   it("has a labelled password field and no message by default", () => {
     render(<LoginForm action={vi.fn()} />);
     expect(screen.getByLabelText("Username")).toHaveAttribute("type", "text");
-    expect(screen.getByLabelText("Password")).toHaveAttribute("type", "password");
+    expect(screen.getByLabelText("Password")).toHaveAttribute(
+      "type",
+      "password",
+    );
     expect(screen.queryByRole("alert")).toBeNull();
   });
 
@@ -126,7 +166,6 @@ describe("LoginForm", () => {
     }
   });
 });
-
 
 describe("role-based views", () => {
   it("a viewer sees the findings but no verdict buttons and a clear explanation", () => {
@@ -153,14 +192,29 @@ describe("role-based views", () => {
         canLabel={false}
       />,
     );
-    expect(screen.getByText(/can read reviews but not mark findings/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/can read reviews but not mark findings/i),
+    ).toBeInTheDocument();
     expect(screen.queryAllByRole("button")).toHaveLength(0);
-    expect(screen.getByText("Use of possibly insecure function")).toBeInTheDocument();
+    expect(
+      screen.getByText("Use of possibly insecure function"),
+    ).toBeInTheDocument();
   });
 
   it("shows who is signed in on the overview", () => {
-    render(<Overview stats={null} runs={[]} who={{ username: "alice", role: "reviewer" }} logout={vi.fn()} />);
-    expect(screen.getByText("Signed in as alice (reviewer)")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Sign out" })).toBeInTheDocument();
+    render(
+      <Overview
+        stats={null}
+        runs={[]}
+        who={{ username: "alice", role: "reviewer" }}
+        logout={vi.fn()}
+      />,
+    );
+    expect(
+      screen.getByText("Signed in as alice (reviewer)"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Sign out" }),
+    ).toBeInTheDocument();
   });
 });
