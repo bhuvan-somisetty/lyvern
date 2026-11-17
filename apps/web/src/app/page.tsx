@@ -3,7 +3,7 @@ import { logout } from "@/app/actions";
 import { currentSession } from "@/lib/current-session";
 import { Loading } from "@/components/Loading";
 import { Overview } from "@/components/Overview";
-import { fetchFeedback, fetchRuns, fetchStats } from "@/lib/api";
+import { fetchFeedback, fetchRuns, fetchStats, SNAPSHOT } from "@/lib/api";
 
 async function DashboardData() {
   const [stats, runs, feedback, who] = await Promise.all([
@@ -19,7 +19,7 @@ async function DashboardData() {
       runs={runs.ok ? runs.data : null}
       error={error}
       feedback={feedback.ok ? feedback.data : null}
-      logout={logout}
+      logout={SNAPSHOT ? undefined : logout}
       who={who}
     />
   );
