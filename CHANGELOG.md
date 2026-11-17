@@ -22,3 +22,4 @@ All notable changes. Dates are in IST. This project is a work in progress; see `
 - 2026-11-16: `docker compose up -d --build` now runs the dashboard (new `web` service and image) next to the API, worker, database and Redis; GitHub App settings are passed as environment variables and the private key is mounted read-only from the host.
 - Read-only snapshot mode for the dashboard (`LYVERN_SNAPSHOT=1`): serves an anonymised export of the real database (`scripts/export_dashboard_snapshot.py`, `apps/web/src/data/snapshot.json`) with repositories, files, commit ids and pull request links hidden. No login, no writes, no invented data. Used for the public Vercel site.
 - README rewritten (live link, how it works, what the bot and dashboard do, measured limits).
+- README: added sandbox PR walkthrough (repo is private; noted).

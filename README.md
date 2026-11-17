@@ -102,6 +102,20 @@ Two modes, one codebase:
 
 The bot itself and its database run locally. The deployed site is a snapshot, refreshed on demand with `scripts/export_dashboard_snapshot.py`.
 
+## See it work on real pull requests
+
+The bot's reviews live in a sandbox repository: [`bhuvan-somisetty/lyvern-sandbox`](https://github.com/bhuvan-somisetty/lyvern-sandbox). It is **private** (some pull requests there review code from my other projects), so the link only opens for me. I walk through it live on request. The demo pull requests show every behaviour above:
+
+| Sandbox PR | What it shows |
+|---|---|
+| #1 Add sample module for review testing | Inline comments on the exact lines, plus a Request changes review |
+| #2 Dismissal flow test | The bot dismisses its own stale review after the author fixes the code |
+| #3 Add a small clean helper | A clean change: no findings, so the bot approves |
+| #4 Conflict demo | Same line changed on main and the branch: a separate "please rebase" comment |
+| #5 Flow demo | Conflict, then resolution, then the fix, reviewed again from scratch |
+| #6 Deps demo | A vulnerable pinned dependency is flagged; the clean pin is not |
+| #7 Xref demo | A helper is removed while other files still use it |
+
 ## Measured results, and their limits
 
 These come from `docs/BENCHMARK.md` and `docs/ML_MODEL_CARD.md`. The limits are part of the result.
