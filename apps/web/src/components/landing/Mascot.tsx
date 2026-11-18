@@ -5,9 +5,9 @@ import { useEffect, useRef } from "react";
 // The Lyvern lynx, rebuilt as layered SVG from the logo's own geometry (1024 grid) so it can move:
 // the head floats, the layers drift at different depths, the eyes follow the pointer, it blinks,
 // and a scan line sweeps the visor. Everything stops for reduced motion.
-const INK = "#0a0f1c";
-const DEEP = "#1558c9";
-const GLOW = "#ff693d";
+const INK = "#160c10";
+const DEEP = "#b01422";
+const GLOW = "#ff5448";
 
 const mirror = (pts: number[][]) =>
   pts.map(([x, y]) => `${1024 - x},${y}`).join(" ");
@@ -91,9 +91,9 @@ export function Mascot({ className = "" }: { className?: string }) {
               <stop offset="1" stopColor="#efe2d0" />
             </linearGradient>
             <radialGradient id="m-eye" cx="0.45" cy="0.4" r="0.7">
-              <stop offset="0" stopColor="#ffa27f" />
+              <stop offset="0" stopColor="#ff8a7c" />
               <stop offset="0.6" stopColor={GLOW} />
-              <stop offset="1" stopColor="#e2481f" />
+              <stop offset="1" stopColor="#d8302a" />
             </radialGradient>
             <linearGradient id="m-scan" x1="0" y1="0" x2="1" y2="0">
               <stop offset="0" stopColor={GLOW} stopOpacity="0" />
@@ -178,7 +178,7 @@ export function Mascot({ className = "" }: { className?: string }) {
                       cy="518"
                       rx="18"
                       ry="22"
-                      fill="#fff3ea"
+                      fill="#ffebe1"
                       className="eye"
                     />
                   </g>

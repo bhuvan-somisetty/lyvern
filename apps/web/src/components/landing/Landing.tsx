@@ -198,8 +198,7 @@ function NavBar() {
       >
         <Link href="/" className="flex items-center gap-3">
           <Image
-            src="/logo.svg"
-            unoptimized
+            src="/logo.png"
             alt=""
             width={34}
             height={34}
@@ -272,8 +271,7 @@ function ReviewCard({
       <div className="tilt-inner glass relative rounded-3xl p-5 sm:p-6">
         <div className="flex items-center gap-3">
           <Image
-            src="/logo.svg"
-            unoptimized
+            src="/logo.png"
             alt=""
             width={36}
             height={36}
