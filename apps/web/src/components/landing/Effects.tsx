@@ -218,13 +218,19 @@ export function LiveReview() {
             </ul>
           </div>
 
-          {!showFinding && phase < 6 ? (
-            <p className="text-sm text-muted">
-              {phase === 4 || phase === 5
-                ? "The author replaced eval with a safe parser."
-                : "Reading the changed lines."}
-            </p>
-          ) : null}
+          <p
+            className={`finding text-sm text-muted ${phase === 0 || phase === 1 ? "show" : ""}`}
+            aria-hidden={!(phase === 0 || phase === 1)}
+          >
+            Reading the changed lines.
+          </p>
+          <p
+            className={`finding text-sm text-muted ${phase === 4 || phase === 5 ? "show" : ""}`}
+            aria-hidden={!(phase === 4 || phase === 5)}
+          >
+            The author replaced eval with a safe parser. Reviewing again from
+            scratch.
+          </p>
         </div>
       </div>
       <p className="border-t border-line px-5 py-3 text-xs text-muted">

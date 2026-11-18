@@ -1,22 +1,30 @@
 @import "tailwindcss";
 
 /* Lyvern visual identity, taken from the owner's saved design references:
-   palette "Black Cherry / Porcelain / Vermillion" (#430D1C, #FFF0D5, #FF493D),
-   an elegant display serif for the logo and big headlines (Maison Salome / Runiga look-alike:
-   Bodoni Moda), a clean sans for UI text (Outfit), a grainy flowing gradient background, and slow
-   calm motion. ONE accent colour only; no purple, no gold, no pure white. */
+   palettes "Midnight Black / Electric Cobalt" and "Midnight Navy / Ice Blue / Tangerine"
+   (#030407, #1558C9, #172C45, #E9F0F5, #FF693D) with Porcelain (#FFF0D5) for text.
+   Cobalt and ice carry the atmosphere (silk, glows, glass); tangerine is the ONE accent, kept for
+   actions and the things a reviewer must look at. Display serif Bodoni Moda, UI sans Outfit,
+   grainy flowing gradients, calm motion. No purple, no gold, no pure white. */
 :root {
-  --cherry: #430d1c; /* Black Cherry */
-  --cherry-deep: #1c0610; /* the same hue, darker, for page depth */
+  --midnight: #030407; /* Midnight Black */
+  --navy: #172c45; /* Midnight Navy */
+  --cobalt: #1558c9; /* Electric Cobalt */
+  --ice: #e9f0f5; /* Ice Blue */
   --porcelain: #fff0d5; /* Porcelain */
-  --accent: #ff493d; /* Vermillion */
+  --accent: #ff693d; /* Tangerine */
+  --glow-rgb: 46, 112, 230; /* cobalt, lifted for light */
+  --porc-rgb: 255, 240, 213;
+  --ice-rgb: 233, 240, 245;
+  --accent-rgb: 255, 105, 61;
+  --on-accent: #0a0d14;
 
-  --background: var(--cherry-deep);
-  --surface: rgba(20, 4, 10, 0.55);
-  --surface-2: rgba(255, 240, 213, 0.06);
-  --line: rgba(255, 240, 213, 0.14);
+  --background: #05070d;
+  --surface: rgba(8, 14, 26, 0.55);
+  --surface-2: rgba(var(--porc-rgb), 0.06);
+  --line: rgba(var(--porc-rgb), 0.14);
   --foreground: var(--porcelain);
-  --muted: rgba(255, 240, 213, 0.64);
+  --muted: rgba(var(--porc-rgb), 0.64);
 }
 
 @theme inline {
@@ -42,7 +50,7 @@ body {
   font-family: var(--font-ui), system-ui, sans-serif;
 }
 
-/* A slow, soft, flowing red "silk" behind everything, like the reference banner */
+/* A slow, soft, flowing cobalt "silk" behind everything, like the reference banner */
 .silk {
   position: fixed;
   inset: 0;
@@ -51,10 +59,10 @@ body {
   background:
     radial-gradient(
       120% 90% at 50% 120%,
-      var(--cherry) 0%,
-      var(--cherry-deep) 60%
+      var(--navy) 0%,
+      var(--background) 60%
     ),
-    var(--cherry-deep);
+    var(--background);
 }
 
 .silk::before,
@@ -73,8 +81,8 @@ body {
   top: -35vmax;
   background: radial-gradient(
     closest-side,
-    rgba(255, 73, 61, 0.55),
-    rgba(255, 73, 61, 0) 70%
+    rgba(var(--glow-rgb), 0.55),
+    rgba(var(--glow-rgb), 0) 70%
   );
   transform: rotate(-14deg);
   animation: drift-a 48s ease-in-out infinite alternate;
@@ -84,8 +92,8 @@ body {
   bottom: -40vmax;
   background: radial-gradient(
     closest-side,
-    rgba(120, 22, 46, 0.9),
-    rgba(67, 13, 28, 0) 72%
+    rgba(21, 60, 140, 0.9),
+    rgba(23, 44, 69, 0) 72%
   );
   transform: rotate(10deg);
   animation: drift-b 60s ease-in-out infinite alternate;
@@ -121,10 +129,10 @@ body::before {
   letter-spacing: -0.005em;
 }
 
-/* primary action: vermillion fill, porcelain text */
+/* primary action: tangerine fill, dark ink text for contrast */
 .btn-accent {
   background: var(--accent);
-  color: var(--porcelain);
+  color: var(--on-accent);
   font-weight: 600;
   transition: filter 0.2s ease-out;
 }
@@ -171,13 +179,13 @@ input:focus-visible {
   background:
     linear-gradient(
       180deg,
-      rgba(255, 240, 213, 0.085),
-      rgba(255, 240, 213, 0.02) 42%
+      rgba(var(--porc-rgb), 0.085),
+      rgba(var(--porc-rgb), 0.02) 42%
     ),
-    rgba(28, 6, 16, 0.5);
+    rgba(8, 14, 26, 0.5);
   border: 1px solid var(--line);
   box-shadow:
-    0 1px 0 rgba(255, 240, 213, 0.12) inset,
+    0 1px 0 rgba(var(--porc-rgb), 0.12) inset,
     0 30px 80px -30px rgba(0, 0, 0, 0.6);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
@@ -206,7 +214,7 @@ input:focus-visible {
   pointer-events: none;
   background: radial-gradient(
     420px circle at var(--mx) var(--my),
-    rgba(255, 73, 61, 0.16),
+    rgba(var(--glow-rgb), 0.16),
     transparent 60%
   );
 }
@@ -285,12 +293,12 @@ em {
   background:
     radial-gradient(
       closest-side at 60% 40%,
-      rgba(255, 73, 61, 0.3),
+      rgba(var(--glow-rgb), 0.3),
       transparent 70%
     ),
     radial-gradient(
       closest-side at 25% 80%,
-      rgba(255, 240, 213, 0.08),
+      rgba(var(--porc-rgb), 0.08),
       transparent 70%
     );
   filter: blur(30px);
@@ -309,8 +317,8 @@ main#top::before {
   z-index: -1;
   pointer-events: none;
   background-image:
-    linear-gradient(rgba(255, 240, 213, 0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 240, 213, 0.05) 1px, transparent 1px);
+    linear-gradient(rgba(var(--porc-rgb), 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(var(--porc-rgb), 0.05) 1px, transparent 1px);
   background-size: 72px 72px;
   mask-image: radial-gradient(70% 70% at 50% 25%, #000, transparent 75%);
   -webkit-mask-image: radial-gradient(
@@ -329,10 +337,10 @@ main#top::before {
 
 li.glass:hover,
 div.glass.reveal:hover {
-  border-color: rgba(255, 73, 61, 0.45);
+  border-color: rgba(var(--glow-rgb), 0.45);
   box-shadow:
-    0 1px 0 rgba(255, 240, 213, 0.16) inset,
-    0 40px 90px -30px rgba(255, 73, 61, 0.22);
+    0 1px 0 rgba(var(--porc-rgb), 0.16) inset,
+    0 40px 90px -30px rgba(var(--glow-rgb), 0.22);
 }
 
 h1,
@@ -352,7 +360,7 @@ h2 {
   border-radius: 50%;
   background: radial-gradient(
     closest-side,
-    rgba(255, 73, 61, 0.2),
+    rgba(var(--glow-rgb), 0.2),
     transparent 70%
   );
   filter: blur(20px);
@@ -365,15 +373,15 @@ h2 {
   background:
     linear-gradient(
       160deg,
-      rgba(255, 240, 213, 0.14),
-      rgba(255, 240, 213, 0.03) 38%,
-      rgba(255, 73, 61, 0.06)
+      rgba(var(--porc-rgb), 0.14),
+      rgba(var(--porc-rgb), 0.03) 38%,
+      rgba(var(--glow-rgb), 0.06)
     ),
-    rgba(24, 5, 13, 0.62);
-  border: 1px solid rgba(255, 240, 213, 0.18);
+    rgba(8, 14, 26, 0.62);
+  border: 1px solid rgba(var(--porc-rgb), 0.18);
   box-shadow:
-    0 1px 0 rgba(255, 240, 213, 0.28) inset,
-    0 -40px 60px -40px rgba(255, 73, 61, 0.18) inset,
+    0 1px 0 rgba(var(--porc-rgb), 0.28) inset,
+    0 -40px 60px -40px rgba(var(--glow-rgb), 0.18) inset,
     0 60px 120px -40px rgba(0, 0, 0, 0.75);
   backdrop-filter: blur(22px) saturate(1.2);
   -webkit-backdrop-filter: blur(22px) saturate(1.2);
@@ -453,14 +461,14 @@ h2 {
 
 .chip-bad {
   color: var(--accent);
-  border-color: rgba(255, 73, 61, 0.55);
-  background: rgba(255, 73, 61, 0.12);
+  border-color: rgba(var(--accent-rgb), 0.55);
+  background: rgba(var(--accent-rgb), 0.12);
 }
 
 .chip-good {
   color: var(--porcelain);
-  border-color: rgba(255, 240, 213, 0.5);
-  background: rgba(255, 240, 213, 0.14);
+  border-color: rgba(var(--porc-rgb), 0.5);
+  background: rgba(var(--porc-rgb), 0.14);
 }
 
 /* animated code lines */
@@ -483,12 +491,12 @@ h2 {
 }
 
 .code-line.hot {
-  background: rgba(255, 73, 61, 0.16);
+  background: rgba(var(--accent-rgb), 0.16);
   box-shadow: 2px 0 0 var(--accent) inset;
 }
 
 .code-line.ok {
-  background: rgba(255, 240, 213, 0.1);
+  background: rgba(var(--porc-rgb), 0.1);
   box-shadow: 2px 0 0 var(--porcelain) inset;
 }
 
@@ -498,7 +506,7 @@ h2 {
   margin-right: 0.9rem;
   text-align: right;
   font-weight: 400;
-  color: rgba(255, 240, 213, 0.3);
+  color: rgba(var(--porc-rgb), 0.3);
 }
 
 .scan {
@@ -509,7 +517,7 @@ h2 {
   background: linear-gradient(
     180deg,
     transparent,
-    rgba(255, 73, 61, 0.22),
+    rgba(var(--accent-rgb), 0.22),
     transparent
   );
   animation: scan 1.2s ease-in-out both;
@@ -564,7 +572,7 @@ h2 {
   pointer-events: none;
   background: radial-gradient(
     closest-side,
-    rgba(255, 73, 61, 0.2),
+    rgba(var(--glow-rgb), 0.2),
     transparent 70%
   );
   filter: blur(24px);
@@ -583,11 +591,11 @@ h2 {
   letter-spacing: -0.03em;
   text-align: center;
   color: transparent;
-  -webkit-text-stroke: 1px rgba(255, 240, 213, 0.22);
+  -webkit-text-stroke: 1px rgba(var(--porc-rgb), 0.22);
   background: linear-gradient(
     180deg,
-    rgba(255, 73, 61, 0.55),
-    rgba(255, 73, 61, 0) 75%
+    rgba(var(--glow-rgb), 0.55),
+    rgba(var(--glow-rgb), 0) 75%
   );
   -webkit-background-clip: text;
   background-clip: text;
@@ -651,8 +659,8 @@ h2 {
   border-radius: 50%;
   background: radial-gradient(
     50% 50% at 50% 50%,
-    rgba(255, 73, 61, 0.55),
-    rgba(255, 73, 61, 0.18) 45%,
+    rgba(var(--glow-rgb), 0.55),
+    rgba(var(--glow-rgb), 0.18) 45%,
     transparent 70%
   );
   filter: blur(40px);
@@ -668,7 +676,7 @@ h2 {
   background: linear-gradient(
     90deg,
     transparent,
-    rgba(255, 240, 213, 0.85),
+    rgba(var(--porc-rgb), 0.85),
     transparent
   );
   filter: blur(1px);
@@ -685,4 +693,363 @@ h2 {
   .horizon {
     animation: none;
   }
+}
+
+/* ---------------------------------------------------------------- mascot (hero subject) */
+.mascot {
+  --px: 0;
+  --py: 0;
+  position: relative;
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+}
+
+.mascot-float {
+  position: relative;
+  width: 78%;
+  animation: float 7s ease-in-out infinite;
+  filter: drop-shadow(0 40px 60px rgba(0, 0, 0, 0.55))
+    drop-shadow(0 0 50px rgba(var(--glow-rgb), 0.25));
+}
+
+.mascot-svg {
+  width: 100%;
+  height: auto;
+  overflow: visible;
+  transform: perspective(900px) rotateY(calc(var(--px) * 9deg))
+    rotateX(calc(var(--py) * -7deg));
+}
+
+.layer-back {
+  transform: translate(calc(var(--px) * -10px), calc(var(--py) * -6px));
+}
+
+.layer-mid {
+  transform: translate(calc(var(--px) * 4px), calc(var(--py) * 3px));
+}
+
+.layer-front {
+  transform: translate(calc(var(--px) * 14px), calc(var(--py) * 9px));
+}
+
+.eyes {
+  transform: translate(calc(var(--px) * 30px), calc(var(--py) * 18px));
+}
+
+.eye {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: blink 6s infinite;
+}
+
+.status {
+  animation: pulse 2.4s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.scanline {
+  animation: visor-scan 5s cubic-bezier(0.6, 0, 0.4, 1) infinite;
+  mix-blend-mode: screen;
+}
+
+.tuft-l,
+.tuft-r {
+  transform-box: fill-box;
+  transform-origin: bottom center;
+  animation: twitch 8s ease-in-out infinite;
+}
+
+.tuft-r {
+  animation-delay: 0.25s;
+}
+
+.mascot-halo {
+  position: absolute;
+  inset: 6%;
+  border-radius: 50%;
+  background: radial-gradient(
+    closest-side,
+    rgba(var(--glow-rgb), 0.45),
+    rgba(var(--glow-rgb), 0.08) 60%,
+    transparent 72%
+  );
+  filter: blur(20px);
+  animation: breathe-halo 7s ease-in-out infinite;
+}
+
+.mascot-ring {
+  position: absolute;
+  inset: 2%;
+  border-radius: 50%;
+  border: 1px solid rgba(var(--porc-rgb), 0.12);
+  transform: rotateX(72deg);
+}
+
+.mascot-ring::after {
+  content: "";
+  position: absolute;
+  top: -4px;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 18px var(--accent);
+}
+
+.mascot-ring-a {
+  animation: orbit 18s linear infinite;
+}
+
+.mascot-ring-b {
+  inset: 12%;
+  border-color: rgba(var(--glow-rgb), 0.2);
+  animation: orbit 26s linear infinite reverse;
+}
+
+.mascot-shadow {
+  position: absolute;
+  bottom: 4%;
+  left: 25%;
+  right: 25%;
+  height: 8%;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(0, 0, 0, 0.6), transparent);
+  animation: shadow 7s ease-in-out infinite;
+}
+
+@keyframes float {
+  50% {
+    transform: translateY(-16px);
+  }
+}
+
+@keyframes shadow {
+  50% {
+    transform: scaleX(0.82);
+    opacity: 0.6;
+  }
+}
+
+@keyframes blink {
+  0%,
+  46%,
+  50%,
+  100% {
+    transform: scaleY(1);
+  }
+  48% {
+    transform: scaleY(0.08);
+  }
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.35;
+    transform: scale(0.7);
+  }
+}
+
+@keyframes visor-scan {
+  0%,
+  35% {
+    transform: translateX(0);
+  }
+  75%,
+  100% {
+    transform: translateX(1300px);
+  }
+}
+
+@keyframes twitch {
+  0%,
+  90%,
+  100% {
+    transform: rotate(0);
+  }
+  93% {
+    transform: rotate(-6deg);
+  }
+  96% {
+    transform: rotate(3deg);
+  }
+}
+
+@keyframes breathe-halo {
+  50% {
+    transform: scale(1.08);
+    opacity: 0.8;
+  }
+}
+
+@keyframes orbit {
+  from {
+    transform: rotateX(72deg) rotateZ(0);
+  }
+  to {
+    transform: rotateX(72deg) rotateZ(360deg);
+  }
+}
+
+/* scroll cue under the hero */
+.scroll-cue {
+  position: absolute;
+  bottom: 1.25rem;
+  left: 50%;
+  transform: translateX(-50%);
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.7rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.scroll-cue i {
+  width: 1px;
+  height: 46px;
+  background: linear-gradient(var(--accent), transparent);
+  animation: cue 2.2s ease-in-out infinite;
+  transform-origin: top;
+}
+
+@keyframes cue {
+  0% {
+    transform: scaleY(0);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+  100% {
+    transform: scaleY(1);
+    opacity: 0;
+  }
+}
+
+/* ---------------------------------------------------------------- story (how it works) */
+.story-chapter {
+  min-height: 62vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  opacity: 0.28;
+  transition: opacity 0.6s ease-out;
+}
+
+.story-chapter.on {
+  opacity: 1;
+}
+
+.story-num {
+  font-size: 7rem;
+  line-height: 0.9;
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(var(--porc-rgb), 0.5);
+  animation: num-in 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+@keyframes num-in {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+    filter: blur(8px);
+  }
+}
+
+.story-progress {
+  height: 2px;
+  background: var(--line);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.story-progress span {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  transform-origin: left;
+  transition: transform 0.7s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.stage-art {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transform: translateY(14px);
+  transition:
+    opacity 0.55s ease-out,
+    transform 0.55s ease-out;
+}
+
+.stage-art.show {
+  opacity: 1;
+  transform: none;
+}
+
+.diff-add {
+  color: var(--porcelain);
+  background: rgba(var(--glow-rgb), 0.14);
+}
+
+@media (max-width: 1023px) {
+  .story-chapter {
+    min-height: auto;
+    padding: 2rem 0;
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mascot-float,
+  .eye,
+  .status,
+  .scanline,
+  .tuft-l,
+  .tuft-r,
+  .mascot-halo,
+  .mascot-ring,
+  .mascot-shadow,
+  .scroll-cue i,
+  .story-num {
+    animation: none !important;
+  }
+
+  .story-chapter {
+    opacity: 1;
+  }
+}
+
+/* ---------------------------------------------------------------- 3D core (hero) */
+.core3d {
+  position: relative;
+  isolation: isolate;
+}
+
+.core3d::before {
+  /* shows at once, and stays as the fallback when WebGL is missing */
+  content: "";
+  position: absolute;
+  inset: 18%;
+  z-index: -1;
+  border-radius: 50%;
+  background:
+    radial-gradient(closest-side, rgba(var(--accent-rgb), 0.35), transparent 45%),
+    radial-gradient(closest-side, rgba(var(--glow-rgb), 0.45), transparent 75%);
+  filter: blur(30px);
+}
+
+.core3d canvas {
+  position: absolute;
+  inset: 0;
+  width: 100% !important;
+  height: 100% !important;
+  opacity: 0;
+  transition: opacity 1.4s ease-out;
+}
+
+.core3d[data-ready="1"] canvas {
+  opacity: 1;
 }

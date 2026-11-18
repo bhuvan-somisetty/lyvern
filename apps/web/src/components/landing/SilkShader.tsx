@@ -2,8 +2,8 @@
 
 import { useEffect, useRef } from "react";
 
-// Flowing red silk drawn on the GPU: domain-warped noise in the house palette
-// (black cherry base, vermillion folds, porcelain highlights). No library, about 2 KB.
+// Flowing silk drawn on the GPU: domain-warped noise in the house palette
+// (midnight base, cobalt folds, ice highlights, a faint tangerine rim). No library, about 2 KB.
 const VERT = `attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}`;
 
 const FRAG = `precision mediump float;
@@ -20,13 +20,14 @@ void main(){
  float f=fbm(q*1.2+w*2.4+vec2(s*.6,0.));
  float fold=smoothstep(.35,.95,f);
  float sheen=pow(smoothstep(.55,1.,fbm(q*2.2+w*3.+s)),3.);
- vec3 cherry=vec3(.11,.024,.063),wine=vec3(.42,.07,.14),verm=vec3(1.,.286,.239),porc=vec3(1.,.94,.835);
- vec3 c=mix(cherry,wine,smoothstep(.2,.8,f));
- c=mix(c,verm,pow(fold,1.6)*.85);
- c+=porc*sheen*.4;
+ vec3 night=vec3(.012,.018,.035),navy=vec3(.06,.13,.24),cobalt=vec3(.08,.35,.79),ice=vec3(.91,.94,.96),tang=vec3(1.,.41,.24);
+ vec3 c=mix(night,navy,smoothstep(.2,.8,f));
+ c=mix(c,cobalt,pow(fold,1.7)*.8);
+ c+=ice*sheen*.42;
  float glow=exp(-3.*length(vec2(q.x*.7,q.y+.15)));
- c+=verm*glow*.18;
- c*=1.-.35*length(uv-vec2(.5,.45));
+ c+=cobalt*glow*.2;
+ c+=tang*pow(smoothstep(.78,1.,f),4.)*.18*(1.-uv.y);
+ c*=1.-.4*length(uv-vec2(.5,.45));
  gl_FragColor=vec4(c,1.);
 }`;
 

@@ -24,7 +24,8 @@ export function LoginForm({
       <div className="rise rounded-3xl border border-line bg-surface p-8">
         <div className="flex items-center gap-3">
           <Image
-            src="/logo.png"
+            src="/logo.svg"
+            unoptimized
             alt=""
             width={44}
             height={44}

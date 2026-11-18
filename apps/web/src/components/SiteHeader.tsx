@@ -19,7 +19,8 @@ export function SiteHeader({
         className="flex items-center gap-3"
       >
         <Image
-          src="/logo.png"
+          src="/logo.svg"
+            unoptimized
           alt=""
           width={40}
           height={40}

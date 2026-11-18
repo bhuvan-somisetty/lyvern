@@ -3,7 +3,10 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { LiveReview, Magnetic, Spotlight } from "@/components/landing/Effects";
 import { CountUp, Tilt } from "@/components/landing/Motion";
+import { Core3D } from "@/components/landing/Core3D";
+import { Mascot } from "@/components/landing/Mascot";
 import { SilkShader } from "@/components/landing/SilkShader";
+import { Story } from "@/components/landing/Story";
 import type { Finding, FeedbackSummary, Stats } from "@/lib/api";
 import { PRODUCT_NAME } from "@/lib/brand";
 
@@ -195,7 +198,8 @@ function NavBar() {
       >
         <Link href="/" className="flex items-center gap-3">
           <Image
-            src="/logo.png"
+            src="/logo.svg"
+            unoptimized
             alt=""
             width={34}
             height={34}
@@ -268,7 +272,8 @@ function ReviewCard({
       <div className="tilt-inner glass relative rounded-3xl p-5 sm:p-6">
         <div className="flex items-center gap-3">
           <Image
-            src="/logo.png"
+            src="/logo.svg"
+            unoptimized
             alt=""
             width={36}
             height={36}
@@ -377,61 +382,85 @@ export function Landing({
         {/* hero: live GPU silk behind, a glowing horizon under the centrepiece */}
         <div className="hero-stage">
           <SilkShader className="hero-canvas" />
-          <section className="relative mx-auto w-full max-w-6xl px-5 pb-20 pt-20 text-center sm:px-8 sm:pt-28 lg:pb-28">
-            <p className="rise inline-flex items-center gap-2 rounded-full border border-line bg-surface-2 px-4 py-1.5 text-xs text-muted">
-              <span
-                className="h-1.5 w-1.5 rounded-full bg-accent"
-                aria-hidden
-              />
-              Free · Open source · MIT licensed
-            </p>
-            <h1 className="font-display mx-auto mt-8 max-w-5xl text-[2.7rem] leading-[1.02] sm:text-7xl lg:text-[5.6rem]">
-              {HEADLINE.map((word, i) => (
+          <section className="relative mx-auto grid w-full max-w-7xl items-center gap-6 px-5 pb-10 pt-16 sm:px-8 sm:pt-24 lg:min-h-[86vh] lg:grid-cols-[1.15fr_0.85fr] lg:pb-16">
+            <div className="text-center lg:text-left">
+              <p className="rise inline-flex items-center gap-2 rounded-full border border-line bg-surface-2 px-4 py-1.5 text-xs text-muted">
                 <span
-                  key={`${word}-${i}`}
-                  className={`word ${word === "yes" ? "shine italic" : ""}`}
-                  style={{ "--i": i } as React.CSSProperties}
-                >
-                  {word}
-                  {" "}
-                </span>
-              ))}
-            </h1>
-            <p
-              className="rise mx-auto mt-8 max-w-2xl text-lg text-muted sm:text-xl"
-              style={{ animationDelay: "0.9s" }}
-            >
-              {PRODUCT_NAME} is a GitHub App. It comments on the exact line,
-              asks for changes, flags merge conflicts, and measures its own
-              accuracy in the open, so you can trust the numbers instead of the
-              pitch.
-            </p>
-            <div
-              className="rise mt-10 flex flex-wrap items-center justify-center gap-4"
-              style={{ animationDelay: "1.1s" }}
-            >
-              <Magnetic>
-                <Link
-                  href="/dashboard"
-                  className="btn-accent inline-block rounded-full px-8 py-4 text-base shadow-[0_18px_50px_-12px_rgba(255,73,61,0.7)]"
-                >
-                  Explore the live data
-                </Link>
-              </Magnetic>
-              <Magnetic>
-                <a
-                  href={REPO_URL}
-                  rel="noreferrer"
-                  className="liquid inline-block rounded-full px-8 py-4 text-base"
-                >
-                  View the code
-                </a>
-              </Magnetic>
+                  className="h-1.5 w-1.5 rounded-full bg-accent"
+                  aria-hidden
+                />
+                Free · Open source · MIT licensed
+              </p>
+              <h1 className="font-display mt-8 text-[2.7rem] leading-[1.02] sm:text-7xl lg:text-[5.4rem]">
+                {HEADLINE.map((word, i) => (
+                  <span
+                    key={`${word}-${i}`}
+                    className={`word ${word === "yes" ? "italic text-accent" : ""}`}
+                    style={{ "--i": i } as React.CSSProperties}
+                  >
+                    {word}
+                    {" "}
+                  </span>
+                ))}
+              </h1>
+              <p
+                className="rise mx-auto mt-8 max-w-xl text-lg text-muted sm:text-xl lg:mx-0"
+                style={{ animationDelay: "0.9s" }}
+              >
+                {PRODUCT_NAME} is a GitHub App. It comments on the exact line,
+                asks for changes, flags merge conflicts, and measures its own
+                accuracy in the open, so you can trust the numbers instead of
+                the pitch.
+              </p>
+              <div
+                className="rise mt-10 flex flex-wrap items-center justify-center gap-4 lg:justify-start"
+                style={{ animationDelay: "1.1s" }}
+              >
+                <Magnetic>
+                  <Link
+                    href="/dashboard"
+                    className="btn-accent inline-block rounded-full px-8 py-4 text-base shadow-[0_18px_50px_-12px_rgba(255,105,61,0.55)]"
+                  >
+                    Explore the live data
+                  </Link>
+                </Magnetic>
+                <Magnetic>
+                  <a
+                    href={REPO_URL}
+                    rel="noreferrer"
+                    className="liquid inline-block rounded-full px-8 py-4 text-base"
+                  >
+                    View the code
+                  </a>
+                </Magnetic>
+              </div>
             </div>
-            <div
-              className="rise relative mt-16 sm:mt-20"
-              style={{ animationDelay: "1.3s" }}
+            <div className="rise relative" style={{ animationDelay: "0.4s" }}>
+              <Core3D className="mx-auto aspect-square w-[min(92vw,40rem)]" />
+            </div>
+            <a
+              href="#watch"
+              className="scroll-cue hidden lg:flex"
+              aria-label="Scroll to the live review"
             >
+              <span>Scroll</span>
+              <i aria-hidden />
+            </a>
+          </section>
+
+          {/* watch a review: the centrepiece over a glowing horizon */}
+          <section
+            id="watch"
+            className="relative mx-auto w-full max-w-6xl px-5 pb-24 pt-10 text-center sm:px-8"
+          >
+            <p className="font-mono text-xs tracking-[0.25em] text-accent">
+              WATCH ONE REVIEW
+            </p>
+            <h2 className="font-display mx-auto mt-4 max-w-3xl text-4xl leading-[1.05] sm:text-6xl">
+              From red flag to <em className="text-accent">approved</em>, in one
+              loop.
+            </h2>
+            <div className="reveal relative mt-14">
               <div className="horizon" aria-hidden />
               <LiveReview />
             </div>
@@ -501,22 +530,12 @@ export function Landing({
           title={
             <>
               From pull request to decision,{" "}
-              <span className="text-muted">in four steps.</span>
+              <span className="text-muted">in four chapters.</span>
             </>
           }
           lead="No black box. Every step is code you can read, test and run yourself."
         >
-          <ol className="grid gap-5 sm:grid-cols-2">
-            {STEPS.map((step) => (
-              <li key={step.n} className="reveal glass rounded-3xl p-7 sm:p-8">
-                <span className="font-display text-5xl text-accent">
-                  {step.n}
-                </span>
-                <h3 className="font-display mt-4 text-2xl">{step.title}</h3>
-                <p className="mt-3 text-muted">{step.body}</p>
-              </li>
-            ))}
-          </ol>
+          <Story chapters={STEPS} />
         </Section>
 
         {/* approval rule */}
@@ -562,7 +581,7 @@ export function Landing({
               <li key={item.title} className="reveal relative pb-10 last:pb-0">
                 <span
                   aria-hidden
-                  className="absolute -left-[41px] top-1 flex h-5 w-5 items-center justify-center rounded-full border border-line bg-[#1c0610]"
+                  className="absolute -left-[41px] top-1 flex h-5 w-5 items-center justify-center rounded-full border border-line bg-[#05070d]"
                 >
                   <span
                     className="h-2 w-2 rounded-full"
@@ -726,7 +745,7 @@ export function Landing({
         <section className="mx-auto w-full max-w-6xl px-5 pb-24 sm:px-8">
           <div className="reveal glass grid gap-px overflow-hidden rounded-3xl bg-line sm:grid-cols-2 lg:grid-cols-4">
             {QUALITY.map((q) => (
-              <div key={q.label} className="bg-[rgba(28,6,16,0.92)] p-7">
+              <div key={q.label} className="bg-[rgba(8,14,26,0.92)] p-7">
                 <p className="font-display text-5xl">{q.value}</p>
                 <p className="mt-2 text-sm text-muted">{q.label}</p>
               </div>
@@ -794,6 +813,7 @@ jobs:
         {/* closing */}
         <section className="mx-auto w-full max-w-6xl px-5 pb-28 sm:px-8">
           <div className="reveal glass rounded-[2rem] px-8 py-16 text-center sm:px-16 sm:py-24">
+            <Mascot className="mx-auto -mt-4 mb-6 w-40 sm:w-52" />
             <h2 className="font-display mx-auto max-w-3xl text-4xl leading-[1.05] sm:text-6xl">
               See every review, every finding, every verdict.
             </h2>

@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1d4fa8"/>
+      <stop offset="0.55" stop-color="#172c45"/>
+      <stop offset="1" stop-color="#05070d"/>
+    </linearGradient>
+    <linearGradient id="cream" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fffaf2"/>
+      <stop offset="1" stop-color="#e9f0f5"/>
+    </linearGradient>
+    <radialGradient id="eye" cx="0.45" cy="0.4" r="0.7">
+      <stop offset="0" stop-color="#ffa27f"/>
+      <stop offset="0.6" stop-color="#ff693d"/>
+      <stop offset="1" stop-color="#e2481f"/>
+    </radialGradient>
+  </defs>
+  <rect width="1024" height="1024" rx="230" fill="url(#bg)"/>
+  <g transform="translate(0 40)">
+    <polygon points="262,360 292,150 478,285" fill="url(#cream)"/>
+    <polygon points="762,360 732,150 546,285" fill="url(#cream)"/>
+    <polygon points="312,310 322,215 420,285" fill="#1558c9"/>
+    <polygon points="712,310 702,215 604,285" fill="#1558c9"/>
+    <polygon points="292,150 262,55 338,128" fill="#0a0f1c"/>
+    <polygon points="732,150 762,55 686,128" fill="#0a0f1c"/>
+    <polygon points="215,540 110,640 235,700" fill="url(#cream)"/>
+    <polygon points="809,540 914,640 789,700" fill="url(#cream)"/>
+    <rect x="196" y="262" width="632" height="550" rx="210" fill="url(#cream)"/>
+    <circle cx="512" cy="340" r="22" fill="#1558c9"/>
+    <circle cx="512" cy="340" r="10" fill="#ff693d"/>
+    <rect x="258" y="430" width="508" height="220" rx="110" fill="#0a0f1c"/>
+    <ellipse cx="400" cy="540" rx="58" ry="66" fill="url(#eye)"/>
+    <ellipse cx="624" cy="540" rx="58" ry="66" fill="url(#eye)"/>
+    <ellipse cx="384" cy="518" rx="18" ry="22" fill="#fff3ea"/>
+    <ellipse cx="608" cy="518" rx="18" ry="22" fill="#fff3ea"/>
+    <polygon points="480,690 544,690 512,730" fill="#0a0f1c"/>
+    <path d="M458 744 a28 30 0 0 0 52 -4 M514 740 a28 30 0 0 0 52 4" fill="none" stroke="#0a0f1c" stroke-width="12" stroke-linecap="round"/>
+  </g>
+</svg>

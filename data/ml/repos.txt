@@ -7,3 +7,11 @@ psf/requests
 fastapi/fastapi
 prometheus/prometheus
 vitejs/vite
+pydantic/pydantic
+pallets/click
+encode/httpx
+sveltejs/svelte
+honojs/hono
+gin-gonic/gin
+spf13/cobra
+open-telemetry/opentelemetry-go
