@@ -3,7 +3,6 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { LiveReview, Magnetic, Spotlight } from "@/components/landing/Effects";
 import { CountUp, Tilt } from "@/components/landing/Motion";
-import { Core3D } from "@/components/landing/Core3D";
 import { Mascot } from "@/components/landing/Mascot";
 import { SilkShader } from "@/components/landing/SilkShader";
 import { Story } from "@/components/landing/Story";
@@ -15,6 +14,12 @@ const REPO_URL = "https://github.com/bhuvan-somisetty/lyvern";
 const HEADLINE = "Reviews that say yes only when nothing is left to fix.".split(
   " ",
 );
+
+const HERO_FACTS = [
+  { label: "Comments", value: "On the exact line" },
+  { label: "Accuracy", value: "Published" },
+  { label: "Licence", value: "MIT, free" },
+];
 
 const BENTO = [
   {
@@ -380,8 +385,8 @@ export function Landing({
         {/* hero: live GPU silk behind, a glowing horizon under the centrepiece */}
         <div className="hero-stage">
           <SilkShader className="hero-canvas" />
-          <section className="relative mx-auto grid w-full max-w-7xl items-center gap-6 px-5 pb-10 pt-16 sm:px-8 sm:pt-24 lg:min-h-[86vh] lg:grid-cols-[1.15fr_0.85fr] lg:pb-16">
-            <div className="text-center lg:text-left">
+          <section className="relative mx-auto flex w-full max-w-6xl flex-col items-center px-5 pb-16 pt-24 text-center sm:px-8 sm:pt-36 lg:pt-40">
+            <div>
               <p className="rise inline-flex items-center gap-2 rounded-full border border-line bg-surface-2 px-4 py-1.5 text-xs text-muted">
                 <span
                   className="h-1.5 w-1.5 rounded-full bg-accent"
@@ -389,7 +394,7 @@ export function Landing({
                 />
                 Free · Open source · MIT licensed
               </p>
-              <h1 className="font-display mt-8 text-[2.7rem] leading-[1.02] sm:text-7xl lg:text-[5.4rem]">
+              <h1 className="font-display hero-title mx-auto mt-10 max-w-5xl text-[2.9rem] leading-[0.98] sm:text-7xl lg:text-[7rem]">
                 {HEADLINE.map((word, i) => (
                   <span
                     key={`${word}-${i}`}
@@ -402,7 +407,7 @@ export function Landing({
                 ))}
               </h1>
               <p
-                className="rise mx-auto mt-8 max-w-xl text-lg text-muted sm:text-xl lg:mx-0"
+                className="rise mx-auto mt-9 max-w-2xl text-lg text-muted sm:text-xl"
                 style={{ animationDelay: "0.9s" }}
               >
                 {PRODUCT_NAME} is a GitHub App. It comments on the exact line,
@@ -411,7 +416,7 @@ export function Landing({
                 the pitch.
               </p>
               <div
-                className="rise mt-10 flex flex-wrap items-center justify-center gap-4 lg:justify-start"
+                className="rise mt-11 flex flex-wrap items-center justify-center gap-4"
                 style={{ animationDelay: "1.1s" }}
               >
                 <Magnetic>
@@ -433,12 +438,24 @@ export function Landing({
                 </Magnetic>
               </div>
             </div>
-            <div className="rise relative" style={{ animationDelay: "0.4s" }}>
-              <Core3D className="mx-auto aspect-square w-[min(92vw,40rem)]" />
-            </div>
+            <dl
+              className="rise hero-facts mt-16 grid w-full max-w-3xl grid-cols-3 border-y border-line"
+              style={{ animationDelay: "1.3s" }}
+            >
+              {HERO_FACTS.map((f) => (
+                <div key={f.label} className="px-3 py-5">
+                  <dt className="text-[0.68rem] uppercase tracking-[0.22em] text-muted">
+                    {f.label}
+                  </dt>
+                  <dd className="font-display mt-1.5 text-xl sm:text-2xl">
+                    {f.value}
+                  </dd>
+                </div>
+              ))}
+            </dl>
             <a
               href="#watch"
-              className="scroll-cue hidden lg:flex"
+              className="scroll-cue hidden"
               aria-label="Scroll to the live review"
             >
               <span>Scroll</span>
