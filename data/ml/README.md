@@ -4,9 +4,9 @@
 labels and 33 features (see `packages/lyvern/src/lyvern/ml/features.py`). No usernames, titles or
 text.
 
-**Provenance.** 1,200 closed pull requests (150 each) from 8 public repositories listed in
-`repos.txt`, newest first, bot-authored ones skipped, collected on 2026-11-16 with read-only GitHub
-API calls (`uv run lyvern ml collect --repos data/ml/repos.txt --per-repo 150`). The raw records
+**Provenance.** 6,400 closed pull requests (400 each) from the 16 public repositories listed in
+`repos.txt`, newest first, bot-authored ones skipped, collected on 2026-11-16 to 2026-11-18 with
+read-only GitHub API calls (`uv run lyvern ml collect --repos data/ml/repos.txt --per-repo 400`). The raw records
 (`prs_raw.jsonl`, with usernames and PR text) are not committed; the command above rebuilds them,
 and `uv run lyvern ml featurize` turns them into `prs.csv`.
 

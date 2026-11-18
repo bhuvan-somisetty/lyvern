@@ -141,6 +141,25 @@ def bootstrap_auc(y: Any, scores: Any, *, seed: int = 0) -> tuple[float, float]:
     return float(np.percentile(values, 2.5)), float(np.percentile(values, 97.5))
 
 
+def paired_bootstrap_gain(
+    y: Any, scores: Any, baseline: Any, *, seed: int = 0
+) -> tuple[float, float]:
+    """95% interval for AUC(scores) - AUC(baseline), resampling the same rows for both."""
+    from sklearn.metrics import roc_auc_score
+
+    rng = np.random.default_rng(seed)
+    n = len(y)
+    gains: list[float] = []
+    for _ in range(BOOTSTRAPS):
+        pick = rng.integers(0, n, n)
+        if len(set(y[pick].tolist())) < 2:
+            continue
+        gains.append(
+            float(roc_auc_score(y[pick], scores[pick]) - roc_auc_score(y[pick], baseline[pick]))
+        )
+    return float(np.percentile(gains, 2.5)), float(np.percentile(gains, 97.5))
+
+
 def _logreg(c: float) -> Any:
     from sklearn.linear_model import LogisticRegression  # type: ignore[import-untyped]
     from sklearn.pipeline import make_pipeline  # type: ignore[import-untyped]
@@ -224,7 +243,9 @@ def train_and_report(data_path: Path, target: str, model_out: Path, card_out: Pa
     auc_low, auc_high = bootstrap_auc(y_test, p_test)
     size_model = _logreg(1.0)
     size_model.fit(x_train[:, size_index], y_train)
-    size_auc = float(roc_auc_score(y_test, size_model.predict_proba(x_test[:, size_index])[:, 1]))
+    p_size = size_model.predict_proba(x_test[:, size_index])[:, 1]
+    size_auc = float(roc_auc_score(y_test, p_size))
+    gain_low, gain_high = paired_bootstrap_gain(y_test, p_test, p_size)
     gbm = _gbm()
     gbm.fit(x_train, y_train)
     gbm_auc = float(roc_auc_score(y_test, gbm.predict_proba(x_test)[:, 1]))
@@ -258,6 +279,8 @@ def train_and_report(data_path: Path, target: str, model_out: Path, card_out: Pa
         "heldout_auc_ci_low": auc_low,
         "heldout_auc_ci_high": auc_high,
         "heldout_size_only_auc": size_auc,
+        "heldout_gain_over_size_ci_low": gain_low,
+        "heldout_gain_over_size_ci_high": gain_high,
         "heldout_gbm_auc": gbm_auc,
         "leave_one_repo_out_auc": loo,
         "repos": sorted(set(data.repos)),
@@ -329,6 +352,15 @@ def render_card(
     definition, _ = describe_target(target)
     gap = meta["heldout_auc"] - meta["heldout_size_only_auc"]
     beats = gap >= 0.02
+    gain_low = meta.get("heldout_gain_over_size_ci_low")
+    gain_high = meta.get("heldout_gain_over_size_ci_high")
+    gain_ci = (
+        f" (95% paired bootstrap CI {gain_low:+.3f} to {gain_high:+.3f})"
+        if gain_low is not None and gain_high is not None
+        else ""
+    )
+    clear_win = beats and gain_low is not None and gain_low > 0
+    weak_repos = [r for r, a in loo.items() if a < 0.6]
     cv_mean = max(m for m, _s in cv.values())
     top_bin = calibration[-1] if calibration else None
     overconfident = top_bin is not None and top_bin[0] > 1.5 * max(top_bin[1], 1e-9)
@@ -389,8 +421,15 @@ def render_card(
         "",
         "### Does it beat a trivial baseline?",
         (
-            f"Yes, slightly: {meta['heldout_auc']:.3f} against {meta['heldout_size_only_auc']:.3f}"
-            " for the size of the change alone."
+            f"**Yes.** It scores {meta['heldout_auc']:.3f} against"
+            f" {meta['heldout_size_only_auc']:.3f} for the size of the change alone, a gain of"
+            f" {gap:+.3f}{gain_ci}. The whole interval is above zero, so it has learned something"
+            ' beyond "bigger changes get more review". Gradient boosting reaches'
+            f" {meta['heldout_gbm_auc']:.3f}, no clear gain over the simpler, readable model."
+            if clear_win
+            else f"Slightly: {meta['heldout_auc']:.3f} against"
+            f" {meta['heldout_size_only_auc']:.3f} for the size of the change alone, a gain of"
+            f" {gap:+.3f}{gain_ci}. The interval reaches zero, so the gain is not certain."
             if beats
             else f"**No.** On the held-out pull requests it scores {meta['heldout_auc']:.3f}, the"
             f" size of the change alone scores {meta['heldout_size_only_auc']:.3f} and gradient"
@@ -429,6 +468,17 @@ def render_card(
         "| --- | --- |",
         *[f"| {r} | {a:.3f} |" for r, a in loo.items()],
         f"\nMean: {np.mean(list(loo.values())):.3f}." if loo else "",
+        *(
+            [
+                "",
+                "On "
+                + " and ".join(weak_repos)
+                + " it is close to chance (below 0.60): those projects review differently from"
+                " the others, so the estimate should not be trusted there without local data.",
+            ]
+            if weak_repos
+            else []
+        ),
         "",
         "## What drives the estimate (standardised coefficients, log-odds per standard deviation)",
         "| Feature | Coefficient |",

@@ -476,3 +476,19 @@ def test_the_ml_commands_are_wired_to_the_raw_then_features_flow(
     collect_repo(FakeClient(), "o/r", raw, target=10, done=set(), log=lambda _m: None, workers=1)
     assert cli.main(["ml", "featurize", "--raw", str(raw), "--out", str(out)]) == 0
     assert "wrote 2 rows" in capsys.readouterr().out and len(rows_of(out)) == 2
+
+
+def test_paired_gain_interval_is_zero_for_identical_scores_and_positive_for_a_better_model() -> (
+    None
+):
+    import numpy as np
+
+    from lyvern.ml.train import paired_bootstrap_gain
+
+    rng = np.random.default_rng(1)
+    y = np.array([0, 1] * 100)
+    noise = rng.random(200)
+    assert paired_bootstrap_gain(y, noise, noise) == (0.0, 0.0)
+    better = y + 0.3 * noise
+    low, high = paired_bootstrap_gain(y, better, noise)
+    assert 0 < low <= high

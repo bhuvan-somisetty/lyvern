@@ -7,74 +7,82 @@ Estimates how likely it is that a person other than the author leaves at least o
 
 ## Data
 - Target: `inline_feedback` = a person other than the author leaves at least one inline code comment. Bots are excluded as authors and as reviewers.
-- Why not "changes requested": only 2.4% of these pull requests received a CHANGES_REQUESTED review (reviewers rarely use that state), which is too few positives to train or evaluate a model honestly.
-- 1200 real closed pull requests from 8 public repositories, read through the GitHub API with read-only calls: fastapi/fastapi (150), jaegertracing/jaeger (150), jaegertracing/jaeger-ui (150), joinmarket-webui/jam (150), pallets/flask (150), prometheus/prometheus (150), psf/requests (150), vitejs/vite (150)
-- Positive rate: 10.6%.
+- Why not "changes requested": only 3.4% of these pull requests received a CHANGES_REQUESTED review (reviewers rarely use that state), which is too few positives to train or evaluate a model honestly.
+- 6400 real closed pull requests from 16 public repositories, read through the GitHub API with read-only calls: encode/httpx (400), fastapi/fastapi (400), gin-gonic/gin (400), honojs/hono (400), jaegertracing/jaeger (400), jaegertracing/jaeger-ui (400), joinmarket-webui/jam (400), open-telemetry/opentelemetry-go (400), pallets/click (400), pallets/flask (400), prometheus/prometheus (400), psf/requests (400), pydantic/pydantic (400), spf13/cobra (400), sveltejs/svelte (400), vitejs/vite (400)
+- Positive rate: 12.8%.
 - Known limits of the labels: repositories differ a lot in review culture (in some, maintainers merge their own changes without review), so the label is a noisy proxy for "needed attention".
 
 ## Method
 - Features (33): see `lyvern/ml/features.py`.
-- Split: inside each repository the oldest 70% of pull requests train the model and the newest 30% test it (840 train, 360 test).
-- Model: standardised logistic regression. The regularisation strength was chosen by 5-fold cross-validation on the training part only (C = 0.3).
+- Split: inside each repository the oldest 70% of pull requests train the model and the newest 30% test it (4480 train, 1920 test).
+- Model: standardised logistic regression. The regularisation strength was chosen by 5-fold cross-validation on the training part only (C = 0.1).
 - The shipped model is refitted on all rows; the numbers below come from the model that did not see the test rows.
 
 ## Results on the held-out newest pull requests (evaluated once)
 | Measure | Value |
 | --- | --- |
-| AUC (1.0 perfect, 0.5 chance) | 0.704 (95% bootstrap CI 0.605 to 0.803) |
-| Baseline: size of the change only | 0.702 |
-| Comparison: gradient boosting | 0.705 |
-| Positive rate in the test part | 8.1% |
-| Average precision (chance = positive rate) | 0.268 |
-| Brier score (lower is better; always predicting the base rate = 0.075) | 0.076 |
-| Precision among the 72 pull requests it ranks highest (top 20%) | 18.1% |
+| AUC (1.0 perfect, 0.5 chance) | 0.747 (95% bootstrap CI 0.712 to 0.781) |
+| Baseline: size of the change only | 0.659 |
+| Comparison: gradient boosting | 0.752 |
+| Positive rate in the test part | 10.6% |
+| Average precision (chance = positive rate) | 0.305 |
+| Brier score (lower is better; always predicting the base rate = 0.096) | 0.087 |
+| Precision among the 384 pull requests it ranks highest (top 20%) | 25.8% |
 
 ### Does it beat a trivial baseline?
-**No.** On the held-out pull requests it scores 0.704, the size of the change alone scores 0.702 and gradient boosting 0.705. The difference (+0.001) is far smaller than the uncertainty, so what it knows beyond "bigger changes get more review" is not measurable with this data.
+**Yes.** It scores 0.747 against 0.659 for the size of the change alone, a gain of +0.088 (95% paired bootstrap CI +0.055 to +0.122). The whole interval is above zero, so it has learned something beyond "bigger changes get more review". Gradient boosting reaches 0.752, no clear gain over the simpler, readable model.
 
 ### Which numbers to trust
-Cross-validation inside the training part reaches about 0.82 AUC, but its random folds mix pull requests from the same repository and the same period, which flatters the model. The held-out newest pull requests and the leave-one-repository-out table below are the honest figures.
+Cross-validation inside the training part reaches about 0.76 AUC, but its random folds mix pull requests from the same repository and the same period, which flatters the model. The held-out newest pull requests and the leave-one-repository-out table below are the honest figures.
 
-Cross-validated AUC on the training part (mean +/- std): C=0.01: 0.804+/-0.047, C=0.03: 0.811+/-0.048, C=0.1: 0.816+/-0.048, C=0.3: 0.818+/-0.049, C=1.0: 0.817+/-0.050, C=3.0: 0.815+/-0.051; size only 0.691; gradient boosting 0.782.
+Cross-validated AUC on the training part (mean +/- std): C=0.01: 0.758+/-0.011, C=0.03: 0.761+/-0.015, C=0.1: 0.762+/-0.018, C=0.3: 0.761+/-0.019, C=1.0: 0.761+/-0.019, C=3.0: 0.761+/-0.019; size only 0.684; gradient boosting 0.785.
 
 ### Calibration (test part, lowest to highest predicted risk)
 | Mean predicted | Observed rate | Pull requests |
 | --- | --- | --- |
-| 0.7% | 1.4% | 72 |
-| 1.8% | 4.2% | 72 |
-| 5.5% | 9.7% | 72 |
-| 14.3% | 6.9% | 72 |
-| 36.5% | 18.1% | 72 |
-
-The highest-risk group is over-confident: the model predicts about 36.5% but 18.1% happened. Read high estimates as "more likely than usual", not as a probability to rely on.
+| 2.4% | 1.0% | 384 |
+| 5.6% | 6.2% | 384 |
+| 10.5% | 8.9% | 384 |
+| 17.2% | 10.9% | 384 |
+| 32.9% | 25.8% | 384 |
 
 ### Repositories it has never seen (leave-one-repository-out AUC)
 | Repository | AUC |
 | --- | --- |
-| fastapi/fastapi | 0.765 |
-| jaegertracing/jaeger | 0.633 |
-| jaegertracing/jaeger-ui | 0.647 |
-| joinmarket-webui/jam | 0.610 |
-| pallets/flask | 0.933 |
-| prometheus/prometheus | 0.653 |
-| psf/requests | 0.821 |
-| vitejs/vite | 0.512 |
+| encode/httpx | 0.640 |
+| fastapi/fastapi | 0.529 |
+| gin-gonic/gin | 0.675 |
+| honojs/hono | 0.693 |
+| jaegertracing/jaeger | 0.709 |
+| jaegertracing/jaeger-ui | 0.725 |
+| joinmarket-webui/jam | 0.641 |
+| open-telemetry/opentelemetry-go | 0.719 |
+| pallets/click | 0.844 |
+| pallets/flask | 0.526 |
+| prometheus/prometheus | 0.712 |
+| psf/requests | 0.726 |
+| pydantic/pydantic | 0.781 |
+| spf13/cobra | 0.749 |
+| sveltejs/svelte | 0.665 |
+| vitejs/vite | 0.736 |
 
-Mean: 0.697.
+Mean: 0.692.
+
+On fastapi/fastapi and pallets/flask it is close to chance (below 0.60): those projects review differently from the others, so the estimate should not be trusted there without local data.
 
 ## What drives the estimate (standardised coefficients, log-odds per standard deviation)
 | Feature | Coefficient |
 | --- | --- |
-| `assoc_contributor` | +0.742 |
-| `assoc_member` | +0.736 |
-| `go_share` | +0.551 |
-| `max_depth` | -0.517 |
-| `jsts_share` | +0.501 |
-| `log_total_churn` | +0.361 |
-| `title_docs_or_chore` | -0.323 |
-| `log_changed_files` | +0.319 |
-| `body_has_checklist` | -0.296 |
-| `log_deletions` | -0.209 |
+| `assoc_contributor` | +0.710 |
+| `assoc_member` | +0.502 |
+| `go_share` | +0.404 |
+| `docs_files_share` | +0.354 |
+| `log_total_churn` | +0.278 |
+| `log_additions` | +0.232 |
+| `ci_config_files` | -0.215 |
+| `renamed_files` | -0.207 |
+| `jsts_share` | +0.199 |
+| `add_share` | +0.195 |
 
 ## How it is used
 - The review summary shows the estimate only when the lower end of the held-out AUC interval is above 0.5 (better than chance by a margin the data can support); the line states the held-out AUC so a reader can judge it.
@@ -85,4 +93,4 @@ Mean: 0.697.
 - A model of size and shape mostly learns that big changes get more review. Treat it as a prompt to look more carefully, never as a verdict.
 - Retrain with `uv run lyvern ml collect ...` then `uv run lyvern ml train` when more data is available; the card is regenerated.
 
-Trained 2026-11-16 with scikit-learn 1.9.1.
+Trained 2026-11-18 with scikit-learn 1.9.1.

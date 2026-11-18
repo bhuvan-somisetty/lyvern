@@ -376,3 +376,9 @@ Question: can the attention model beat "size of the change alone" (held-out AUC 
 | 33 + history, gradient boosting | 0.679 | 0.178 |
 
 Paired bootstrap gain of 33+history over the current model: +0.011 AUC, 95% CI -0.019 to +0.045. Average precision went DOWN (0.268 to 0.189). Decision: not shipped; the current model stays. The limit is the data: 29 positive test cases cannot separate models that differ by about 0.01 AUC. The next useful step is more labelled pull requests (several thousand), not more features.
+
+## 2026-11-18: attention model retrained on 6,400 pull requests
+- Collected 400 PRs each from 16 public repositories (8 new: pydantic, click, httpx, svelte, hono, gin, cobra, opentelemetry-go), read-only.
+- Held-out newest 30%: AUC 0.747 (95% CI 0.712-0.781), size-only 0.659, gradient boosting 0.752. Paired gain over size +0.088 (CI +0.055 to +0.122): the model now beats the baseline, which it did not at 1,200 PRs (0.704 vs 0.702).
+- Leave-one-repository-out mean 0.692; near chance on fastapi (0.53) and flask (0.53), noted in the card.
+- Card generator now reports the paired interval and names weak repositories. Fixed the stale read-only client test (list_review_records is a GET).
